@@ -7,28 +7,40 @@ function Sidenav({ color }) {
   const { pathname } = useLocation();
   const page = pathname.replace("/", "");
 
-  const dashboard = [
+  const chat = [
+  <svg
+      width="24"
+      height="24"
+      viewBox="0 0 700 550"
+      fill="none"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg">
+    <path d="m132.67 413.37c-6.0547 21.895-28.91 88.461-28.91 88.461-2.2227 6.4961-0.4375 13.688 4.5508 18.395 4.9883 4.707 12.266 6.0742 18.617 3.4805 0 0 66.938-27.332 88.445-35.031 19.023 7.8047 39.832 12.09 61.637 12.09 89.898 0 162.89-72.973 162.89-162.87s-72.992-162.89-162.89-162.89c-89.898 0-162.87 72.992-162.87 162.89 0 27.23 6.6992 52.902 18.531 75.477zm71.66-21.629h96.918c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-96.918c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5zm67.027-251.65c2.0312-0.050782 4.0781-0.085938 6.125-0.085938 109.22 0 197.89 88.672 197.89 197.89 0 4.9336-0.17578 9.8164-0.54297 14.664 3.5508-1.1719 7.0508-2.4688 10.48-3.8828 21.473 7.6797 88.445 35.031 88.445 35.031 6.3555 2.5938 13.633 1.2266 18.637-3.4805 4.9883-4.707 6.7578-11.898 4.5352-18.395 0 0-22.84-66.566-28.91-88.461 11.848-22.574 18.531-48.246 18.531-75.477 0-89.898-72.973-162.89-162.87-162.89-69.547 0-128.98 43.68-152.32 105.09zm-67.027 178.96h145.38c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-145.38c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5z" fill-rule="evenodd"/>
+  </svg>,
+     ];
+
+  const documents = [
     <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      xmlns="http://www.w3.org/2000/svg"
-      key={0}
-    >
-      <path
-        d="M3 4C3 3.44772 3.44772 3 4 3H16C16.5523 3 17 3.44772 17 4V6C17 6.55228 16.5523 7 16 7H4C3.44772 7 3 6.55228 3 6V4Z"
-        fill={color}
-      ></path>
-      <path
-        d="M3 10C3 9.44771 3.44772 9 4 9H10C10.5523 9 11 9.44771 11 10V16C11 16.5523 10.5523 17 10 17H4C3.44772 17 3 16.5523 3 16V10Z"
-        fill={color}
-      ></path>
-      <path
-        d="M14 9C13.4477 9 13 9.44771 13 10V16C13 16.5523 13.4477 17 14 17H16C16.5523 17 17 16.5523 17 16V10C17 9.44771 16.5523 9 16 9H14Z"
-        fill={color}
-      ></path>
+        width="30"
+        height="30"
+        viewBox="0 0 700 600"
+        fill="none"
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg">
+      <path d="m192.5 140c0-35.438 28.727-64.168 64.168-64.168h74.004c17.016 0 33.336 6.7617 45.371 18.797l112.66 112.66c12.039 12.035 18.797 28.355 18.797 45.375v167.34c0 35.438-28.727 64.168-64.168 64.168h-186.66c-35.441 0-64.168-28.73-64.168-64.168zm64.168-29.168c-16.109 0-29.168 13.059-29.168 29.168v280c0 16.109 13.059 29.168 29.168 29.168h186.66c16.109 0 29.168-13.059 29.168-29.168v-167.34c0-0.61328-0.019531-1.2227-0.058594-1.832h-75.773c-35.441 0-64.168-28.727-64.168-64.164v-75.777c-0.60547-0.039063-1.2188-0.058594-1.8281-0.058594zm110.83 24.75v51.086c0 16.105 13.059 29.164 29.168 29.164h51.082z"/>
     </svg>,
   ];
+
+  const team = [
+  <svg   width="23"
+         height="23"
+         viewBox="0 0 700 600"
+         version="1.1"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="m253.11 227.17c0-56.586 43.453-101.55 97.785-101.55 54.73 0 98.336 44.961 98.336 101.55-3.3711 58.613-45.449 101.01-98.336 101.84-54.266 0-97.785-45.672-97.785-101.84zm-128.4 107.62c35.773 0 64.359-29.398 64.359-66.25 0-37.297-28.586-66.828-64.359-66.828-35.773 0-64.359 29.531-64.359 66.828 0.57813 40.598 28.25 63.945 64.359 66.25zm451.84 0c35.773 0 64.359-29.398 64.359-66.25 0-37.297-28.586-66.828-64.359-66.828-35.777 0-64.086 29.531-64.086 66.828 0.53906 37.812 26.555 65.379 64.086 66.25zm-140.85-14.277c-23.082 19.664-52.746 31.535-84.801 31.535-31.984 0-61.203-12.098-84.25-31.824v0.003906c-49.684 24.695-85.629 71.273-85.629 145.52v14.734h340.03v-14.738c0.003907-73.965-35.949-120.65-85.352-145.23zm-238.34 24.012c-3.9141-2.8477-7.8203-5.7578-12.156-8.1016-16.828 13.383-37.84 21.41-60.492 21.41-22.516 0-43.441-7.8828-60.219-21.121-32.172 17.039-54.965 47.383-54.965 96.633v46.867c0.13281 0.09375 0.26562 0.17969 0.39844 0.27344h149.59v-14.738c0-48.898 14.68-89.527 37.844-121.22zm494.37 135.39v-46.574c0-49.438-22.883-80.02-54.969-96.918-16.789 13.266-37.676 21.41-60.215 21.41-22.625 0-43.402-8.0547-60.219-21.41-4.3125 2.3242-8.4961 5.0078-12.43 7.8086 23.285 31.734 37.844 72.543 37.844 121.51v14.738h149.17c0.27344-0.19141 0.54688-0.375 0.82031-0.56641z"/>
+  </svg>,
+      ];
+
   const kanban = [
     <svg
         width="20"
@@ -96,80 +108,6 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
-  const rtl = [
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      key={0}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M3 6C3 4.34315 4.34315 3 6 3H16C16.3788 3 16.725 3.214 16.8944 3.55279C17.0638 3.89157 17.0273 4.29698 16.8 4.6L14.25 8L16.8 11.4C17.0273 11.703 17.0638 12.1084 16.8944 12.4472C16.725 12.786 16.3788 13 16 13H6C5.44772 13 5 13.4477 5 14V17C5 17.5523 4.55228 18 4 18C3.44772 18 3 17.5523 3 17V6Z"
-        fill={color}
-      ></path>
-    </svg>,
-  ];
-
-  const profile = [
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      key={0}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10ZM12 7C12 8.10457 11.1046 9 10 9C8.89543 9 8 8.10457 8 7C8 5.89543 8.89543 5 10 5C11.1046 5 12 5.89543 12 7ZM9.99993 11C7.98239 11 6.24394 12.195 5.45374 13.9157C6.55403 15.192 8.18265 16 9.99998 16C11.8173 16 13.4459 15.1921 14.5462 13.9158C13.756 12.195 12.0175 11 9.99993 11Z"
-        fill={color}
-      ></path>
-    </svg>,
-  ];
-
-  const signin = [
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      key={0}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M6 2C5.44772 2 5 2.44772 5 3V4H4C2.89543 4 2 4.89543 2 6V16C2 17.1046 2.89543 18 4 18H16C17.1046 18 18 17.1046 18 16V6C18 4.89543 17.1046 4 16 4H15V3C15 2.44772 14.5523 2 14 2C13.4477 2 13 2.44772 13 3V4H7V3C7 2.44772 6.55228 2 6 2ZM6 7C5.44772 7 5 7.44772 5 8C5 8.55228 5.44772 9 6 9H14C14.5523 9 15 8.55228 15 8C15 7.44772 14.5523 7 14 7H6Z"
-        fill={color}
-      ></path>
-    </svg>,
-  ];
-
-  const signup = [
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      key={0}
-    >
-      <path
-        d="M0,2A2,2,0,0,1,2,0H8a2,2,0,0,1,2,2V8a2,2,0,0,1-2,2H2A2,2,0,0,1,0,8Z"
-        transform="translate(4 4)"
-        fill={color}
-      />
-      <path
-        d="M2,0A2,2,0,0,0,0,2V8a2,2,0,0,0,2,2V4A2,2,0,0,1,4,2h6A2,2,0,0,0,8,0Z"
-        fill={color}
-      />
-    </svg>,
-  ];
-
   return (
     <>
       <div className="brand">
@@ -178,6 +116,19 @@ function Sidenav({ color }) {
       <hr />
       <Menu defaultSelectedKeys={"1"} theme="light" mode="inline">
         <Menu.Item key="1">
+          <NavLink to="/chat">
+            <span
+                className="icon"
+                style={{
+                  background: page === "chat" ? color : "",
+                }}
+            >
+              {chat}
+            </span>
+            <span className="label">Chat</span>
+          </NavLink>
+        </Menu.Item>
+        <Menu.Item key="2">
           <NavLink to="/kanban">
             <span
               className="icon"
@@ -190,20 +141,44 @@ function Sidenav({ color }) {
             <span className="label">Kanban</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="2">
-          <NavLink to="/dashboard">
+        <Menu.Item key="3">
+          <NavLink to="/team">
             <span
-                className="icon"
-                style={{
-                  background: page === "dashboard" ? color : "",
-                }}
+              className="icon"
+              style={{
+                background: page === "team" ? color : "",
+              }}
             >
-              {dashboard}
+              {team}
             </span>
-            <span className="label">Dashboard</span>
+            <span className="label">Team</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="3">
+        <Menu.Item key="4">
+          <NavLink to="/documents">
+            <span
+              className="icon"
+              style={{
+                background: page === "documents" ? color : "",
+              }}
+            >
+              {documents}
+            </span>
+            <span className="label">Documents</span>
+          </NavLink>
+        </Menu.Item>
+        <Menu.ItemGroup title="Issues" className="menu-item-header" key="5">
+        </Menu.ItemGroup>
+      </Menu>
+      <div className="aside-footer">
+      </div>
+    </>
+  );
+}
+
+export default Sidenav;
+/*
+  <Menu.Item key="2">
           <NavLink to="/tables">
             <span
               className="icon"
@@ -216,7 +191,7 @@ function Sidenav({ color }) {
             <span className="label">Tables</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="4">
+        <Menu.Item key="3">
           <NavLink to="/billing">
             <span
               className="icon"
@@ -232,7 +207,7 @@ function Sidenav({ color }) {
         <Menu.Item clickable="false" className="menu-item-header" key="5">
           Account Pages
         </Menu.Item>
-        <Menu.Item key="6">
+        <Menu.Item key="4">
           <NavLink to="/profile">
             <span
               className="icon"
@@ -245,23 +220,10 @@ function Sidenav({ color }) {
             <span className="label">Profile</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="7">
-          <NavLink to="/sign-in">
-            <span className="icon">{signin}</span>
-            <span className="label">Sign In</span>
-          </NavLink>
-        </Menu.Item>
         <Menu.Item key="8">
           <NavLink to="/sign-up">
             <span className="icon">{signup}</span>
             <span className="label">Sign Up</span>
           </NavLink>
         </Menu.Item>
-      </Menu>
-      <div className="aside-footer">
-      </div>
-    </>
-  );
-}
-
-export default Sidenav;
+ */

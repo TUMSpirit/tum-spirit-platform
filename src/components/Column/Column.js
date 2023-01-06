@@ -38,10 +38,10 @@ const Column = ({
 					<HeaderActions>
 						<IssueCount>{`${item?.issues.length} issue${item?.issues.length > 1 ? 's' : ''}`}</IssueCount>
 						<Tooltip placement="topLeft" title="Add new issue" arrowPointAtCenter>
-							<PlusSquareOutlined style={{ color: '#2dff79' }} key="add" onClick={() => setIssueModalVisible(true)} />
+							<PlusSquareOutlined style={{ color: '#8D9093' }} key="add" onClick={() => setIssueModalVisible(true)} />
 						</Tooltip>
 						<Popconfirm placement="bottomLeft" arrowPointAtCenter title="Are you sure to delete this column?" onConfirm={() => onRemove(item.id)} okText="Yes" cancelText="No">
-							<CloseSquareOutlined style={{ color: '#fff' }} key="remove" />
+							<CloseSquareOutlined style={{ color: '#F8031B' }} key="remove" />
 						</Popconfirm>
 					</HeaderActions>
 				</Header>

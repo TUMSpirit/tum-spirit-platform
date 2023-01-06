@@ -18,6 +18,5 @@ export const Sidebar = styled.div`
   padding: 8px 0;
   width: 48px;
   height: 100%;
-  background: #353535;
   z-index: 1;
 `;

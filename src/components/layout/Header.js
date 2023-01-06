@@ -275,19 +275,19 @@ function Header({
             >
               {subName.replace("/", "")}
             </span>
+            <Col span={24} md={18} className="header-control">
+
+
+              <Button
+                  type="link"
+                  className="sidebar-toggler"
+                  onClick={() => onPress()}
+              >
+                {toggler}
+              </Button>
+
+            </Col>
           </div>
-        </Col>
-        <Col span={24} md={18} className="header-control">
-
-
-          <Button
-              type="link"
-              className="sidebar-toggler"
-              onClick={() => onPress()}
-          >
-            {toggler}
-          </Button>
-
         </Col>
       </Row>
     </>
