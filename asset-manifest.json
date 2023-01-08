@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/tum-spirit-platform/static/css/main.9dfeecec.css",
-    "main.js": "/tum-spirit-platform/static/js/main.2ee6f080.js",
+    "main.js": "/tum-spirit-platform/static/js/main.0e55501d.js",
     "static/media/background.png": "/tum-spirit-platform/static/media/background.4d6c92df8678fb4f41c0.png",
     "static/media/background-mobile.png": "/tum-spirit-platform/static/media/background-mobile.93670393900eeee25d64.png",
     "static/media/bg-signup.jpg": "/tum-spirit-platform/static/media/bg-signup.bec2ba7098b7ca00f473.jpg",
@@ -26,10 +26,10 @@
     "static/media/logos-facebook.svg": "/tum-spirit-platform/static/media/logos-facebook.636d99abf08b3f56f5fa13748601c668.svg",
     "static/media/pencil.svg": "/tum-spirit-platform/static/media/pencil.177258577d59e301b13eb12fe99a2223.svg",
     "main.9dfeecec.css.map": "/tum-spirit-platform/static/css/main.9dfeecec.css.map",
-    "main.2ee6f080.js.map": "/tum-spirit-platform/static/js/main.2ee6f080.js.map"
+    "main.0e55501d.js.map": "/tum-spirit-platform/static/js/main.0e55501d.js.map"
   },
   "entrypoints": [
     "static/css/main.9dfeecec.css",
-    "static/js/main.2ee6f080.js"
+    "static/js/main.0e55501d.js"
   ]
 }
