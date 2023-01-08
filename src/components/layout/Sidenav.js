@@ -114,7 +114,7 @@ function Sidenav({ color }) {
         <img src={logo} alt="" />
       </div>
       <hr />
-      <Menu defaultSelectedKeys={"1"} theme="light" mode="inline">
+      <Menu defaultSelectedKeys={"2"} theme="light" mode="inline">
         <Menu.Item key="1">
           <NavLink to="/chat">
             <span
