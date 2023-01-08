@@ -24,7 +24,9 @@ const SignIn = () => {
       console.log("Failed:", errorInfo);
     }
     const login = () => {
-      history.push('/kanban');
+      if(document.getElementById("password-input").value === "R3s3arch_23"){
+        history.push('/kanban');
+      }
     }
     return (
       <>
@@ -56,7 +58,7 @@ const SignIn = () => {
                       rules={[{ required: true, message: 'Please input your password!' }]}
                   >
                     <Input.Password
-                        placeholder="Password"
+                        id="password-input" placeholder="Password"
                     />
                   </Form.Item>
 

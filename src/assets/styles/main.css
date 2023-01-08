@@ -1,5 +1,5 @@
 *{
-  font-family: "Josefin Sans", serif;
+  font-family: "Josefin Sans", sans-serif;
 }
 .ant-typography{
   font-family: "Poppins", serif;
@@ -12,6 +12,7 @@ body {
   font-size: 14px;
   line-height: 1.6;
   font-weight: 400;
+  font-family: "Josefin Sans", sans-serif;
 }
 .ant-layout.ant-layout-has-sider {
   flex-direction: row;
@@ -346,6 +347,7 @@ width: calc(100%);
 }
 .ant-btn-sm {
   border-radius: 4px;
+  height:auto;
 }
 
 .ant-btn-sm,
@@ -408,7 +410,6 @@ width: calc(100%);
 }
 .layout-dashboard .header-control {
   display: flex;
-  flex-direction: row-reverse;
   align-items: center;
   margin-top: 10px;
 }
@@ -521,12 +522,8 @@ h4 {
   line-height: normal;
 }
 
-.ant-btn svg {
-  margin-right: 5px;
-}
 .layout-dashboard .header-control svg {
-  width: 20px;
-  height: 20px;
+  width: 1em;
 }
 
 .layout-dashboard .header-control svg path {
@@ -609,7 +606,38 @@ h6 {
   .ant-input-suffix
   .ant-input-search-icon.anticon-loading,
 .layout-dashboard .header-control .sidebar-toggler {
-  display: block;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  outline: 0px;
+  border: 0px;
+  cursor: pointer;
+  user-select: none;
+  appearance: none;
+  text-decoration: none;
+  text-align: center;
+  flex: 0 0 auto;
+  padding: 8px;
+  overflow: visible;
+  /* transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms; */
+  border-radius: 4px;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  position: relative;
+  color: rgb(38, 38, 38);
+  background-color: rgb(245, 245, 245);
+}
+.layout-dashboard
+  .header-control
+  .header-search
+  .ant-input-suffix
+  .ant-input-search-icon.anticon-loading,
+.layout-dashboard .header-control .sidebar-toggler:hover {
+  background-color: rgb(217, 217, 217);
 }
 .layout-dashboard .header-control .btn-sign-in span {
   font-weight: 600;
