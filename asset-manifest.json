@@ -1,0 +1,35 @@
+{
+  "files": {
+    "main.css": "/sign-in/static/css/main.511573b8.css",
+    "main.js": "/sign-in/static/js/main.85b09b20.js",
+    "static/media/background.png": "/sign-in/static/media/background.4d6c92df8678fb4f41c0.png",
+    "static/media/background-mobile.png": "/sign-in/static/media/background-mobile.93670393900eeee25d64.png",
+    "static/media/bg-signup.jpg": "/sign-in/static/media/bg-signup.bec2ba7098b7ca00f473.jpg",
+    "static/media/info-card-2.jpg": "/sign-in/static/media/info-card-2.9a5119d163ea1e152800.jpg",
+    "static/media/info-card-3.jpg": "/sign-in/static/media/info-card-3.e73b3934a3c41fdb920d.jpg",
+    "static/media/doc-type.png": "/sign-in/static/media/doc-type.e7a94c57be29ae101667.png",
+    "static/media/file-type.png": "/sign-in/static/media/file-type.3510ae122c083e9132de.png",
+    "static/media/Google__G__Logo.svg.png": "/sign-in/static/media/Google__G__Logo.svg.bb49f97a750f1a53695c.png",
+    "static/media/mastercard-logo.png": "/sign-in/static/media/mastercard-logo.e1b9bed1d306f6491e05.png",
+    "static/media/avatar3.png": "/sign-in/static/media/avatar3.19cfd553f5480c39f6a1.png",
+    "static/media/avatar2.png": "/sign-in/static/media/avatar2.0fe6a6f98e379addef79.png",
+    "static/media/paypal-logo-2.png": "/sign-in/static/media/paypal-logo-2.e414836fafdf6084279e.png",
+    "static/media/avatar1.png": "/sign-in/static/media/avatar1.5bfcd52143d2a1f6f2b0.png",
+    "static/media/team-2.jpg": "/sign-in/static/media/team-2.e725aef8c892cb21f262.jpg",
+    "static/media/logo-apple.svg": "/sign-in/static/media/logo-apple.2c9fa987f354f5eb0f32fc5a7ef68cce.svg",
+    "static/media/logo-invision.svg": "/sign-in/static/media/logo-invision.9914cf42b44071b5326f6ad315a83bba.svg",
+    "static/media/logo-shopify.svg": "/sign-in/static/media/logo-shopify.98e3f7cf77d4661ce67d796d1158e923.svg",
+    "static/media/logo-jira.svg": "/sign-in/static/media/logo-jira.a0d2348178d8f7a18e4b5406b3cdccf9.svg",
+    "static/media/logo-slack.svg": "/sign-in/static/media/logo-slack.cd48b339ddcc336030e0c46b32f4d835.svg",
+    "static/media/logo-atlassian.svg": "/sign-in/static/media/logo-atlassian.7db5f0ddbe2cfc1d27cb6b81dc560b8f.svg",
+    "index.html": "/sign-in/index.html",
+    "static/media/logos-facebook.svg": "/sign-in/static/media/logos-facebook.636d99abf08b3f56f5fa13748601c668.svg",
+    "static/media/pencil.svg": "/sign-in/static/media/pencil.177258577d59e301b13eb12fe99a2223.svg",
+    "main.511573b8.css.map": "/sign-in/static/css/main.511573b8.css.map",
+    "main.85b09b20.js.map": "/sign-in/static/js/main.85b09b20.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.511573b8.css",
+    "static/js/main.85b09b20.js"
+  ]
+}
