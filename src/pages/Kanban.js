@@ -15,6 +15,7 @@ import paypal from "../assets/images/paypal-logo-2.png";
 import visa from "../assets/images/visa-logo.png";
 import Board from "../components/Board";
 
+
 function Kanban() {
     const data = [
         {

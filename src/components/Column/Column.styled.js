@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { createGlobalStyle } from 'styled-components'
 
 export const Root = styled.div`
   display: flex;
@@ -13,9 +14,10 @@ export const Root = styled.div`
 export const Container = styled.div`
   min-width: 280px;
   max-width: 280px;
-  border: 1px solid #E4E7EF;
+  border: 0px solid #E4E7EF;
   padding: 4px;
   align-self: flex-start;
+  margin-right:40px;
 `;
 
 export const Header = styled.div`
@@ -25,7 +27,7 @@ export const Header = styled.div`
   padding: 3px 4px;
   
   span {
-    font-size: 18px;
+    font-size: 20px;
     margin-left: 4px;
   }
 `;
@@ -36,23 +38,35 @@ export const ColumnTitle = styled.h4`
   max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
+  position:relative;
+  top:5px;
 `;
 
 
 export const HeaderActions = styled.div`
   display: flex;
   align-items: center;
+
+`;
+
+export const GlobalStyle = createGlobalStyle`
+  body {
+    .ant-popconfirm-buttons :where(.css-dev-only-do-not-override-k83k30).ant-btn.ant-btn-sm{
+      height:40px;
+      width:50px;
+    }
+  }
 `;
 
 export const IssueCount = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 10px;
+  font-size: 14px;
   width: auto;
   height: 16px;
-  border: 1px solid #8D9093;
-  color: #8D9093;
+  border: 0px solid #8D9093;
+  color: black;
   font-weight: 400;
   padding: 0 4px;
 `;

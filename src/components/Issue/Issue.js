@@ -4,14 +4,15 @@ import { Card, Typography, Popconfirm, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined, DoubleRightOutlined, DoubleLeftOutlined } from '@ant-design/icons';
 
 import { IssueTitle } from './Issue.styled';
+import '../../assets/styles/main.css';
 
 const { Paragraph } = Typography;
 
 const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLeftColumn, onMoveToRightColumn }) => {
 	const moveActions = () => {
-		if (isFirstColumn && isLastColumn) {
-			return null;
-		}
+		// if (isFirstColumn && isLastColumn) {
+		// 	return null;
+		// }
 		if (!isFirstColumn && !isLastColumn) {
 			return [
 				<Tooltip placement="bottom" title="Move to left column" arrowPointAtCenter>
@@ -43,13 +44,15 @@ const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLe
 			actions={[
 				...moveActions(),
 				<EditOutlined key="edit" onClick={onEdit} />,
-				<Popconfirm placement="bottomLeft" title="Are you sure to delete this issue?" onConfirm={onRemove} okText="Yes" cancelText="No" arrowPointAtCenter>
+				<Popconfirm placement="bottomLeft" title="Are you sure to delete this issue?" onConfirm={onRemove} okText="Yes" cancelText="No" arrowPointAtCenter okButtonProps={{}}>
 					<DeleteOutlined style={{ color: 'red' }} key="delete" />
 				</Popconfirm>
 			]}
+			size={'small'}
+			style={{height:'100%',width:'300px'}}
 		>
 			<IssueTitle>{item.title}</IssueTitle>
-			<Paragraph className="mh-100 description">
+			<Paragraph className="mh-100 description card-para"  style={{height:'110px',overflow:'auto'}}> 
 				{item.description}
 			</Paragraph>
 		</Card>

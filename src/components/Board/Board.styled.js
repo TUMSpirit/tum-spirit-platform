@@ -6,6 +6,14 @@ export const Container = styled.div`
 
 export const Columns = styled.div`
   display: flex;
+  height:20%;
+`;
+
+export const Timeliner = styled.div`
+  position:absolute;
+  top:15%;
+  right:5%;
+  height:500px;
 `;
 
 export const Sidebar = styled.div`

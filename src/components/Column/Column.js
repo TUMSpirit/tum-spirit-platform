@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import propTypes from 'prop-types';
-import { Popconfirm, Tooltip } from 'antd';
-import { CloseSquareOutlined, PlusSquareOutlined } from '@ant-design/icons';
+import { Popconfirm, Tooltip,List } from 'antd';
+import { CloseCircleFilled, PlusCircleFilled } from '@ant-design/icons';
 
 import { Issue, IssueFormModal } from '../Issue';
-import { Container, ColumnTitle, Header, HeaderActions, IssueCount, Root } from './Column.styled';
+import { Container, ColumnTitle, Header, HeaderActions, IssueCount, Root,GlobalStyle } from './Column.styled';
 
 const Column = ({
 	item,
@@ -38,28 +38,37 @@ const Column = ({
 					<HeaderActions>
 						<IssueCount>{`${item?.issues.length} issue${item?.issues.length > 1 ? 's' : ''}`}</IssueCount>
 						<Tooltip placement="topLeft" title="Add new issue" arrowPointAtCenter>
-							<PlusSquareOutlined style={{ color: '#8D9093' }} key="add" onClick={() => setIssueModalVisible(true)} />
+							<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="add" onClick={() => setIssueModalVisible(true)} />
 						</Tooltip>
+						<GlobalStyle/>
 						<Popconfirm placement="bottomLeft" arrowPointAtCenter title="Are you sure to delete this column?" onConfirm={() => onRemove(item.id)} okText="Yes" cancelText="No">
-							<CloseSquareOutlined style={{ color: '#F8031B' }} key="remove" />
+							<CloseCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="remove" />
 						</Popconfirm>
 					</HeaderActions>
 				</Header>
-				{item.issues.map(issue => (
-					<Issue
-						key={issue.id}
-						item={issue}
-						isFirstColumn={isFirstColumn}
-						isLastColumn={isLastColumn}
-						onEdit={() => {
-							setEditingIssue(issue);
-							setIssueModalVisible(true);
-						}}
-						onRemove={() => onIssueRemove(item, issue)}
-						onMoveToLeftColumn={() => onMoveIssueToLeftColumn(item, issue)}
-						onMoveToRightColumn={() => onMoveIssueToRightColumn(item, issue)}
-					/>
-				))}
+				<List
+				rowKey="id"
+				grid={{
+				}}
+				>
+					{item.issues.map(issue => (
+						<List.Item style={{height:'220px',marginTop:'30px',paddingLeft:0}}>
+						<Issue
+							key={issue.id}
+							item={issue}
+							isFirstColumn={isFirstColumn}
+							isLastColumn={isLastColumn}
+							onEdit={() => {
+								setEditingIssue(issue);
+								setIssueModalVisible(true);
+							}}
+							onRemove={() => onIssueRemove(item, issue)}
+							onMoveToLeftColumn={() => onMoveIssueToLeftColumn(item, issue)}
+							onMoveToRightColumn={() => onMoveIssueToRightColumn(item, issue)}
+						/>
+						</List.Item>
+					))}
+				</List>
 				<IssueFormModal
 					visible={issueModalVisible}
 					issue={editingIssue}

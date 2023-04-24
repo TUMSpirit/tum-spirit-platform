@@ -24,9 +24,7 @@ const SignIn = () => {
       console.log("Failed:", errorInfo);
     }
     const login = () => {
-      if(document.getElementById("password-input").value === "R3s3arch_23"){
-        history.push('/kanban');
-      }
+        history.push('/kanban')
     }
     return (
       <>

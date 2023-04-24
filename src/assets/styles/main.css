@@ -3207,6 +3207,9 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile
   display: block;
   width: 100%;
 }
+.card-para::-webkit-scrollbar{
+    display: none;
+}
 @media screen and (max-width: 1023px) {
   .login-box {
     flex-direction: column;

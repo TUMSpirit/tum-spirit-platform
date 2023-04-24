@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Button, Tooltip, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Tooltip, message,Timeline, Steps} from 'antd';
+import { PlusOutlined,ClockCircleOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Column, ColumnFormModal } from '../Column';
-import { Columns, Container, Sidebar } from './Board.styled';
+import { Columns, Container, Timeliner} from './Board.styled';
 
 import Storage from '../../services/StorageService';
 
@@ -158,6 +158,23 @@ const Board = () => {
 				onSubmit={addColumn}
 				onCancel={() => setColumnModalVisible(false)}
 			/>
+			{/* <Timeliner>
+				<Timeline pending={true}>
+					<Timeline.Item style={{paddingBottom:'300%'}}></Timeline.Item>
+					<Timeline.Item color={'red'} style={{paddingBottom:'300%'}}></Timeline.Item>
+					<Timeline.Item color={'green'} style={{paddingBottom:'300%'}}></Timeline.Item>
+					<Timeline.Item style={{paddingBottom:'300%'}} dot={<ClockCircleOutlined style={{fontSize: '16px'}}/>}></Timeline.Item>
+				</Timeline>
+			</Timeliner> */}
+			<Steps size="small" style={{padding:'20px',backgroundColor:'white',width:'100%'}}>
+				<Steps.Item status={'finish'}></Steps.Item>
+				<Steps.Item status={'finish'}></Steps.Item>
+				<Steps.Item status={'finish'}></Steps.Item>
+				<Steps.Item status={'process'}></Steps.Item>
+				<Steps.Item status={'wait'}></Steps.Item>
+				<Steps.Item status={'wait'}></Steps.Item>
+				<Steps.Item status={'wait'}></Steps.Item>
+			</Steps>
 		</Container>
 	);
 };
