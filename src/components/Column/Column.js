@@ -15,7 +15,8 @@ const Column = ({
 	onIssueEdit,
 	onIssueRemove,
 	onMoveIssueToLeftColumn,
-	onMoveIssueToRightColumn
+	onMoveIssueToRightColumn,
+	onColumnEdit
 }) => {
 	const [issueModalVisible, setIssueModalVisible] = useState(false);
 	const [editingIssue, setEditingIssue] = useState();
@@ -40,6 +41,9 @@ const Column = ({
 						<Tooltip placement="topLeft" title="Add new issue" arrowPointAtCenter>
 							<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="add" onClick={() => setIssueModalVisible(true)} />
 						</Tooltip>
+						{/* <Tooltip placement="topLeft" title="Edit column name" arrowPointAtCenter>
+							<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="add" onClick={() => setIssueModalVisible(true)} />
+						</Tooltip> */}
 						<GlobalStyle/>
 						<Popconfirm placement="bottomLeft" arrowPointAtCenter title="Are you sure to delete this column?" onConfirm={() => onRemove(item.id)} okText="Yes" cancelText="No">
 							<CloseCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="remove" />
@@ -94,7 +98,8 @@ Column.propTypes = {
 	onIssueRemove: propTypes.func,
 	onIssueAdd: propTypes.func,
 	onMoveIssueToLeftColumn: propTypes.func,
-	onMoveIssueToRightColumn: propTypes.func
+	onMoveIssueToRightColumn: propTypes.func,
+	onColumnEdit:propTypes.func,
 };
 
 export default Column;

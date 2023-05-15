@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Button, Tooltip, message,Timeline, Steps} from 'antd';
+import React, { useState , useRef} from 'react';
+import { Button, Tooltip, message, Steps} from 'antd';
 import { PlusOutlined,ClockCircleOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Column, ColumnFormModal } from '../Column';
-import { Columns, Container, Timeliner} from './Board.styled';
+import { Timeline, TimelineFormModal } from '../Timeline';
 
+import { Column, ColumnFormModal } from '../Column';
+import { Columns, Container,} from './Board.styled';
+
+import {PlusCircleFilled } from '@ant-design/icons';
 import Storage from '../../services/StorageService';
 
 import { generateBoard } from '../../utils/helper';
@@ -20,8 +23,10 @@ const Board = () => {
 					</Button>
 				</Tooltip>
 			</Sidebar>*/
+	const stepsRef = useRef();
 	const [columns, setColumns] = useState(generateBoard);
 	const [columnModalVisible, setColumnModalVisible] = useState(false);
+	const [timelineModalVisible,setTimelineModalVisible] = useState(false);
 
 	const addColumn = title => {
 		const newColumnList = [...columns, {
@@ -34,7 +39,20 @@ const Board = () => {
 		setColumnModalVisible(false);
 		message.success('New column is added.');
 	};
-
+	const editColumn = (id,title) => {
+		const newColumnList = columns.map(col => {
+			if (col.id === id) {
+				return {
+					...col,
+					title:title
+				};
+			}
+			return col;
+		});
+		setColumns(newColumnList);
+		Storage.setItem('kanbanBoardData', newColumnList);
+		message.success('Column is edited.');
+	};
 	const removeColumn = id => {
 		const newColumnList = columns.filter(column => column.id !== id);
 		setColumns(newColumnList);
@@ -135,7 +153,12 @@ const Board = () => {
 		message.success('Issue is moved.');
 	};
 
+	const handleClickTimeline = (value) => {
+		setTimelineModalVisible(value);
+	};
+
 	return (
+		<div>
 		<Container>
 			<Columns>
 				{columns.map((column, index) => (
@@ -150,8 +173,10 @@ const Board = () => {
 						onIssueRemove={removeIssue}
 						onMoveIssueToLeftColumn={moveIssueLeft}
 						onMoveIssueToRightColumn={moveIssueRight}
+						onColumnEdit={editColumn}
 					/>
 				))}
+				<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '100px', paddingLeft:'120px', paddingRight:'120px',display:'flex',alignItems:'center',height:'100vh' }} key="add" onClick={() => setColumnModalVisible(true)} />
 			</Columns>
 			<ColumnFormModal
 				visible={columnModalVisible}
@@ -166,16 +191,17 @@ const Board = () => {
 					<Timeline.Item style={{paddingBottom:'300%'}} dot={<ClockCircleOutlined style={{fontSize: '16px'}}/>}></Timeline.Item>
 				</Timeline>
 			</Timeliner> */}
-			<Steps size="small" style={{padding:'20px',backgroundColor:'white',width:'100%'}}>
-				<Steps.Item status={'finish'}></Steps.Item>
-				<Steps.Item status={'finish'}></Steps.Item>
-				<Steps.Item status={'finish'}></Steps.Item>
-				<Steps.Item status={'process'}></Steps.Item>
-				<Steps.Item status={'wait'}></Steps.Item>
-				<Steps.Item status={'wait'}></Steps.Item>
-				<Steps.Item status={'wait'}></Steps.Item>
-			</Steps>
 		</Container>
+		<Timeline onChange={handleClickTimeline} ref={stepsRef}></Timeline>
+		<TimelineFormModal 
+			visible={timelineModalVisible}
+			onCancel={() => handleClickTimeline(false)}
+			onSubmit={() => {
+				stepsRef.current.updateStep();
+				setTimelineModalVisible(false);
+			}}
+		/>
+		</div>
 	);
 };
 

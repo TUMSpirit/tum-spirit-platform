@@ -2,6 +2,7 @@ import styled from 'styled-components';
 
 export const Container = styled.div`
     overflow: scroll;
+    height:81vh;
 `;
 
 export const Columns = styled.div`
