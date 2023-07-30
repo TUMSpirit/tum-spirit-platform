@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useMediaQuery } from 'react-responsive';
 
 import {
   Row,
@@ -226,6 +227,7 @@ const setting = [
   </svg>,
 ];
 
+
 function Header({
   placement,
   name,
@@ -245,14 +247,18 @@ function Header({
   const showDrawer = () => setVisible(true);
   const hideDrawer = () => setVisible(false);
 
+  const isMobile = useMediaQuery({ query: '(max-device-width: 600px)' })
+
   return (
     <>
+    {isMobile
+      ?
       <Row gutter={[24, 0]}>
-        <Col span={24} md={18} className="header-control">
+        <Col span={24} md={18} className="header-control" style={{marginTop:0}}>
           <Button icon={<MenuUnfoldOutlined />} className="sidebar-toggler" onClick={() => { onPress() }} />
         </Col>
-        <Col span={24} md={6}>
-          <div className="ant-page-header-heading">
+        <Col span={24} md={6} style={{margin:0}}>
+          <div className="ant-page-header-heading" style={{marginTop:10,marginBottom:0}}>
             <span
               className="ant-page-header-heading-title"
               style={{ textTransform: "capitalize" }}>
@@ -261,6 +267,22 @@ function Header({
           </div>
         </Col>
       </Row>
+      :
+      <Row gutter={[24, 0]}>
+      <Col span={24} md={18} className="header-control">
+        <Button icon={<MenuUnfoldOutlined />} className="sidebar-toggler" onClick={() => { onPress() }} />
+      </Col>
+      <Col span={24} md={6}>
+        <div className="ant-page-header-heading">
+          <span
+            className="ant-page-header-heading-title"
+            style={{ textTransform: "capitalize" }}>
+            {subName.replace("/", "")}
+          </span>
+        </div>
+      </Col>
+    </Row>
+      }
     </>
   );
 }

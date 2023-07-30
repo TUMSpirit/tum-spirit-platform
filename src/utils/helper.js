@@ -6,6 +6,7 @@ export const generateBoard = () => {
 		? Storage.getItem('kanbanBoardData')
 		: [
 			{
+				timeline:1,
 				id: uuidv4(),
 				title: 'READY FOR DEV',
 				issues: [
@@ -15,6 +16,7 @@ export const generateBoard = () => {
 				]
 			},
 			{
+				timeline:1,
 				id: uuidv4(),
 				title: 'IN DEVELOPMENT',
 				issues: [
@@ -22,11 +24,13 @@ export const generateBoard = () => {
 				]
 			},
 			{
+				timeline:1,
 				id: uuidv4(),
 				title: 'IN TEST',
 				issues: []
 			},
 			{
+				timeline:1,
 				id: uuidv4(),
 				title: 'DONE',
 				issues: [

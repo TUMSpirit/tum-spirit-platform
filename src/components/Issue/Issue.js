@@ -23,19 +23,22 @@ const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLe
 				</Tooltip>
 			];
 		}
-		if (isFirstColumn) {
+		if (isFirstColumn && !isLastColumn) {
 			return [
 				<Tooltip placement="bottom" title="Move to right column" arrowPointAtCenter>
 					<DoubleRightOutlined key="edit" onClick={onMoveToRightColumn} />
 				</Tooltip>
 			];
 		}
-		if (isLastColumn) {
+		if (isLastColumn &&!isFirstColumn) {
 			return [
 				<Tooltip placement="bottom" title="Move to left column" arrowPointAtCenter>
-					<DoubleLeftOutlined key="edit" onClick={onMoveToLeftColumn} />
+					<DoubleLeftOutlined key="ediit" onClick={onMoveToLeftColumn} />
 				</Tooltip>
 			];
+		}
+		if (isLastColumn &&isFirstColumn) {
+			return [];
 		}
 	};
 

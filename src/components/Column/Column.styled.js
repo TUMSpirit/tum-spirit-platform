@@ -51,7 +51,7 @@ export const HeaderActions = styled.div`
 
 export const GlobalStyle = createGlobalStyle`
   body {
-    .ant-popconfirm-buttons :where(.css-dev-only-do-not-override-k83k30).ant-btn.ant-btn-sm{
+    .ant-popconfirm-buttons :where(.css-dev-only-do-not-override-1wazalj).ant-btn.ant-btn-sm{
       height:40px;
       width:50px;
     }

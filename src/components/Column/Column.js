@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import propTypes from 'prop-types';
+import { useMediaQuery } from 'react-responsive';
+
 import { Popconfirm, Tooltip,List } from 'antd';
 import { CloseCircleFilled, PlusCircleFilled } from '@ant-design/icons';
 
@@ -31,6 +33,8 @@ const Column = ({
 		onIssueEdit && onIssueEdit(item, { id, title, description });
 	};
 
+	const isMobile = useMediaQuery({ query: '(max-device-width: 600px)' });
+
 	return (
 		<Root>
 			<Container>
@@ -38,6 +42,22 @@ const Column = ({
 					<ColumnTitle>{item?.title}</ColumnTitle>
 					<HeaderActions>
 						<IssueCount>{`${item?.issues.length} issue${item?.issues.length > 1 ? 's' : ''}`}</IssueCount>
+						{isMobile
+						?
+						<>
+						<Tooltip placement="topLeft" title="Add new issue" arrowPointAtCenter>
+							<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '40px' }} key="add" onClick={() => setIssueModalVisible(true)} />
+						</Tooltip>
+						{/* <Tooltip placement="topLeft" title="Edit column name" arrowPointAtCenter>
+							<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="add" onClick={() => setIssueModalVisible(true)} />
+						</Tooltip> */}
+						<GlobalStyle/>
+						<Popconfirm placement="bottomLeft" arrowPointAtCenter title="Are you sure to delete this column?" onConfirm={() => onRemove(item.id)} okText="Yes" cancelText="No">
+							<CloseCircleFilled style={{ color: '#C0C6CD',fontSize: '40px' }} key="remove" />
+						</Popconfirm>
+						</>
+						:
+						<>
 						<Tooltip placement="topLeft" title="Add new issue" arrowPointAtCenter>
 							<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="add" onClick={() => setIssueModalVisible(true)} />
 						</Tooltip>
@@ -48,6 +68,8 @@ const Column = ({
 						<Popconfirm placement="bottomLeft" arrowPointAtCenter title="Are you sure to delete this column?" onConfirm={() => onRemove(item.id)} okText="Yes" cancelText="No">
 							<CloseCircleFilled style={{ color: '#C0C6CD',fontSize: '20px' }} key="remove" />
 						</Popconfirm>
+						</>
+						}
 					</HeaderActions>
 				</Header>
 				<List
