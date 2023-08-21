@@ -7,15 +7,9 @@ import { useMediaQuery } from 'react-responsive';
 import { CheckCircleOutlined,ClockCircleOutlined,ConsoleSqlOutlined,ScheduleOutlined} from '@ant-design/icons';
 var steps = ['finish','process','wait','wait','wait','wait','wait'];
 
-const Timeline = ({onChange,changeColumn,data},stepsRef) => {
+const Timeline = ({onChange,changeColumn,data}) => {
     const [stepNow,setStepNow] = useState(0)
 
-    useImperativeHandle(stepsRef, () => ({
-        updateStep: () => {
-            steps[stepNow] = 'process';
-            steps[stepNow-1]='finish';
-        }
-    }))
 
     // console.log(data[0].start_time)
     // const diff = moment(data[0].end_time).diff(moment(data[0].start_time),'day')

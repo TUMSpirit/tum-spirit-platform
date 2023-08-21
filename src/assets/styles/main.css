@@ -1967,7 +1967,7 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav
   font-size: 12px;
   height: 40px;
   padding: 0 15px;
-  line-height: 40px;
+  line-height: 20px;
 }
 .ant-btn {
   box-shadow: 0 2px 4px rgb(0 0 0 / 7%);

@@ -23,14 +23,14 @@ const Column = ({
 	const [issueModalVisible, setIssueModalVisible] = useState(false);
 	const [editingIssue, setEditingIssue] = useState();
 
-	const handleOnIssueAdd = (title, description) => {
+	const handleOnIssueAdd = (title, description,person,tag) => {
 		setIssueModalVisible(false);
-		onIssueAdd && onIssueAdd(item, { title, description });
+		onIssueAdd && onIssueAdd(item, { title, description,person,tag });
 	};
 
-	const handleOnIssueEdit = (id, title, description) => {
+	const handleOnIssueEdit = (id, title, description,person,tag) => {
 		setIssueModalVisible(false);
-		onIssueEdit && onIssueEdit(item, { id, title, description });
+		onIssueEdit && onIssueEdit(item, { id, title, description,person,tag });
 	};
 
 	const isMobile = useMediaQuery({ query: '(max-device-width: 600px)' });
@@ -98,8 +98,8 @@ const Column = ({
 				<IssueFormModal
 					visible={issueModalVisible}
 					issue={editingIssue}
-					onSubmit={(id, title, description) => {
-						id ? handleOnIssueEdit(id, title, description) : handleOnIssueAdd(title, description);
+					onSubmit={(id, title, description,person,tag) => {
+						id ? handleOnIssueEdit(id, title, description,person,tag) : handleOnIssueAdd(title, description,person,tag);
 					}}
 					onCancel={() => {
 						setIssueModalVisible(false);

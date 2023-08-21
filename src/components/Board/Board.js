@@ -1,8 +1,8 @@
 import React, { useState , useRef} from 'react';
 import moment from 'moment/moment';
 import { useMediaQuery } from 'react-responsive';
-import { Button, Tooltip, message, Upload} from 'antd';
-import { PlusOutlined,ClockCircleOutlined,UploadOutlined ,QuestionCircleOutlined,MessageOutlined} from '@ant-design/icons';
+import { Button, Tooltip, message, Upload,Steps,Tour,Popconfirm} from 'antd';
+import { PlusOutlined,ClockCircleOutlined,UploadOutlined ,QuestionCircleOutlined,MessageOutlined,FlagOutlined,LoadingOutlined,SmileOutlined} from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Timeline, TimelineFormModal } from '../Timeline';
@@ -10,7 +10,7 @@ import { Timeline, TimelineFormModal } from '../Timeline';
 import { Column, ColumnFormModal } from '../Column';
 import { Columns, Container,} from './Board.styled';
 
-import {PlusCircleFilled ,ScheduleOutlined, TeamOutlined, EditOutlined, DashboardOutlined, CheckCircleOutlined} from '@ant-design/icons';
+import {PlusCircleFilled ,ScheduleOutlined, TeamOutlined, EditOutlined, DashboardOutlined, CheckCircleOutlined,RobotOutlined} from '@ant-design/icons';
 import Storage from '../../services/StorageService';
 import { generateBoard } from '../../utils/helper';
 import { generateTitle } from '../../utils/data';
@@ -18,7 +18,10 @@ import { DescriptionFormModal } from './DescriptionFormModal';
 import { QuestionFormModal } from './QuestionFormModal';
 import { AnswerFormModal } from './AnswerFormModal';
 import { useEffect } from 'react';
-  
+import { ShakeSlow } from 'reshake'
+
+
+
 
 const Board = () => {
 	/*<Sidebar>
@@ -40,6 +43,7 @@ const Board = () => {
 	const [editVisible,setEditVisible] = useState(false);
 	const [questionModalVisible,setQuestionModalVisible] = useState(false);
 	const [answerModalVisible, setAnswerModalVisible] = useState(false);
+	const [open, setOpen] = useState(false);
 	var nowColumns = [];
 	const [nowColumstoUpdate,setNowColumstoUpdate] = useState([]);
 	const clickCard = (id) =>{
@@ -114,7 +118,9 @@ const Board = () => {
 					issues: [...col.issues, {
 						id: uuidv4(),
 						title: issue.title,
-						description: issue.description
+						description: issue.description,
+						person: issue.person,
+						tag: issue.tag
 					}]
 				};
 			}
@@ -213,7 +219,6 @@ const Board = () => {
 	const submitQuestion = () => {
 		message.success('Your question has already been sent to your tutor')
 	};
-
 	useEffect(()=>{
 		nowColumns=[];
 		columns.map((column,index) => {
@@ -237,8 +242,47 @@ const Board = () => {
         };
 
 	const isMobile = useMediaQuery({ query: '(max-device-width: 600px)' })
+	
 
-	// console.log(description[0].start_time.diff(description[0].end_time,'day'))
+	const ref1=useRef();
+	const ref2=useRef();
+	const ref3=useRef();
+	const ref4=useRef();
+	const ref5=useRef();
+
+	const steps = [
+		{
+		  title: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'Edit timeline',
+		  description: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'You can edit the period and description of timeline',
+		  cover: (<RobotOutlined style={{position:'absolute',top:65,left:30,fontSize:40}} />),
+		  target: () => ref1.current,
+		},
+		{
+			title: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'Edit or check your task ',
+			description: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'You can edit issues or tasks here',
+			cover: (<RobotOutlined style={{position:'absolute',top:65,left:30,fontSize:40}} />),
+			target: () => ref2.current,
+		  },
+		  {
+			title: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'Check your progress ',
+			description: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'You can see the achievement here',
+			cover: (<RobotOutlined style={{position:'absolute',top:65,left:30,fontSize:40}} />),
+			target: () => ref3.current,
+		  },
+		  {
+			title: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'Switch timeline ',
+			description: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'You can switch different timelines and check different kanban',
+			cover: (<RobotOutlined style={{position:'absolute',top:65,left:30,fontSize:40}} />),
+			target: () => ref4.current,
+		  },
+		  {
+			title: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'Question and answer ',
+			description: '\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0'+'You can send your question to tutor and check the answer from tutor',
+			cover: (<RobotOutlined style={{position:'absolute',top:65,left:30,fontSize:40}} />),
+			target: () => ref5.current,
+		  },
+	]
+
 	return (
 		<div>
 		<Container>
@@ -320,12 +364,34 @@ const Board = () => {
 			<div style={{height:200}}></div>
 			</div>
 			: 
-			<div style={{marginTop:15}} >
+			<div style={{marginTop:15}}>
 				<p>
 					<span style={{fontWeight: 'bolder',fontSize:'20px',color:'black'}} >
 					{description[cardId].title}
 					</span>
-					<Button type="primary" style={{backgroundColor:'#E7F1FF', color:'#2576CA',marginLeft:30,width:100}} onClick={()=>{setEditVisible(true)}}>Edit</Button>
+					<Button type="primary" ref={ref1} style={{backgroundColor:'#E7F1FF', color:'#2576CA',marginLeft:30,width:100}} onClick={()=>{setEditVisible(true)}}>Edit</Button>	
+					<div style={{width:'30%',display:'flex',float:'right',marginTop:20}} ref={ref3}>
+					<Steps
+					    items={[
+							{
+							  status: 'finish',
+							  icon: <FlagOutlined />,
+							},
+							{
+							  status: 'finish',
+							  icon: <FlagOutlined/>,
+							},
+							{
+							  status: 'process',
+							  icon: <LoadingOutlined />,
+							},
+							{
+							  status: 'wait',
+							  icon: <SmileOutlined />,
+							},
+						  ]}>
+						</Steps>
+						</div>
 				</p>
 				<div style={{marginLeft:20}} >
 					<ScheduleOutlined style={{color:'#999999', fontSize:20}} ></ScheduleOutlined>
@@ -389,11 +455,23 @@ const Board = () => {
 					})()}
 					
 				</div>
+				<ShakeSlow fixed={true} fixedStop={true}>
+				<Popconfirm
+				icon={<></>}
+				trigger="hover"
+				cancelText="No"
+				placement="right"
+				description="Do you need me to tell you how to use kanban system?"
+				onConfirm={() => setOpen(true)}
+				>
+					<RobotOutlined style={{display:'flex',float:'right',position:'relative',top:-50,right:150, fontSize:'40px'}}/>	
+				</Popconfirm>
+				</ShakeSlow>
 				<hr style={{opacity:0.5}} ></hr>
 			</div>
 			}
 			{/* Kanban Column */}
-			<Columns>
+			<Columns ref={ref2}>
 				{nowColumstoUpdate.map((column, index) => (
 					<Column
 						key={column.id}
@@ -413,17 +491,17 @@ const Board = () => {
 				?
 				<>
 					<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '100px', paddingLeft:'120px', paddingRight:'120px',paddingTop:150,display:'flex',alignItems:'flex-start',height:'100vh' }} key="add" onClick={() => setColumnModalVisible(true)} />
-					<QuestionCircleOutlined onClick={()=>{setQuestionModalVisible(true)}} style={{color:'#3D85D1',fontSize:'40px',position:'absolute',bottom:100,right:100}}></QuestionCircleOutlined>
-					<MessageOutlined onClick={()=>{setAnswerModalVisible(true)}} style={{color:'#3D85D1',fontSize:'40px',position:'absolute',bottom:100,right:30}}></MessageOutlined>
+					<QuestionCircleOutlined ref={ref5} onClick={()=>{setQuestionModalVisible(true)}} style={{color:'#3D85D1',fontSize:'40px',position:'absolute',bottom:100,right:100}}></QuestionCircleOutlined>
+					{/* <MessageOutlined onClick={()=>{setAnswerModalVisible(true)}} style={{color:'#3D85D1',fontSize:'40px',position:'absolute',bottom:100,right:30}}></MessageOutlined> */}
 				</>
 				:
 				<>
 				{/* add new Column */}
 					<PlusCircleFilled style={{ color: '#C0C6CD',fontSize: '100px', paddingLeft:'120px', paddingRight:'120px',display:'flex',alignItems:'center',height:'100vh' }} key="add" onClick={() => setColumnModalVisible(true)} />
 					{/* Question Button */}
-					<QuestionCircleOutlined onClick={()=>{setQuestionModalVisible(true)}} style={{color:'#3D85D1',fontSize:'60px',position:'absolute',bottom:150,right:200}}></QuestionCircleOutlined>
+					<QuestionCircleOutlined ref={ref5} onClick={()=>{setQuestionModalVisible(true)}} style={{color:'#3D85D1',fontSize:'60px',position:'absolute',bottom:150,right:200}}></QuestionCircleOutlined>
 					{/* Answer Button */}
-					<MessageOutlined onClick={()=>{setAnswerModalVisible(true)}} style={{color:'#3D85D1',fontSize:'60px',position:'absolute',bottom:150,right:100}}></MessageOutlined>
+					{/* <MessageOutlined onClick={()=>{setAnswerModalVisible(true)}} style={{color:'#3D85D1',fontSize:'60px',position:'absolute',bottom:150,right:100}}></MessageOutlined> */}
 				</>
 				}
 			</Columns>
@@ -459,7 +537,7 @@ const Board = () => {
 			}}
 			onSubmit = {submitQuestion}
 		/>
-		<AnswerFormModal
+		<AnswerFormModal 
 			visible={answerModalVisible}
 			cardId={cardId}
 			columns={columns}
@@ -470,18 +548,21 @@ const Board = () => {
 				setAnswerModalVisible(false)
 			}}
 		/>
+		{/* <Button onClick={() => setOpen(true)} style={{position:'absolute',top:0}}>Test</Button> */}
 	{/* Timeline Cards */}
-	<Timeline onChange={clickCard} data={ description } ref={stepsRef} changeColumn={handleColumnChange}></Timeline>
-		{/* <TimelineFormModal 
-			visible={timelineModalVisible}
-			onCancel={() => handleClickTimeline(false)}
-			onSubmit={() => {
-				stepsRef.current.updateStep();
-				setTimelineModalVisible(false);
-			}}
-		/> */}
+		<div style={{height:'4vh',position:'relative',top:'2vh'}} ref={ref4}>
+			<Timeline onChange={clickCard} data={ description } changeColumn={handleColumnChange}></Timeline>
+		</div>
+		<Tour open={open} onClose={() => setOpen(false)} steps={steps}        
+			indicatorsRender={(current, total) => (
+          <span>
+            {current + 1} / {total}
+          </span> 
+			)}
+		  />
 		</div>
 	);
+	
 };
 
 export default Board;

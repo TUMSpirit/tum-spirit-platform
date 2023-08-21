@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { generateAnswer } from '../../utils/answerData';
 import PropTypes from 'prop-types';
-import {Input, Modal, Select} from 'antd';
+import {Input, Modal, Select,Tabs,TabPaneProps,List,Descriptions} from 'antd';
+import TabPane from 'antd/es/tabs/TabPane';
 
 const { TextArea } = Input;
 
@@ -21,7 +22,7 @@ export const QuestionFormModal = ({ visible, cardId,columns, onSubmit, onCancel}
                 }
         )}
         })
-    },[cardId]);
+    });
 	const handleOnCancel = () => {
 		// setTime([dayjs(data.start_time),dayjs(data.end_time)]);
 		// setDescription(data.intro);
@@ -29,22 +30,77 @@ export const QuestionFormModal = ({ visible, cardId,columns, onSubmit, onCancel}
 		onCancel && onCancel();
 	};
 
+	const [answers, setAnswers] = useState(generateAnswer);
+    const [nowAnswer,setNowAnswer] = useState({});
+    const data = [
+        'Issue 1',
+        'Issue 2',
+        'Issue 3',
+        'Issue 4',
+        'Issue 5',
+      ];
+    useEffect(()=>{
+		setNowAnswer({})
+    },[cardId]);
+
+
+    const handleClickAnswer = (answer) => {
+        setNowAnswer(answer)
+    }
+
 	return (
 		// Send question to tutor
 		<Modal
-			title="Send Qustion"
 			visible={visible}
 			onOk={() => {onSubmit();onCancel && onCancel();setTitles([]);}}
 			onCancel={() => handleOnCancel()}
+			style={{width:800}}
 		>
-            <Select options={titles} style={{width:200,marginTop: 4 }} placeholder={'Select a question'}>
+			<Tabs defaultActiveKey={1}>
+				<TabPane tab="Send Question" key="1">
+					<Select options={titles} style={{width:200,marginTop: 4 }} placeholder={'Select a question'}>
+					</Select>
+					<TextArea
+						placeholder="Description"
+						// value={description}
+						// onChange={e => setDescription(e.target.value)}
+						autoSize={{ minRows: 3, maxRows: 6 }}
+						style={{ marginTop: 4 }} />
+				</TabPane>
+				<TabPane tab="Answer" key="2">
+					<div style={{display:'flex'}}>
+						<List
+						style={{width:'100px'}}
+						dataSource={answers}
+						renderItem={(answer) => (
+								answer.cardId===cardId ?
+									<List.Item onClick={() => handleClickAnswer(answer)}>
+									{answer.title}
+									</List.Item>
+								:
+								''
+						)}
+						/>
+						<Descriptions
+						bordered
+						column={1}
+						style={{width:'500',marginLeft:'20px'}}
+						>
+						<Descriptions.Item label="Title" labelStyle={{width:50}}>{nowAnswer.title}</Descriptions.Item>
+						<Descriptions.Item label="Description">{nowAnswer.description}</Descriptions.Item>
+						<Descriptions.Item label="Answer">{nowAnswer.answer}</Descriptions.Item>
+					</Descriptions>
+					</div>
+				</TabPane>
+			</Tabs>
+            {/* <Select options={titles} style={{width:200,marginTop: 4 }} placeholder={'Select a question'}>
             </Select>
 			<TextArea
 				placeholder="Description"
 				// value={description}
 				// onChange={e => setDescription(e.target.value)}
 				autoSize={{ minRows: 3, maxRows: 6 }}
-				style={{ marginTop: 4 }} />
+				style={{ marginTop: 4 }} /> */}
 		</Modal>
 	);
 };
