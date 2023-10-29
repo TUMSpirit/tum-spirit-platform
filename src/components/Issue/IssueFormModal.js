@@ -106,7 +106,7 @@ const IssueFormModal = ({ visible, issue, onSubmit, onCancel }) => {
 				placeholder="Person in charge"
 				value={person}
 				optionFilterProp="children"
-				style={{ marginTop: 4 }}
+				style={{ marginTop: 4,width: 200}}
 				filterOption={(input, option) =>
 				(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
 				}

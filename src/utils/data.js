@@ -4,7 +4,7 @@ export const generateTitle = () => {
 			{
 				id: 0,
 				title: 'Interview With User Group',
-                intro: 'Intview with user group and make personas and scenarios and upload the necessary files',
+                intro: 'Interview with user group and make personas and scenarios and upload the necessary files',
                 start_time: '2023-09-01',
                 end_time: '2023-10-15',
                 member:'John Johnson; Max Muster; Clara Copyright',

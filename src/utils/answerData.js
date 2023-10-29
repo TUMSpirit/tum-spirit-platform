@@ -31,15 +31,15 @@ export const generateAnswer = () => {
             {
 				cardId: 3,
 				title: 'Quantitative Evaluation',
-                description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-                answer:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+                description: 'Which language should I use for the evaluation',
+                answer:'I think it depends on you, you can use germen or english:)',
                 read:true
 			},
             {
 				cardId: 3,
 				title: 'Analysis',
-                description: 'analyse the effectivity of the App by data from the experiment',
-                answer:'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
+                description: 'Can you recommand a software to do the data analysis',
+                answer:'I would prefer SPSS',
                 read:false
 			},
 		];

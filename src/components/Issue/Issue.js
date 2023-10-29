@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Card, Typography, Popconfirm, Tooltip,Tag, Avatar} from 'antd';
+import { Card, Typography, Popconfirm, Tooltip, Tag, Avatar } from 'antd';
 import { DeleteOutlined, EditOutlined, DoubleRightOutlined, DoubleLeftOutlined } from '@ant-design/icons';
 
 import { IssueTitle } from './Issue.styled';
@@ -11,7 +11,7 @@ import face3 from "../../assets/images/avatar3.png";
 
 
 const { Paragraph } = Typography;
-const {Title} = Typography;
+const { Title } = Typography;
 
 const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLeftColumn, onMoveToRightColumn }) => {
 	const moveActions = () => {
@@ -35,14 +35,14 @@ const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLe
 				</Tooltip>
 			];
 		}
-		if (isLastColumn &&!isFirstColumn) {
+		if (isLastColumn && !isFirstColumn) {
 			return [
 				<Tooltip placement="bottom" title="Move to left column" arrowPointAtCenter>
 					<DoubleLeftOutlined key="ediit" onClick={onMoveToLeftColumn} />
 				</Tooltip>
 			];
 		}
-		if (isLastColumn &&isFirstColumn) {
+		if (isLastColumn && isFirstColumn) {
 			return [];
 		}
 	};
@@ -56,28 +56,28 @@ const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLe
 				</Popconfirm>
 			]}
 			size={'small'}
-			style={{height:'130%',width:'300px'}}
+			style={{ height: '130%', width: '300px' }}
 		>
 			<IssueTitle>{item.title}</IssueTitle>
-			<Paragraph className="mh-100 description card-para"  style={{height:'110px',overflow:'auto'}}> 
+			<Paragraph className="mh-100 description card-para" style={{ height: '110px', overflow: 'auto' }}>
 				{item.description}
 			</Paragraph>
 			{item.tag.map(tag => (
-				<Tag color={tag.value} style={{paddingLeft:15,paddingRight:15,fontSize:15}}>{tag.label}</Tag>
+				<Tag color={tag.value} style={{ paddingLeft: 15, paddingRight: 15, fontSize: 15 }}>{tag.label}</Tag>
 			))}
-			<br/>
-			<Avatar.Group style={{display:'flex',float:'right'}}>
-			<Avatar
-				className="shape-avatar"
-				shape="square"
-				size={30}
-				src={face3}
-				style={{marginTop:0}}
-			></Avatar>
-			<div className="avatar-info" style={{marginTop:20}}>
-				<Title level={5}>{item.person}</Title>
-			</div>
-		</Avatar.Group>
+			<br />
+			<Avatar.Group style={{ display: 'flex', float: 'right' }}>
+				<Avatar
+					className="shape-avatar"
+					shape="square"
+					size={30}
+					src={face3}
+					style={{ marginTop: 0 }}
+				></Avatar>
+				<div className="avatar-info" style={{ marginTop: 20 }}>
+					<Title level={5}>{item.person}</Title>
+				</div>
+			</Avatar.Group>
 		</Card>
 	);
 };
