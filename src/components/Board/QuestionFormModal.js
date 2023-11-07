@@ -102,7 +102,7 @@ export const QuestionFormModal = ({ visible, cardId, columns, onSubmit, onCancel
 						:
 						<div style={{ display: 'flex' }}>
 							<List
-								style={{ width: '150px' }}
+								style={{ width: '200px' }}
 								dataSource={answers}
 								renderItem={(answer) => (
 									answer.cardId === cardId ?
