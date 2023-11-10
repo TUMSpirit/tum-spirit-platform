@@ -10,6 +10,8 @@ import { Container, ColumnTitle, Header, HeaderActions, IssueCount, Root, Global
 
 const Column = ({
 	item,
+	cardId,
+	taskFilter,
 	isFirstColumn,
 	isLastColumn,
 	onRemove,
@@ -23,14 +25,14 @@ const Column = ({
 	const [issueModalVisible, setIssueModalVisible] = useState(false);
 	const [editingIssue, setEditingIssue] = useState();
 
-	const handleOnIssueAdd = (title, description, person, tag) => {
+	const handleOnIssueAdd = (title, description, person, tag, timeline) => {
 		setIssueModalVisible(false);
-		onIssueAdd && onIssueAdd(item, { title, description, person, tag });
+		onIssueAdd && onIssueAdd(item, { title, description, person, tag, timeline });
 	};
 
-	const handleOnIssueEdit = (id, title, description, person, tag) => {
+	const handleOnIssueEdit = (id, title, description, person, tag, timeline) => {
 		setIssueModalVisible(false);
-		onIssueEdit && onIssueEdit(item, { id, title, description, person, tag });
+		onIssueEdit && onIssueEdit(item, { id, title, description, person, tag, timeline });
 	};
 
 	const isMobile = useMediaQuery({ query: '(max-device-width: 600px)' });
@@ -82,6 +84,8 @@ const Column = ({
 							<Issue
 								key={issue.id}
 								item={issue}
+								cardId={cardId}
+								taskFilter={taskFilter}
 								isFirstColumn={isFirstColumn}
 								isLastColumn={isLastColumn}
 								onEdit={() => {
@@ -98,8 +102,8 @@ const Column = ({
 				<IssueFormModal
 					visible={issueModalVisible}
 					issue={editingIssue}
-					onSubmit={(id, title, description, person, tag) => {
-						id ? handleOnIssueEdit(id, title, description, person, tag) : handleOnIssueAdd(title, description, person, tag);
+					onSubmit={(id, title, description, person, tag, timeline) => {
+						id ? handleOnIssueEdit(id, title, description, person, tag, timeline) : handleOnIssueAdd(title, description, person, tag, timeline);
 					}}
 					onCancel={() => {
 						setIssueModalVisible(false);

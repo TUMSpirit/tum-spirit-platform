@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import moment from 'moment/moment';
 import { useMediaQuery } from 'react-responsive';
-import { Button, Tooltip, message, Upload, Steps, Tour, Popconfirm } from 'antd';
+import { Button, Tooltip, message, Upload, Steps, Tour, Popconfirm, Switch } from 'antd';
 import { PlusOutlined, ClockCircleOutlined, UploadOutlined, QuestionCircleOutlined, MessageOutlined, FlagOutlined, LoadingOutlined, SmileOutlined } from '@ant-design/icons';
 import { v4 as uuidv4 } from 'uuid';
 import { Timeline, TimelineFormModal } from '../Timeline';
@@ -38,13 +38,12 @@ const Board = () => {
 	const [questionModalVisible, setQuestionModalVisible] = useState(false);
 	const [answerModalVisible, setAnswerModalVisible] = useState(false);
 	const [open, setOpen] = useState(false);
+	const [taskFilter,setTaskFilter] = useState(true);
 	var nowColumns = [];
 	const [nowColumstoUpdate, setNowColumstoUpdate] = useState([]);
 	const clickCard = (id) => {
 		setCardId(id);
 	}
-
-
 	const props = {
 		name: 'file',
 		action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
@@ -81,7 +80,6 @@ const Board = () => {
 		setColumnModalVisible(false);
 		message.success('New column is added.'
 		);
-		console.log(timeline)
 	};
 	const editColumn = (id, title) => {
 		const newColumnList = columns.map(col => {
@@ -114,7 +112,8 @@ const Board = () => {
 						title: issue.title,
 						description: issue.description,
 						person: issue.person,
-						tag: issue.tag
+						tag: issue.tag,
+						timeline:issue.timeline,
 					}]
 				};
 			}
@@ -213,15 +212,15 @@ const Board = () => {
 	const submitQuestion = () => {
 		message.success('Your question has already been sent to your tutor')
 	};
-	useEffect(() => {
-		nowColumns = [];
-		columns.map((column, index) => {
-			if (column.timeline === cardId) {
-				nowColumns.push(column)
-			}
-		})
-		setNowColumstoUpdate(nowColumns)
-	}, [cardId, columns]);
+	// useEffect(() => {
+	// 	nowColumns = [];
+	// 	columns.map((column, index) => {
+	// 		if (column.timeline === cardId) {
+	// 			nowColumns.push(column)
+	// 		}
+	// 	})
+	// 	setNowColumstoUpdate(nowColumns)
+	// }, [cardId, columns]);
 
 
 	const handleColumnChange = () => {
@@ -234,6 +233,10 @@ const Board = () => {
 		// })
 		// setNowColumstoUpdate(nowColumns)
 	};
+
+	const handleFilterChange = (checked) => {
+		setTaskFilter(checked);
+	}
 
 	const isMobile = useMediaQuery({ query: '(max-device-width: 600px)' })
 
@@ -465,13 +468,19 @@ const Board = () => {
 					</div>
 				}
 				{/* Kanban Column */}
+				<div style={{display:'flex',justifyContent:'flex-start'}}>
+					<Switch defaultChecked={true} onChange={handleFilterChange} style={{verticalAlign:'middle'}}></Switch>
+					<span style={{fontSize:18,verticalAlign:'middle',marginLeft:20}} >Only see the related tasks</span>
+				</div>
 				<Columns ref={ref2}>
-					{nowColumstoUpdate.map((column, index) => (
+					{columns.map((column, index) => (
 						<Column
 							key={column.id}
 							isFirstColumn={index === 0}
-							isLastColumn={index === nowColumstoUpdate.length - 1}
+							isLastColumn={index === columns.length - 1}
 							item={column}
+							cardId={cardId}
+							taskFilter={taskFilter}
 							onRemove={removeColumn}
 							onIssueAdd={addIssue}
 							onIssueEdit={editIssue}

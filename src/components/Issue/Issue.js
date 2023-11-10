@@ -13,7 +13,7 @@ import face3 from "../../assets/images/avatar3.png";
 const { Paragraph } = Typography;
 const { Title } = Typography;
 
-const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLeftColumn, onMoveToRightColumn }) => {
+const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLeftColumn, onMoveToRightColumn, cardId, taskFilter }) => {
 	const moveActions = () => {
 		// if (isFirstColumn && isLastColumn) {
 		// 	return null;
@@ -56,7 +56,7 @@ const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLe
 				</Popconfirm>
 			]}
 			size={'small'}
-			style={{ height: '130%', width: '300px' }}
+			style={{ height: '130%', width: '300px',opacity: (cardId === item.timeline) || taskFilter === false ? 1 : 0.4}}
 		>
 			<IssueTitle>{item.title}</IssueTitle>
 			<Paragraph className="mh-100 description card-para" style={{ height: '110px', overflow: 'auto' }}>
