@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Input, Modal } from 'antd';
 
-const ColumnFormModal = ({ visible, onSubmit, onCancel }) => {
+const ColumnFormModal = ({ visible, timeline,onSubmit, onCancel }) => {
 	const [title, setTitle] = useState();
 
 	const handleOnCancel = () => {
@@ -14,7 +14,7 @@ const ColumnFormModal = ({ visible, onSubmit, onCancel }) => {
 		<Modal
 			title="Add new column"
 			visible={visible}
-			onOk={() => onSubmit(title)}
+			onOk={() => onSubmit(title,timeline)}
 			onCancel={() => handleOnCancel()}
 			okButtonProps={{ disabled: !title }}
 		>

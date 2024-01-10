@@ -1579,12 +1579,6 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav
   margin-right: 20px;
 }
 
-.shape-avatar img {
-  height:40px;
-  object-fit: scale-down;
-  border-radius: 4px;
-}
-
 .avatar-info h5 {
   font-weight: bold;
   font-size: 14px;

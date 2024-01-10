@@ -1,10 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Card, Typography, Popconfirm, Tooltip } from 'antd';
+import { Card, Typography, Popconfirm, Tooltip, Tag, Avatar } from 'antd';
 import { DeleteOutlined, EditOutlined, DoubleRightOutlined, DoubleLeftOutlined } from '@ant-design/icons';
+
+import face from "../../assets/images/avatar1.png";
+import face2 from "../../assets/images/avatar2.png";
+import face3 from "../../assets/images/avatar3.png";
 
 import { IssueTitle } from './Issue.styled';
 
+const {Title} = Typography;
 const { Paragraph } = Typography;
 
 const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLeftColumn, onMoveToRightColumn }) => {
@@ -52,6 +57,18 @@ const Issue = ({ item, isFirstColumn, isLastColumn, onEdit, onRemove, onMoveToLe
 			<Paragraph className="mh-100 description">
 				{item.description}
 			</Paragraph>
+			<Avatar.Group style={{ display: 'flex', float: 'right' }}>
+				<Avatar
+					className="shape-avatar"
+					shape="square"
+					size={30}
+					src={face3}
+					style={{ marginTop: 0 }}
+				></Avatar>
+				<div className="avatar-info" style={{ marginTop: 20 }}>
+					<Title level={5}>{item.person}</Title>
+				</div>
+			</Avatar.Group>
 		</Card>
 	);
 };
