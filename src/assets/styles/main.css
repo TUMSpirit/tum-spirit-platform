@@ -2198,9 +2198,6 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav
   font-size: 16px;
   color: #8c8c8c;
 }
-.ant-row {
-  display: block;
-}
 .row-col .ant-row {
   margin-left: 0px;
   margin-right: 0px;

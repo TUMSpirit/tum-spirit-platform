@@ -9,6 +9,8 @@ import Chat from "./pages/Chat";
 import Kanban from "./pages/Kanban";
 import Team from "./pages/Team";
 import Documents from "./pages/Documents";
+import Dashboard from "./pages/Dashboard";
+
 
 function App() {
   return (
@@ -20,6 +22,7 @@ function App() {
           <Route exact path="/kanban" component={Kanban} />
           <Route exact path="/team" component={Team} />
           <Route exact path="/documents" component={Documents} />
+          <Route exact path="/dashboard" component={Dashboard} />
           <Redirect from="*" to="/kanban" />
         </Main>
       </Switch>

@@ -248,9 +248,6 @@ function Header({
   return (
     <>
       <Row gutter={[24, 0]}>
-        <Col span={24} md={18} className="header-control">
-          <Button icon={<MenuUnfoldOutlined />} className="sidebar-toggler" onClick={() => { onPress() }} />
-        </Col>
         <Col span={24} md={6}>
           <div className="ant-page-header-heading">
             <span
@@ -259,6 +256,9 @@ function Header({
               {subName.replace("/", "")}
             </span>
           </div>
+        </Col>
+        <Col span={24} md={18} className="header-control">
+          <Button icon={<MenuUnfoldOutlined />} className="sidebar-toggler" onClick={() => { onPress() }} />
         </Col>
       </Row>
     </>
