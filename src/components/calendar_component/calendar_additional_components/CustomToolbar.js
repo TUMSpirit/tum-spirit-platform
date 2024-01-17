@@ -58,23 +58,6 @@ const CustomToolbar = ({
                 </div>
             </div>
         </div>
-
-
-
-    /*<div>
-        <h1 className="viewSwitch">
-            <div className="viewSwitch"><Radio.Group options={viewsOptions} optionType={"button"}></Radio.Group></div>
-            <div >
-                <Button icon={<LeftOutlined />} onClick={onNavigate(navigate.PREVIOUS)} type={"text"}></Button>
-                December
-                <Button icon={<RightOutlined />} type={"text"}></Button>
-            </div>
-            <div className="viewSwitch" >
-                <Button type={"primary"} style={{marginRight: "10px"}} icon={<UploadOutlined />}></Button>
-                <Button type={"primary"}>+ add Event</Button>
-            </div>
-        </h1>
-    </div>*/
     )}
 
 

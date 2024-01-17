@@ -138,7 +138,22 @@ function Sidenav({ color }) {
       </div>
       <hr />
       <Menu defaultSelectedKeys={"2"} theme="light" mode="inline">
+
         <Menu.Item key="1">
+          <NavLink to="/calendar">
+            <span
+                className="icon"
+                style={{
+                  background: page === "chat" ? color : "",
+                }}
+            >
+              {chat}
+            </span>
+            <span className="label">Calendar</span>
+          </NavLink>
+        </Menu.Item>
+
+        <Menu.Item key="2">
           <NavLink to="/chat">
             <span
                 className="icon"
@@ -151,7 +166,8 @@ function Sidenav({ color }) {
             <span className="label">Chat</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="2">
+
+        <Menu.Item key="3">
           <NavLink to="/kanban">
             <span
               className="icon"
@@ -164,7 +180,7 @@ function Sidenav({ color }) {
             <span className="label">Kanban</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="3">
+        <Menu.Item key="4">
           <NavLink to="/team">
             <span
               className="icon"
@@ -177,7 +193,7 @@ function Sidenav({ color }) {
             <span className="label">Team</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="4">
+        <Menu.Item key="5">
           <NavLink to="/documents">
             <span
               className="icon"
@@ -190,7 +206,7 @@ function Sidenav({ color }) {
             <span className="label">Documents</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="5">
+        <Menu.Item key="6">
           <NavLink to="/dashboard">
             <span
                 className="icon"

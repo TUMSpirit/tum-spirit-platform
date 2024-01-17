@@ -10,6 +10,7 @@ import Kanban from "./pages/Kanban";
 import Team from "./pages/Team";
 import Documents from "./pages/Documents";
 import Dashboard from "./pages/Dashboard";
+import Calendar from "./pages/Calendar";
 
 
 function App() {
@@ -18,11 +19,13 @@ function App() {
       <Switch>
         <Route path="/sign-in" exact component={SignIn} />
         <Main>
+          <Route exact path="/calendar" component={Calendar} />
           <Route exact path="/chat" component={Chat} />
           <Route exact path="/kanban" component={Kanban} />
           <Route exact path="/team" component={Team} />
           <Route exact path="/documents" component={Documents} />
           <Route exact path="/dashboard" component={Dashboard} />
+
           <Redirect from="*" to="/kanban" />
         </Main>
       </Switch>

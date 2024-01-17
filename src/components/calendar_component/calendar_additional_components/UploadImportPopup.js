@@ -9,7 +9,6 @@ import {func, object} from "prop-types";
 import {useCreateEntries} from "../requests/requestFunc";
 
 
-
 const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen}) => {
     const {mutateAsync: createEntry} = useCreateEntries()
     const [data, setData] = useState([])

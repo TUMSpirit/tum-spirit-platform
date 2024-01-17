@@ -1,7 +1,7 @@
 import axios from "axios";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import moment from "moment";
-import {queryClient} from "../index";
+import {queryClient} from "../../../index";
 
 /*
 export const getFn = async () => {

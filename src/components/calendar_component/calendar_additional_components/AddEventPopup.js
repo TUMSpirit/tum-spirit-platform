@@ -5,7 +5,7 @@ import './AddEventPopup.css';
 import dayjs from "dayjs";
 import {DeleteOutlined} from "@ant-design/icons";
 import moment from "moment";
-import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
+//import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
 const {RangePicker} = DatePicker
 
