@@ -1,20 +1,10 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-    overflow: scroll;
-    height:81vh;
 `;
 
 export const Columns = styled.div`
   display: flex;
-  height:20%;
-`;
-
-export const Timeliner = styled.div`
-  position:absolute;
-  top:15%;
-  right:5%;
-  height:500px;
 `;
 
 export const Sidebar = styled.div`

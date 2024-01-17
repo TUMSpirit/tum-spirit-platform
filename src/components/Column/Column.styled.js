@@ -35,7 +35,6 @@ export const Header = styled.div`
 export const ColumnTitle = styled.h4`
   font-weight: 100;
   font-size: 16px;
-  max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
   position:relative;
