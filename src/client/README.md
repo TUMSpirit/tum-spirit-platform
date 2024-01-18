@@ -1,0 +1,1 @@
+Start the server and the client with 'npm start'
