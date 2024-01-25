@@ -26,7 +26,7 @@ function App() {
           <Route exact path="/documents" component={Documents} />
           <Route exact path="/dashboard" component={Dashboard} />
 
-          <Redirect from="*" to="/kanban" />
+          <Redirect from="*" to="/calendar" />
         </Main>
       </Switch>
     </div>

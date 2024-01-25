@@ -4,9 +4,16 @@ import "react-big-calendar/lib/css/react-big-calendar.css"
 import {Calendar, momentLocalizer} from "react-big-calendar";
 import moment from 'moment';
 import CustomToolbar from "./calendar_additional_components/CustomToolbar";
-import AddEventPopup from "./calendar_additional_components/AddEventPopup";
+import AddEventPopup, {uploadFile} from "./calendar_additional_components/AddEventPopup";
 import {lighten, modularScale, rgba} from 'polished'
-import {getFn, useCreateEntries, useDeleteEntries, useEntries, useUpdateEntries} from "./requests/requestFunc";
+import {
+    getFn,
+    useCreateEntries,
+    useDeleteEntries,
+    useEntries,
+    useUpdateEntries,
+    useUploadFile
+} from "./requests/requestFunc";
 import {createEvent} from "./calendar_additional_components/AddEventPopup";
 import UploadImportPopup from "./calendar_additional_components/UploadImportPopup";
 
@@ -24,6 +31,7 @@ const Calendar_Main = () => {
         color: entry.color,
         allDay: entry.allDay,
         id: entry._id,
+        files: entry.files,
     }))
     //------------------------- State Hooks -------------------------------------------
     const [isAddEventPopupOpen, setIsAddEventPopupOpen] = useState(false)
@@ -65,6 +73,9 @@ const Calendar_Main = () => {
     const {mutateAsync: createEntry} = useCreateEntries()
     const {mutateAsync: updateEntry} = useUpdateEntries()
     const {mutateAsync: deleteEntry} = useDeleteEntries()
+    const {mutateAsync: uploadFile} = useUploadFile()
+
+
     const deleteEntryFuncArg = (id) =>
     {
         deleteEntry(id)
@@ -75,12 +86,23 @@ const Calendar_Main = () => {
 
         const newEvent = createEvent(fieldsValue)
         if(fieldsValue['params'].isNew) {
-            createEntry(newEvent)
+           const createdEvent = await createEntry(newEvent)
+           if(fieldsValue['files'])
+           {
+               console.log('created event', createdEvent)
+               uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+           }
+
         }
 
         else
         {
-            updateEntry(newEvent)
+            const createdEvent = await updateEntry(newEvent)
+            if(fieldsValue['files'])
+            {
+                console.log('updated event id', createdEvent._id)
+                uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+            }
         }
 
         //handleAddEvent(newEvent)
@@ -95,8 +117,8 @@ const Calendar_Main = () => {
 
     return (
         <div>
-            {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNew={true}/>}
-            {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNew={false} event={currentEvent} deleteEntry={deleteEntryFuncArg}/>}
+            {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true}/>}
+            {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg}/>}
             {isUploadImportPopupOpen && <UploadImportPopup onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>}
             <div style={{height: "75vh"}}>
                 <Calendar

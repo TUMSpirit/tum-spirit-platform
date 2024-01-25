@@ -23,6 +23,10 @@ code {
     justify-content: space-between;
 }
 
+.layout-dashboard .ant-layout-content {
+    margin: 0 ;
+}
+
 /*---------------------------RBC---------------------------*/
 /*
 .rbc-allday-cell {
