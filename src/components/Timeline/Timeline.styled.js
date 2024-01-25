@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-
+/*
 export const Container = styled.div`
     padding:10px;
     background-color:white;
@@ -11,7 +11,7 @@ export const Container = styled.div`
     margin-left:-20px;
     height:10vh;
     ::-webkit-scrollbar {
-        display: none; /* Chrome Safari */
+        display: none;
       }
 `;
 
@@ -28,3 +28,4 @@ export const ContainerMobile = styled.div`
 `;
 
 
+*/
