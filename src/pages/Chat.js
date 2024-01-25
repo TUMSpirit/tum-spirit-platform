@@ -1,51 +1,33 @@
-import React, { useEffect, useState, useRef } from 'react';
-import ChatBody from '../components/chat/client/src/components/ChatBody';
-import ChatFooter from '../components/chat/client/src/components/ChatFooter';
+import React, {useEffect, useState, useRef} from 'react';
+import ChatBody from '../components/chat/ChatBody';
+import ChatFooter from '../components/chat/ChatFooter';
 import '../components/chat/client/src/index.css';
+import socketIO from "socket.io-client"
 
-const Chat = ({ socket }) => {
+const socket = socketIO.connect("http://localhost:4000")
 
-    const [messages, setMessages] = useState([
-        { id: 1, name: "User1", text: "Hello" },
-        { id: 2, name: "User2", text: "Hi there!" },
-    ]);
+const Chat = () => {
 
-
-    const [message, setMessage] = useState('');
-
-
+    const [messages, setMessages] = useState([])
     const lastMessageRef = useRef(null);
 
     useEffect(() => {
-        if (socket) {
-            socket.on('message', (message) => {
-                setMessages((prevMessages) => [...prevMessages, message]);
-            });
+        socket.on("messageResponse", data => setMessages([...messages, data]))
+    }, [socket, messages])
 
-            return () => {
-                socket.off('message');
-            };
-        }
-    }, [socket]);
 
-    const handleSendMessage = (e) => {
-        e.preventDefault()
-            socket.emit("message",
-                {
-                    text: message,
-                    name: localStorage.getItem("userName"),
-                    id: `${socket.id}${Math.random()}`,
-                    socketID: socket.id
-                }
-            )
-        setMessage("")
-    }
+    useEffect(() => {
+        lastMessageRef.current?.scrollIntoView({behavior: 'smooth'});
+    }, [messages]);
+
     return (
-        <div className="chat-container">
-            <ChatBody messages={messages} lastMessageRef={lastMessageRef} />
-            <ChatFooter onSubmit={handleSendMessage} />
+        <div className="chat">
+            <div className='chat__main'>
+                <ChatBody messages={messages} lastMessageRef={lastMessageRef}/>
+                <ChatFooter socket={socket}/>
+            </div>
         </div>
-    );
+    )
 };
 
 export default Chat;

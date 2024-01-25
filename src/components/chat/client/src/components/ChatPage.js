@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef} from 'react'
-import ChatBody from './ChatBody'
-import ChatFooter from './ChatFooter'
+import ChatBody from '../../../ChatBody'
+import ChatFooter from '../../../ChatFooter'
 
 const ChatPage = ({socket}) => {
     const [messages, setMessages] = useState([])

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 const ChatBody = ({messages, lastMessageRef}) => {
 
@@ -26,4 +26,4 @@ const ChatBody = ({messages, lastMessageRef}) => {
     )
 }
 
-export default ChatBody
+export default ChatBody;
