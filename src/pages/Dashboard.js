@@ -18,20 +18,12 @@ import {
     Typography,
     Tooltip,
     Progress,
-    Upload,
     message,
     Button,
     Timeline,
-    Radio,
+    DatePicker,
 } from "antd";
-import {
-    ToTopOutlined,
-    MenuUnfoldOutlined,
-    RightOutlined,
-} from "@ant-design/icons";
-import Paragraph from "antd/lib/typography/Paragraph";
 
-import Echart from "../components/chart/EChart";
 import LineChart from "../components/chart/LineChart";
 import Chart from "chart.js/auto";
 
@@ -45,7 +37,8 @@ import team1 from "../assets/images/team-1.jpg";
 import team2 from "../assets/images/team-2.jpg";
 import team3 from "../assets/images/team-3.jpg";
 import team4 from "../assets/images/team-4.jpg";
-import card from "../assets/images/info-card-1.jpg";
+
+const { RangePicker } = DatePicker;
 
 function Dashboard() {
     const { Title, Text } = Typography;
@@ -397,65 +390,90 @@ function Dashboard() {
 
     return (
         <>
-            <div className="layout-content p-4">
-                <div className="grid grid-cols-3 gap-4">
-                    <Card bordered={false} className="criclebox">
-                        <h3 className=" text-gray-600 text-xl">Spider Chart</h3>
-                        <canvas id="spider-container"></canvas>
-                    </Card>
-                    <div className="col-span-2 grid grid-cols-4 gap-2 auto-rows-min">
-                        {count.map((c, index) => (
+            <div className="relative w-full">
+                <div className="layout-content p-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        <Card bordered={false} className="criclebox">
+                            <h3 className=" text-gray-600 text-xl">
+                                Spider Chart
+                            </h3>
+                            <canvas id="spider-container"></canvas>
+                        </Card>
+                        <div className="col-span-2 grid grid-cols-4 gap-2 auto-rows-min">
+                            {count.map((c, index) => (
+                                <Card
+                                    key={index}
+                                    bordered={false}
+                                    className="criclebox "
+                                >
+                                    <div className="number">
+                                        <Row align="middle" gutter={[24, 0]}>
+                                            <Col xs={24}>
+                                                <span>{c.today}</span>
+                                                <Title level={3}>
+                                                    {c.title}{" "}
+                                                    <small className={c.bnb}>
+                                                        {c.persent}
+                                                    </small>
+                                                </Title>
+                                            </Col>
+                                        </Row>
+                                    </div>
+                                </Card>
+                            ))}
+
                             <Card
-                                key={index}
                                 bordered={false}
-                                className="criclebox "
+                                className="criclebox h-full col-span-4"
                             >
-                                <div className="number">
-                                    <Row align="middle" gutter={[24, 0]}>
-                                        <Col xs={24}>
-                                            <span>{c.today}</span>
-                                            <Title level={3}>
-                                                {c.title}{" "}
-                                                <small className={c.bnb}>
-                                                    {c.persent}
-                                                </small>
-                                            </Title>
-                                        </Col>
-                                    </Row>
+                                <div className="timeline-box">
+                                    <Title level={5}>Chatlog</Title>
+
+                                    <Timeline
+                                        className="timelinelist mt-4 -mb-10"
+                                        items={timelineList}
+                                    />
                                 </div>
                             </Card>
-                        ))}
-
-                        <Card
-                            bordered={false}
-                            className="criclebox h-full col-span-4"
-                        >
-                            <div className="timeline-box">
-                                <Title level={5}>Chatlog</Title>
-
-                                <Timeline
-                                    className="timelinelist mt-4 -mb-10"
-                                    items={timelineList}
-                                />
-                            </div>
-                        </Card>
+                        </div>
                     </div>
-                </div>
 
-                <Row gutter={[24, 0]} className="mt-4">
-                    <Col
-                        xs={24}
-                        sm={24}
-                        md={24}
-                        lg={24}
-                        xl={24}
-                        className="mb-24"
-                    >
-                        <Card bordered={false} className="criclebox h-full">
-                            <LineChart />
-                        </Card>
-                    </Col>
-                </Row>
+                    <Row gutter={[24, 0]} className="mt-4">
+                        <Col
+                            xs={24}
+                            sm={24}
+                            md={24}
+                            lg={24}
+                            xl={24}
+                            className="mb-24"
+                        >
+                            <Card bordered={false} className="criclebox h-full">
+                                <LineChart />
+                            </Card>
+                        </Col>
+                    </Row>
+                </div>
+                <div className="fixed bottom-0 p-4 bg-white w-[calc(_100vw_-_250px_)] flex items-center justify-between">
+                    <RangePicker />
+                    <div className="flex items-baseline font-bold gap-4">
+                        <span>Filters:</span>
+                        <div className="bg-gray-100 p-2 rounded-lg flex gap-1">
+                            <Button className="bg-white">Fischers</Button>
+                            <Button className="bg-white">Sentiment</Button>
+                            <Button className="border-transparent">WL</Button>
+                            <Button className="border-transparent">
+                                Polarity
+                            </Button>
+                            <Button className="border-transparent">
+                                Task Duration
+                            </Button>
+                            <Button className="bg-white">Grammar</Button>
+                        </div>
+                    </div>
+                    <Button type="primary" className="bg-blue-600">
+                        Apply
+                    </Button>
+                </div>
             </div>
         </>
     );
