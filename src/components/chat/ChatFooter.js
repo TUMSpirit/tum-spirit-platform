@@ -3,10 +3,10 @@ import React, {useState} from 'react';
 
 const ChatFooter = ({socket}) => {
     const [message, setMessage] = useState("")
+    localStorage.setItem("userName", "TestUser") //für EyeTracking - hier muss später der Profilname genommen werden
 
     const handleSendMessage = (e) => {
             e.preventDefault();
-
             const userMessage = {
                 text: message,
                 name: localStorage.getItem('userName'),
