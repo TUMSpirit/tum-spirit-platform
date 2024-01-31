@@ -18,10 +18,10 @@ export const getFn = async () => {
 }*/
 
 //-------------------------------------------------------get-------------------------------------------------
-export const useEntries = () => {
+export const useEntries = (userId) => {
     return useQuery({
         queryFn: async () => {
-            const {data} = await axios.get('http://localhost:8000/calendar');
+            const {data} = await axios.get(`http://localhost:8000/calendar/${userId}`);
             console.log('form Get: ', data)
             return data;
         },
@@ -37,7 +37,11 @@ const postEntry = async (newEntry) => {
         color: newEntry.color,
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
-        allDay: newEntry.allDay? newEntry.allDay:false,
+        allDay: newEntry.allDay? newEntry.allDay : false,
+        isOnSite: newEntry.isOnSite? newEntry.isOnSite : true,
+        room: newEntry.room? newEntry.room : null,
+        remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
+        users: newEntry.users,
 
     });
     return data;
@@ -61,8 +65,11 @@ const putEntry = async (newEntry) => {
         color: newEntry.color,
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
-        allDay: newEntry.allDay? newEntry.allDay:false,
-
+        allDay: newEntry.allDay? newEntry.allDay : false,
+        isOnSite: newEntry.isOnSite? newEntry.isOnSite : true,
+        room: newEntry.room? newEntry.room : null,
+        remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
+        users: newEntry.users,
     });
     return data;
 

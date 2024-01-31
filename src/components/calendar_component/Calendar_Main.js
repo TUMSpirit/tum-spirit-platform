@@ -20,9 +20,40 @@ import UploadImportPopup from "./calendar_additional_components/UploadImportPopu
 
 const localizer = momentLocalizer(moment);
 
+const currentUser = {
+    name: "Josef Suckart",
+    id: "123456",
+    color: "green",
+    initialen: "JS"
+};
+
+const users = [
+    {
+        name: "Josef Suckart",
+        id: "123456",
+        color: "green",
+        initialen: "JS"
+    },
+
+    {
+        name: "Jonas Bender",
+        id: "420420",
+        color: "blue",
+        initialen: "JB"
+    },
+
+    {
+        name: "Degenhardt Hardt",
+        id: "808080",
+        color: "blue",
+        initialen: "DH"
+    },
+
+]
+
 const Calendar_Main = () => {
 
-    const fetchedData = useEntries();
+    const fetchedData = useEntries(currentUser.id);
 
     const entries = fetchedData.data?.map(entry => ({
         title: entry.title,
@@ -31,7 +62,11 @@ const Calendar_Main = () => {
         color: entry.color,
         allDay: entry.allDay,
         id: entry._id,
+        isOnSite: entry.isOnSite,
+        room: entry.room,
+        remoteLink: entry.remoteLink,
         files: entry.files,
+        users: entry.users,
     }))
     //------------------------- State Hooks -------------------------------------------
     const [isAddEventPopupOpen, setIsAddEventPopupOpen] = useState(false)
@@ -83,8 +118,7 @@ const Calendar_Main = () => {
     }
 
     const onFinishAddEvent = async (fieldsValue) => {
-
-        const newEvent = createEvent(fieldsValue)
+        const newEvent = createEvent(fieldsValue, currentUser.id)
         if(fieldsValue['params'].isNew) {
            const createdEvent = await createEntry(newEvent)
            if(fieldsValue['files'])
@@ -117,13 +151,13 @@ const Calendar_Main = () => {
 
     return (
         <div>
-            {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true}/>}
-            {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg}/>}
+            {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true} users={users} currentUser={currentUser}/>}
+            {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg} users={users}/>}
             {isUploadImportPopupOpen && <UploadImportPopup onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>}
             <div style={{height: "75vh"}}>
                 <Calendar
                     components={{
-                        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsAddEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>)
+                        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsAddEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
                     }}
                     views={['month', 'week', 'day']}
                     onSelectEvent ={onClickEvent}
