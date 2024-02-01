@@ -1,28 +1,33 @@
-import {
-  Row,
-  Col,
-  Card,
-  Statistic,
-  Button,
-  List,
-  Descriptions,
-  Avatar,
-} from "antd";
+import React, {useEffect, useState, useRef} from 'react';
+import ChatBody from '../components/chat/ChatBody';
+import ChatFooter from '../components/chat/ChatFooter';
+import '../components/chat/index.css';
+import socketIO from "socket.io-client"
 
-import { PlusOutlined, ExclamationOutlined } from "@ant-design/icons";
-import mastercard from "../assets/images/mastercard-logo.png";
-import paypal from "../assets/images/paypal-logo-2.png";
-import visa from "../assets/images/visa-logo.png";
-import Board from "../components/Board";
+const socket = socketIO.connect("http://localhost:4000")
 
-function Chat() {
-  const data = [
-  ];
+const Chat = () => {
 
-  return (
-      <>
-      </>
-  );
-}
+    const [messages, setMessages] = useState([])
+    const lastMessageRef = useRef(null);
+
+    useEffect(() => {
+        socket.on("messageResponse", data => setMessages([...messages, data]))
+    }, [socket, messages])
+
+
+    useEffect(() => {
+        lastMessageRef.current?.scrollIntoView({behavior: 'smooth'});
+    }, [messages]);
+
+    return (
+        <div className="chat">
+            <div className='chat__main'>
+                <ChatBody messages={messages} lastMessageRef={lastMessageRef}/>
+                <ChatFooter socket={socket}/>
+            </div>
+        </div>
+    )
+};
 
 export default Chat;
