@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
-import '../components/chat/index.css';
+//import '../components/chat/index.css';
 import socketIO from "socket.io-client"
 
 const socket = socketIO.connect("http://localhost:4000")
