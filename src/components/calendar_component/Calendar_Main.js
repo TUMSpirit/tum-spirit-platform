@@ -14,7 +14,6 @@ import {
     useUpdateEntries,
     useUploadFile
 } from "./requests/requestFunc";
-import {createEvent} from "./calendar_additional_components/AddEventPopup";
 import UploadImportPopup from "./calendar_additional_components/UploadImportPopup";
 
 
@@ -45,7 +44,7 @@ const users = [
     {
         name: "Degenhardt Hardt",
         id: "808080",
-        color: "blue",
+        color: "red",
         initialen: "DH"
     },
 
@@ -65,19 +64,22 @@ const Calendar_Main = () => {
         isOnSite: entry.isOnSite,
         room: entry.room,
         remoteLink: entry.remoteLink,
+        isMilestone: entry.isMilestone,
         files: entry.files,
         users: entry.users,
     }))
     //------------------------- State Hooks -------------------------------------------
-    const [isAddEventPopupOpen, setIsAddEventPopupOpen] = useState(false)
+    const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false)
     const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false)
     const [isUploadImportPopupOpen, setIsUploadImportPopupOpen] = useState(false)
     const [currentEvent, setCurrentEvent] = useState(null)
 
     //------------------------- Button Events Handler -------------------------------------------
-    const onCancelAddEvent = () => {
-        setIsAddEventPopupOpen(false);
-        setIsUpdateEventPopupOpen(false);
+
+
+    const closeEventPopup = () => {
+        setIsUploadImportPopupOpen(false)
+            setIsCreateEventPopupOpen(false)
     }
 
     const onCancelUploadImport = () => {
@@ -97,7 +99,7 @@ const Calendar_Main = () => {
             borderRadius: '4px',
             backgroundOpacity: 'rgba(0,0,0,0.5)',
             color: event.color,
-            border: '0px',
+            border: event.isMilestone? '2px solid '+event.color:'0px',
             display: 'block'
         };
         return {
@@ -105,59 +107,23 @@ const Calendar_Main = () => {
         };
     }
 
-    const {mutateAsync: createEntry} = useCreateEntries()
-    const {mutateAsync: updateEntry} = useUpdateEntries()
-    const {mutateAsync: deleteEntry} = useDeleteEntries()
-    const {mutateAsync: uploadFile} = useUploadFile()
-
-
-    const deleteEntryFuncArg = (id) =>
-    {
-        deleteEntry(id)
-        setIsUpdateEventPopupOpen(false);
-    }
-
-    const onFinishAddEvent = async (fieldsValue) => {
-        const newEvent = createEvent(fieldsValue, currentUser.id)
-        if(fieldsValue['params'].isNew) {
-           const createdEvent = await createEntry(newEvent)
-           if(fieldsValue['files'])
-           {
-               console.log('created event', createdEvent)
-               uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
-           }
-
-        }
-
-        else
-        {
-            const createdEvent = await updateEntry(newEvent)
-            if(fieldsValue['files'])
-            {
-                console.log('updated event id', createdEvent._id)
-                uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
-            }
-        }
-
-        //handleAddEvent(newEvent)
-        setIsAddEventPopupOpen(false);
-        setIsUpdateEventPopupOpen(false);
-    }
 
     const components = {
-        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsAddEventPopupOpen}/>),
+        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsCreateEventPopupOpen}/>),
         //event: props => (<CustomEvent {...props} color={'#0047ab'}/>)
     }
 
     return (
         <div>
-            {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true} users={users} currentUser={currentUser}/>}
-            {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg} users={users}/>}
+            {(isUpdateEventPopupOpen || isCreateEventPopupOpen) && <AddEventPopup isUpdateEventOpen={isUpdateEventPopupOpen} isCreateEventOpen={isCreateEventPopupOpen}
+                           setIsCreateEventOpen={setIsCreateEventPopupOpen} setIsUpdateEventOpen={setIsUpdateEventPopupOpen}
+                           event={currentEvent}
+                           users={users} currentUser={currentUser}/>}
             {isUploadImportPopupOpen && <UploadImportPopup onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>}
             <div style={{height: "75vh"}}>
                 <Calendar
                     components={{
-                        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsAddEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
+                        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
                     }}
                     views={['month', 'week', 'day']}
                     onSelectEvent ={onClickEvent}
@@ -174,5 +140,11 @@ const Calendar_Main = () => {
 
     );
 }
+
+/*
+{isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true} users={users} currentUser={currentUser}/>}
+            {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg} users={users}/>}
+            */
+
 
 export default Calendar_Main;

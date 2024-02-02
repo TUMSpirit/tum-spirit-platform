@@ -1,60 +1,190 @@
 // Popup.js
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
-    Button,
-    Form,
-    Input,
-    DatePicker,
-    ColorPicker,
-    Upload,
-    Modal,
-    Row,
-    Col,
-    message,
-    Select,
-    Avatar,
-    Space,
-    Image, Switch
+    Button, Form, Input, DatePicker, ColorPicker, Upload, Modal, Row, Col, message, Select, Avatar, Space, Image, Switch
 } from "antd";
 import './AddEventPopup.css';
 import dayjs from "dayjs";
 import {DeleteOutlined, DownloadOutlined, UploadOutlined} from "@ant-design/icons";
 import moment from "moment";
 import axios from "axios";
-import {useDeleteFile, useUploadFile} from "../requests/requestFunc";
+import {
+    useCreateEntries,
+    useDeleteEntries,
+    useDeleteFile,
+    useUpdateEntries,
+    useUploadFile
+} from "../requests/requestFunc";
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
 const fallbackImgRoomfinder = require('../img/Room not found.png')
 const {RangePicker} = DatePicker
 
 
-const AddEventPopup = ({onCancel, onFinish, isNewOpen, event, deleteEntry, isExistingOpen, users, currentUser}) => {
+const AddEventPopup = ({
+                           isCreateEventOpen,
+                           isUpdateEventOpen,
+                           setIsCreateEventOpen,
+                           setIsUpdateEventOpen,
+                           event,
+                           users,
+                           currentUser
+                       }) => {
 
-    const [sharedUsers, setSharedUsers] = useState( isNewOpen? [currentUser] : users.filter(user => event.users.includes(user.id)))
-    const [isOnSite, setIsOnSite] = useState(event? event.isOnSite : true)
-    const [room, setRoom] = useState(event? event.room : null)
+
+    const init_formData = {
+        id: isUpdateEventOpen ? event.id : undefined,
+        title: isUpdateEventOpen ? event.title : '',
+        start: isUpdateEventOpen ? event.start : moment(),
+        end: isUpdateEventOpen ? event.end : moment().add(1, 'hour'),
+        color: isUpdateEventOpen ? event.color : '#1677FF',
+        allDay: isUpdateEventOpen ? event.allDay : false,
+        sharedUsers: isUpdateEventOpen ? users.filter(user => event.users.includes(user.id)) : [currentUser],
+        isOnSite: isUpdateEventOpen ? event.isOnSite : true,
+        room: isUpdateEventOpen ? event.room : null,
+        remoteLink: isUpdateEventOpen ? event.remoteLink : null,
+        isMilestone: isUpdateEventOpen ? event.isMilestone : false,
+    }
+
+
+    const [formData, setFormData] = useState(init_formData)
+    const [form] = Form.useForm();
+    const formRef = useRef(null);
+
+    const getInitialFormValues = () => {
+       return {
+           title: formData.title,
+           color: formData.color,
+           rangepicker: [dayjs(formData.start), dayjs(formData.end)],
+           sharedUsers: formData.sharedUsers.map(user => user.id),
+       }
+    }
+
+
+    const {mutateAsync: createEntry} = useCreateEntries()
+    const {mutateAsync: updateEntry} = useUpdateEntries()
+    const {mutateAsync: deleteEntry} = useDeleteEntries()
     const {mutateAsync: deleteFile} = useDeleteFile()
+    const {mutateAsync: uploadFile} = useUploadFile()
 
-    console.log('Popup: ', users, sharedUsers)
+    //---------------------------------- form functions ---------------------------------------
+    const fillNewEvent = (fieldsValue) => {
+        console.log('fieldsValue: ', fieldsValue)
+        let color = fieldsValue['colorPicker'];
+
+
+        const startYear = fieldsValue["rangepicker"][0].format('YYYY');
+        const startMonth = transformMonth(fieldsValue["rangepicker"][0].format('MM'));
+
+        const startDay = fieldsValue["rangepicker"][0].format('DD');
+        const startHour = fieldsValue["rangepicker"][0].format('HH');
+        const startMinute = fieldsValue["rangepicker"][0].format('mm');
+        const endYear = fieldsValue["rangepicker"][1].format('YYYY');
+        const endMonth = transformMonth(fieldsValue["rangepicker"][1].format('MM'));
+        const endDay = fieldsValue["rangepicker"][1].format('DD');
+        const endHour = fieldsValue["rangepicker"][1].format('HH');
+        const endMinute = fieldsValue["rangepicker"][1].format('mm');
+        console.log('users: ', users)
+        const newEvent = {
+            id: formData.id,
+            title: formData.title,
+            start: new Date(startYear, startMonth, startDay, startHour, startMinute),
+            end: new Date(endYear, endMonth, endDay, endHour, endMinute),
+            color: formData.color,
+            isOnSite: formData.isOnSite,
+            room: formData.room,
+            remoteLink: formData.remoteLink,
+            isMilestone: formData.isMilestone,
+            users: formData.sharedUsers.map(user => user.id),
+        }
+
+        return newEvent;
+    }
+    const onSubmit = async (fieldsValue) => {
+        const newEvent = fillNewEvent(fieldsValue); //get rid of id
+        if(isCreateEventOpen) {
+            const createdEvent = await createEntry(newEvent)
+            if(fieldsValue['files'])
+            {
+                console.log('created event', createdEvent)
+                uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+            }
+
+        }
+
+        else
+        {
+            const createdEvent = await updateEntry(newEvent)
+            if(fieldsValue['files'])
+            {
+                console.log('updated event id', createdEvent._id)
+                uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+            }
+        }
+
+        form.resetFields()
+        setIsCreateEventOpen(false);
+        setIsUpdateEventOpen(false);
+        //form.resetFields();
+    }
+
+    const onCancel = () => {
+        form.resetFields()
+        setIsCreateEventOpen(false);
+        setIsUpdateEventOpen(false);
+        console.log('create, updat:', isCreateEventOpen, isUpdateEventOpen)
+    }
+
+    const onDelete = (id) =>
+    {
+        form.resetFields()
+        deleteEntry(id)
+        setIsUpdateEventOpen(false);
+        //form.resetFields();
+    }
+    //---------------------------------- helper functions -------------------------------------
+    const transformMonth = (m) => {
+        return (parseInt(m) - 1).toString().padStart(2, '0')
+    }
+    const onChangeDate = (e) => {
+        const startYear = e.target.value[0].format('YYYY');
+        const startMonth = transformMonth(e.target.value[0].format('MM'));
+        const startDay = e.target.value[0].format('DD');
+        const startHour = e.target.value[0].format('HH');
+        const startMinute = e.target.value[0].format('mm');
+        const endYear = e.target.value[1].format('YYYY');
+        const endMonth = transformMonth(e.target.value[1].format('MM'));
+        const endDay = e.target.value[1].format('DD');
+        const endHour = e.target.value[1].format('HH');
+        const endMinute = e.target.value[1].format('mm');
+
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            start: new Date(startYear, startMonth, startDay, startHour, startMinute),
+            end: new Date(endYear, endMonth, endDay, endHour, endMinute),
+        }))
+    }
 
     const onChangeParticipants = (selectedUserIds) => {
-        if(selectedUserIds.length === 0)
-        {
+        if (selectedUserIds.length === 0) {
             message.error('Event needs at least one Participant')
         }
-            setSharedUsers(users.filter(user => selectedUserIds.includes(user.id)));
+        setFormData((prevFormData) => ({
+            ...prevFormData, sharedUsers: users.filter(user => selectedUserIds.includes(user.id))
+        }));
 
 
-        console.log('shared:', sharedUsers)
+        console.log('shared:', formData.sharedUsers)
     }
 
     const defFileList = () => {
         //console.log('file: ', event.files)
         if (event?.files) {
             return event.files.map(file => ({
-                uid: file.fileRef,  // Use the file's ID as the unique identifier
-                name: file.filename,  // File name
-                status: 'done', url: `http://localhost:8000/calendar/files/${file.fileRef}`, // Construct the file URL (adjust as needed)
+                uid: file.fileRef,
+                name: file.filename,
+                status: 'done',
+                url: `http://localhost:8000/calendar/files/${file.fileRef}`, // Construct the file URL
             }));
         } else {
             return null
@@ -80,10 +210,10 @@ const AddEventPopup = ({onCancel, onFinish, isNewOpen, event, deleteEntry, isExi
             if (file.status !== 'uploading') {
                 //console.log(file, fileList);
             }
-        },
-        openFileDialogOnClick: true,
-        showPreviewIcon: true,
-        defaultFileList: defFileList(), showUploadList: {
+        }, openFileDialogOnClick: true,
+           showPreviewIcon: true,
+           defaultFileList: defFileList(),
+           showUploadList: {
             showDownloadIcon: true,
             showRemoveIcon: true,
             downloadIcon: <DownloadOutlined/>,
@@ -92,122 +222,161 @@ const AddEventPopup = ({onCancel, onFinish, isNewOpen, event, deleteEntry, isExi
         },
     };
 
-    const initialValues = {
-        title: isExistingOpen ? event.title : '',
-        start: isExistingOpen ? event.start : moment(),
-        end: isExistingOpen ? event.end : moment().add(1, 'hour'),
-        color: isExistingOpen ? event.color : '#1677FF',
+
+    const onClickRemoteLink = () => {
+        console.log('open meeting')
+        if(formData.remoteLink)
+        {
+            window.open(formData.remoteLink, '_blank')
+        }
+
+        else {
+            message.error('Please enter a URL.');
+        }
     }
 
-    //FileUpload Stuff
 
-
-    return (<Modal open={isExistingOpen || isNewOpen} footer={null} closeIcon={false}>
+    return (<Modal open={isCreateEventOpen || isUpdateEventOpen} footer={null} closeIcon={false}>
         <Row>
             <h1>Details</h1>
         </Row>
 
 
-        <Form layout={'vertical'} onFinish={onFinish}>
-
-        <Row gutter={[16, 0]}>
-                <Col>
-                    <Form.Item label={"Title"} name="eventTitle" initialValue={initialValues.title}>
-                        <Input required placeholder={"Enter Title"}></Input>
-                    </Form.Item>
-                </Col>
-
-                <Col>
-                    <Form.Item label={' '} name={'colorPicker'} initialValue={initialValues.color}>
-                        <ColorPicker disabledAlpha presets={[{
-                            label: 'Recommended',
-                            colors: ['#F5222D', '#FA8C16', '#FADB14', '#8BBB11', '#52C41A', '#13A8A8', '#1677FF', '#2F54EB', '#722ED1', '#EB2F96',],
-                        }]}/>
-                    </Form.Item>
-                </Col>
-        </Row>
+        <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef} initialValues={getInitialFormValues()}>
 
             <Row gutter={[16, 0]}>
-                <Form.Item label={"Date"} name="rangepicker"
-                           initialValue={[dayjs(initialValues.start), dayjs(initialValues.end)]}>
+                <Col>
+                    <Form.Item label={"Title"} name="title" >
+                        <Input required placeholder={"Enter Title"} onChange={(e) => {
+                            setFormData((prevFormData) => ({
+                                ...prevFormData, title: e.target.value
+                            }))
+                        }}/>
+                    </Form.Item>
+                </Col>
+
+                <Col>
+                    <Form.Item label={' '} name="color" >
+                        <ColorPicker disabledAlpha onChange={(color) => {
+                            setFormData((prevFormData) => ({
+                                ...prevFormData, color: color.toHexString()
+                            }))
+                        }}
+                                     presets={[{
+                                         label: 'Recommended',
+                                         colors: ['#F5222D', '#FA8C16', '#FADB14', '#8BBB11', '#52C41A', '#13A8A8', '#1677FF', '#2F54EB', '#722ED1', '#EB2F96',],
+                                     }]}
+                        />
+                    </Form.Item>
+                </Col>
+            </Row>
+
+            <Row gutter={[16, 0]}>
+                <Form.Item label={"Date"} name="rangepicker">
                     <RangePicker format="DD.MM.YYYY HH:mm" showTime={{format: 'HH:mm'}} required></RangePicker>
                 </Form.Item>
             </Row>
 
             <Row gutter={[16, 0]}>
                 <Form.Item name='files'>
-                    <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload} maxCount={10} multiple={true}>
+                    <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload} maxCount={10}
+                            multiple={true}>
                         <Button icon={<UploadOutlined/>}>Upload</Button>
                     </Upload>
                 </Form.Item>
             </Row>
 
             <Form.Item name="params" type="hidden"
-                       initialValue={{isNew: isNewOpen, id: event?.id, allDay: event?.allDay, event: event}}>
+                       initialValue={{isNew: isUpdateEventOpen, id: event?.id, allDay: event?.allDay, event: event}}>
                 <input type={'hidden'}/>
             </Form.Item>
 
             <Row gutter={[16, 0]}>
                 <Col>
                     <Form.Item name={'sharedUsers'}>
-                        <Select required maxTagCount={0} fieldNames={{label: 'name', value: 'id'}} defaultValue={sharedUsers.map(user => user.id)} maxTagPlaceholder={'Add Participants'} placeholder="Add Participants" mode="tags" allowClear={false} options={users} onChange={onChangeParticipants} style={{width: 200}}  />
+                        <Select required maxTagCount={0} fieldNames={{label: 'name', value: 'id'}}
+                                maxTagPlaceholder={'Add Participants'}
+                                placeholder="Add Participants" mode="tags" allowClear={false} options={users}
+                                onChange={onChangeParticipants} style={{width: 200}}/>
                     </Form.Item>
-                    </Col>
+                </Col>
             </Row>
 
             <Row gutter={[16, 0]}>
                 <Col>
-                    <AvatarDisplay selectedUsers={sharedUsers}></AvatarDisplay>
+                    <AvatarDisplay selectedUsers={formData.sharedUsers}></AvatarDisplay>
                 </Col>
             </Row>
             <Row>
                 <Col>
                     <Form.Item name={'isOnSite'}>
-                        <Switch checked={isOnSite} checkedChildren={'On Site'} unCheckedChildren={'Remote'} onChange={() => {setIsOnSite(!isOnSite)}}/>
+                        <Switch checked={formData.isOnSite} checkedChildren={'On Site'} unCheckedChildren={'Remote'}
+                                onChange={(e) => {
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData, isOnSite: e
+                                    }))
+                                }}/>
                     </Form.Item>
                 </Col>
             </Row>
 
-            {isOnSite &&
-            <Row>
+            {formData.isOnSite && <Row>
                 <Col>
-                     <Form.Item label={'Room'} name={'room'}>
-                        <Space.Compact style={{ width: '100%' }}>
-                            <Input defaultValue={room} placeholder="Room ID" onChange={(event) => {setRoom(event.target.value)}}/>
+                    <Form.Item label={'Room'} name={'room'}>
+                        <Space.Compact style={{width: '100%'}}>
+                            <Input defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
+                                setFormData((prevFormData) => ({
+                                    ...prevFormData, room: event.target.value
+                                }))
+                            }}/>
                         </Space.Compact>
                     </Form.Item>
-                    <Image width={400} src={`https://nav.tum.de/api/preview/${room}`} fallback={fallbackImgRoomfinder}/>
+                    <Image width={400} src={`https://nav.tum.de/api/preview/${formData.room}`}
+                           fallback={fallbackImgRoomfinder}/>
 
                 </Col>
             </Row>}
 
-            {
-                !isOnSite &&
-                <Row>
-                    <Col>
-                        <Form.Item name={'remoteLink'} label={'Link'} >
-                            <Space.Compact style={{ width: '100%' }}>
-                                <Input placeholder={'Insert Meeting Link'} defaultValue={event? event.remoteLink : null}/>
-                                <Button>Open Meeting</Button>
-                            </Space.Compact>
-                        </Form.Item>
-                    </Col>
-                </Row>
-            }
+            {!formData.isOnSite && <Row>
+                <Col>
+                    <Form.Item name={'remoteLink'} label={'Link'}>
+                        <Space.Compact style={{width: '100%'}}>
+                            <Input placeholder={'Insert Meeting Link'}
+                                   defaultValue={formData.remoteLink} onChange={(event) => {
+                                setFormData((prevFormData) => ({
+                                    ...prevFormData, remoteLink: event.target.value
+                                }))
+                            }}/>
+                            <Button onClick={onClickRemoteLink}>Open Meeting</Button>
+                        </Space.Compact>
+                    </Form.Item>
+                </Col>
+            </Row>}
 
+            <Row>
+                <Col>
+                    <Form.Item name={'isMilestone'}>
+                        <Switch checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
+                                onChange={(e) => {
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData, isMilestone: e
+                                    }))
+                                }}/>
+                    </Form.Item>
+                </Col>
+            </Row>
 
             <Row justify={'end'} gutter={[16, 0]}>
 
                 <Col>
-                    {!isNewOpen && <Button type='primary' icon={<DeleteOutlined/>} onClick={() => {
-                        deleteEntry(event.id)
+                    {isUpdateEventOpen && <Button type='primary' icon={<DeleteOutlined/>} onClick={() => {
+                        onDelete(event.id)
                     }}></Button>}
                 </Col>
 
                 <Col>
                     <Button onClick={onCancel}>Cancel</Button>
                 </Col>
-
 
 
                 <Col>
@@ -218,16 +387,17 @@ const AddEventPopup = ({onCancel, onFinish, isNewOpen, event, deleteEntry, isExi
             </Row>
 
 
-
         </Form>
     </Modal>);
+
 };
 
 export default AddEventPopup;
-
+/*
 const transformMonth = (m) => {
     return (parseInt(m) - 1).toString().padStart(2, '0')
 }
+
 export const createEvent = (fieldsValue, currUserId) => {
     console.log('fieldsValue: ', fieldsValue)
     let color = fieldsValue['colorPicker'];
@@ -249,7 +419,7 @@ export const createEvent = (fieldsValue, currUserId) => {
     const endHour = fieldsValue["rangepicker"][1].format('HH');
     const endMinute = fieldsValue["rangepicker"][1].format('mm');
     const id = fieldsValue['params'].id ? fieldsValue['params'].id : undefined;
-    const users = fieldsValue['sharedUsers']? fieldsValue['sharedUsers'] : [currUserId]
+    const users = fieldsValue['sharedUsers'] ? fieldsValue['sharedUsers'] : [currUserId]
     const room = fieldsValue['room']
     console.log('users: ', users)
     const newEvent = {
@@ -266,21 +436,15 @@ export const createEvent = (fieldsValue, currUserId) => {
 
     return newEvent;
 }
+*/
 
-
-
-const AvatarDisplay = ({ selectedUsers }) => {
-    return (
-        <Avatar.Group>
-            {selectedUsers.map(user => (
-                <Avatar key={user.id} style={{backgroundColor: user.color, color:'white'}}>
-                    {user.initialen}
-                </Avatar>
-            ))}
-        </Avatar.Group>
-    );
+const AvatarDisplay = ({selectedUsers}) => {
+    return (<Avatar.Group>
+        {selectedUsers.map(user => (<Avatar key={user.id} style={{backgroundColor: user.color, color: 'white'}}>
+            {user.initialen}
+        </Avatar>))}
+    </Avatar.Group>);
 };
-
 
 
 /*
