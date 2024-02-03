@@ -15,6 +15,7 @@ import {
     useUpdateEntries,
     useUploadFile
 } from "../requests/requestFunc";
+import TextArea from "antd/es/input/TextArea";
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
 const fallbackImgRoomfinder = require('../img/Room not found.png')
@@ -39,6 +40,7 @@ const AddEventPopup = ({
         end: isUpdateEventOpen ? event.end : moment().add(1, 'hour'),
         color: isUpdateEventOpen ? event.color : '#1677FF',
         allDay: isUpdateEventOpen ? event.allDay : false,
+        textArea: isUpdateEventOpen ? event.textArea : '',
         sharedUsers: isUpdateEventOpen ? users.filter(user => event.users.includes(user.id)) : [currentUser],
         isOnSite: isUpdateEventOpen ? event.isOnSite : true,
         room: isUpdateEventOpen ? event.room : null,
@@ -56,6 +58,7 @@ const AddEventPopup = ({
            title: formData.title,
            color: formData.color,
            rangepicker: [dayjs(formData.start), dayjs(formData.end)],
+           textArea: formData.textArea,
            sharedUsers: formData.sharedUsers.map(user => user.id),
        }
     }
@@ -91,6 +94,7 @@ const AddEventPopup = ({
             start: new Date(startYear, startMonth, startDay, startHour, startMinute),
             end: new Date(endYear, endMonth, endDay, endHour, endMinute),
             color: formData.color,
+            textArea: formData.textArea,
             isOnSite: formData.isOnSite,
             room: formData.room,
             remoteLink: formData.remoteLink,
@@ -285,6 +289,18 @@ const AddEventPopup = ({
                     </Upload>
                 </Form.Item>
             </Row>
+
+            <Row gutter={[16, 0]}>
+                <Form.Item name={'textArea'} label="TextArea">
+                    <TextArea rows={4} onChange={(e) => {
+                        setFormData((prevFormData) => ({
+                            ...prevFormData, textArea: e.target.value
+                        }))
+                    }}/>
+                </Form.Item>
+            </Row>
+
+
 
             <Form.Item name="params" type="hidden"
                        initialValue={{isNew: isUpdateEventOpen, id: event?.id, allDay: event?.allDay, event: event}}>

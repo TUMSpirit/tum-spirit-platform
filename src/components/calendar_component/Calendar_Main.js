@@ -62,6 +62,7 @@ const Calendar_Main = () => {
         allDay: entry.allDay,
         id: entry._id,
         isOnSite: entry.isOnSite,
+        textArea: entry.textArea,
         room: entry.room,
         remoteLink: entry.remoteLink,
         isMilestone: entry.isMilestone,
