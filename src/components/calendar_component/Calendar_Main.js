@@ -15,6 +15,8 @@ import {
     useUploadFile
 } from "./requests/requestFunc";
 import UploadImportPopup from "./calendar_additional_components/UploadImportPopup";
+import TimelinePopup from "./calendar_additional_components/TimelinePopup";
+import {Button, Modal} from "antd";
 
 
 const localizer = momentLocalizer(moment);
@@ -73,6 +75,7 @@ const Calendar_Main = () => {
     const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false)
     const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false)
     const [isUploadImportPopupOpen, setIsUploadImportPopupOpen] = useState(false)
+    const [isTimelineOpen, setIsTimelineOpen] = useState(false)
     const [currentEvent, setCurrentEvent] = useState(null)
 
     //------------------------- Button Events Handler -------------------------------------------
@@ -135,6 +138,9 @@ const Calendar_Main = () => {
                     toolbar={true}
                     eventPropGetter={(eventStyleGetter)}
                 />
+
+                <Button onClick={() => {setIsTimelineOpen(!isTimelineOpen)}}>Project Schedule</Button>
+                <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen}></TimelinePopup>
 
             </div>
         </div>

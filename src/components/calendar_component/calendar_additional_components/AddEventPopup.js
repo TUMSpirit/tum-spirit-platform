@@ -1,7 +1,22 @@
 // Popup.js
 import React, {useEffect, useRef, useState} from 'react';
 import {
-    Button, Form, Input, DatePicker, ColorPicker, Upload, Modal, Row, Col, message, Select, Avatar, Space, Image, Switch
+    Button,
+    Form,
+    Input,
+    DatePicker,
+    ColorPicker,
+    Upload,
+    Modal,
+    Row,
+    Col,
+    message,
+    Select,
+    Avatar,
+    Space,
+    Image,
+    Switch,
+    Flex
 } from "antd";
 import './AddEventPopup.css';
 import dayjs from "dayjs";
@@ -9,11 +24,7 @@ import {DeleteOutlined, DownloadOutlined, UploadOutlined} from "@ant-design/icon
 import moment from "moment";
 import axios from "axios";
 import {
-    useCreateEntries,
-    useDeleteEntries,
-    useDeleteFile,
-    useUpdateEntries,
-    useUploadFile
+    useCreateEntries, useDeleteEntries, useDeleteFile, useUpdateEntries, useUploadFile
 } from "../requests/requestFunc";
 import TextArea from "antd/es/input/TextArea";
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
@@ -54,13 +65,13 @@ const AddEventPopup = ({
     const formRef = useRef(null);
 
     const getInitialFormValues = () => {
-       return {
-           title: formData.title,
-           color: formData.color,
-           rangepicker: [dayjs(formData.start), dayjs(formData.end)],
-           textArea: formData.textArea,
-           sharedUsers: formData.sharedUsers.map(user => user.id),
-       }
+        return {
+            title: formData.title,
+            color: formData.color,
+            rangepicker: [dayjs(formData.start), dayjs(formData.end)],
+            textArea: formData.textArea,
+            sharedUsers: formData.sharedUsers.map(user => user.id),
+        }
     }
 
 
@@ -106,21 +117,16 @@ const AddEventPopup = ({
     }
     const onSubmit = async (fieldsValue) => {
         const newEvent = fillNewEvent(fieldsValue); //get rid of id
-        if(isCreateEventOpen) {
+        if (isCreateEventOpen) {
             const createdEvent = await createEntry(newEvent)
-            if(fieldsValue['files'])
-            {
+            if (fieldsValue['files']) {
                 console.log('created event', createdEvent)
                 uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
             }
 
-        }
-
-        else
-        {
+        } else {
             const createdEvent = await updateEntry(newEvent)
-            if(fieldsValue['files'])
-            {
+            if (fieldsValue['files']) {
                 console.log('updated event id', createdEvent._id)
                 uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
             }
@@ -139,8 +145,7 @@ const AddEventPopup = ({
         console.log('create, updat:', isCreateEventOpen, isUpdateEventOpen)
     }
 
-    const onDelete = (id) =>
-    {
+    const onDelete = (id) => {
         form.resetFields()
         deleteEntry(id)
         setIsUpdateEventOpen(false);
@@ -214,10 +219,7 @@ const AddEventPopup = ({
             if (file.status !== 'uploading') {
                 //console.log(file, fileList);
             }
-        }, openFileDialogOnClick: true,
-           showPreviewIcon: true,
-           defaultFileList: defFileList(),
-           showUploadList: {
+        }, openFileDialogOnClick: true, showPreviewIcon: true, defaultFileList: defFileList(), showUploadList: {
             showDownloadIcon: true,
             showRemoveIcon: true,
             downloadIcon: <DownloadOutlined/>,
@@ -229,182 +231,153 @@ const AddEventPopup = ({
 
     const onClickRemoteLink = () => {
         console.log('open meeting')
-        if(formData.remoteLink)
-        {
+        if (formData.remoteLink) {
             window.open(formData.remoteLink, '_blank')
-        }
-
-        else {
+        } else {
             message.error('Please enter a URL.');
         }
     }
 
 
-    return (<Modal open={isCreateEventOpen || isUpdateEventOpen} footer={null} closeIcon={false}>
-        <Row>
-            <h1>Details</h1>
-        </Row>
+    return (
 
 
-        <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef} initialValues={getInitialFormValues()}>
-
-            <Row gutter={[16, 0]}>
-                <Col>
-                    <Form.Item label={"Title"} name="title" >
-                        <Input required placeholder={"Enter Title"} onChange={(e) => {
-                            setFormData((prevFormData) => ({
-                                ...prevFormData, title: e.target.value
-                            }))
-                        }}/>
-                    </Form.Item>
-                </Col>
-
-                <Col>
-                    <Form.Item label={' '} name="color" >
-                        <ColorPicker disabledAlpha onChange={(color) => {
-                            setFormData((prevFormData) => ({
-                                ...prevFormData, color: color.toHexString()
-                            }))
-                        }}
-                                     presets={[{
-                                         label: 'Recommended',
-                                         colors: ['#F5222D', '#FA8C16', '#FADB14', '#8BBB11', '#52C41A', '#13A8A8', '#1677FF', '#2F54EB', '#722ED1', '#EB2F96',],
-                                     }]}
-                        />
-                    </Form.Item>
-                </Col>
-            </Row>
-
-            <Row gutter={[16, 0]}>
-                <Form.Item label={"Date"} name="rangepicker">
-                    <RangePicker format="DD.MM.YYYY HH:mm" showTime={{format: 'HH:mm'}} required></RangePicker>
-                </Form.Item>
-            </Row>
-
-            <Row gutter={[16, 0]}>
-                <Form.Item name='files'>
-                    <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload} maxCount={10}
-                            multiple={true}>
-                        <Button icon={<UploadOutlined/>}>Upload</Button>
-                    </Upload>
-                </Form.Item>
-            </Row>
-
-            <Row gutter={[16, 0]}>
-                <Form.Item name={'textArea'} label="TextArea">
-                    <TextArea rows={4} onChange={(e) => {
-                        setFormData((prevFormData) => ({
-                            ...prevFormData, textArea: e.target.value
-                        }))
-                    }}/>
-                </Form.Item>
-            </Row>
-
-
-
-            <Form.Item name="params" type="hidden"
-                       initialValue={{isNew: isUpdateEventOpen, id: event?.id, allDay: event?.allDay, event: event}}>
-                <input type={'hidden'}/>
-            </Form.Item>
-
-            <Row gutter={[16, 0]}>
-                <Col>
-                    <Form.Item name={'sharedUsers'}>
-                        <Select required maxTagCount={0} fieldNames={{label: 'name', value: 'id'}}
-                                maxTagPlaceholder={'Add Participants'}
-                                placeholder="Add Participants" mode="tags" allowClear={false} options={users}
-                                onChange={onChangeParticipants} style={{width: 200}}/>
-                    </Form.Item>
-                </Col>
-            </Row>
-
-            <Row gutter={[16, 0]}>
-                <Col>
-                    <AvatarDisplay selectedUsers={formData.sharedUsers}></AvatarDisplay>
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    <Form.Item name={'isOnSite'}>
-                        <Switch checked={formData.isOnSite} checkedChildren={'On Site'} unCheckedChildren={'Remote'}
-                                onChange={(e) => {
+        <Modal open={isCreateEventOpen || isUpdateEventOpen} closeIcon={false} title={"Details"}
+               className={'modal-addEvent'}
+               footer={[
+                   isUpdateEventOpen && (<Button type='primary' onClick={() => onDelete(event.id)} icon={<DeleteOutlined/>}/>),
+                   <Button onClick={onCancel}>Cancel</Button>,
+                   <Button key="submit" type='primary' onClick={form.submit}>Save</Button>
+               ]}
+        >
+            <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef}
+                  initialValues={getInitialFormValues()}>
+                <Row gutter={[32, 16]}>
+                    <Col span={12}>
+                        <Row gutter={[0, 16]}>
+                            <Form.Item label={"Title"} name="title">
+                                <Input required placeholder={"Enter Title"} onChange={(e) => {
                                     setFormData((prevFormData) => ({
-                                        ...prevFormData, isOnSite: e
+                                        ...prevFormData, title: e.target.value
                                     }))
                                 }}/>
-                    </Form.Item>
-                </Col>
-            </Row>
+                            </Form.Item>
 
-            {formData.isOnSite && <Row>
-                <Col>
-                    <Form.Item label={'Room'} name={'room'}>
-                        <Space.Compact style={{width: '100%'}}>
-                            <Input defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
-                                setFormData((prevFormData) => ({
-                                    ...prevFormData, room: event.target.value
-                                }))
-                            }}/>
-                        </Space.Compact>
-                    </Form.Item>
-                    <Image width={400} src={`https://nav.tum.de/api/preview/${formData.room}`}
-                           fallback={fallbackImgRoomfinder}/>
-
-                </Col>
-            </Row>}
-
-            {!formData.isOnSite && <Row>
-                <Col>
-                    <Form.Item name={'remoteLink'} label={'Link'}>
-                        <Space.Compact style={{width: '100%'}}>
-                            <Input placeholder={'Insert Meeting Link'}
-                                   defaultValue={formData.remoteLink} onChange={(event) => {
-                                setFormData((prevFormData) => ({
-                                    ...prevFormData, remoteLink: event.target.value
-                                }))
-                            }}/>
-                            <Button onClick={onClickRemoteLink}>Open Meeting</Button>
-                        </Space.Compact>
-                    </Form.Item>
-                </Col>
-            </Row>}
-
-            <Row>
-                <Col>
-                    <Form.Item name={'isMilestone'}>
-                        <Switch checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
-                                onChange={(e) => {
+                            <Form.Item label={' '} name="color" style={{marginLeft: '2px'}}>
+                                <ColorPicker size={'large'} disabledAlpha onChange={(color) => {
                                     setFormData((prevFormData) => ({
-                                        ...prevFormData, isMilestone: e
+                                        ...prevFormData, color: color.toHexString()
+                                    }))
+                                }}
+                                             presets={[{
+                                                 label: 'Recommended',
+                                                 colors: ['#F5222D', '#FA8C16', '#FADB14', '#8BBB11', '#52C41A', '#13A8A8', '#1677FF', '#2F54EB', '#722ED1', '#EB2F96',],
+                                             }]}
+                                />
+                            </Form.Item>
+                        </Row>
+
+                        <Row gutter={[0, 16]}>
+                            <Form.Item label={"Date"} name="rangepicker">
+                                <RangePicker format="DD.MM.YYYY HH:mm" showTime={{format: 'HH:mm'}}
+                                             required></RangePicker>
+                            </Form.Item>
+                        </Row>
+
+                        <Row className={'row-upload'} gutter={[0, 16]}>
+                            <Form.Item name={'textArea'} label="TextArea">
+                                <TextArea rows={4} onChange={(e) => {
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData, textArea: e.target.value
                                     }))
                                 }}/>
-                    </Form.Item>
-                </Col>
-            </Row>
+                            </Form.Item>
 
-            <Row justify={'end'} gutter={[16, 0]}>
+                            <Form.Item name='files'>
+                                <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload}
+                                        maxCount={10}
+                                        multiple={true}>
+                                    <Button icon={<UploadOutlined/>}>Upload</Button>
+                                </Upload>
+                            </Form.Item>
+                        </Row>
 
-                <Col>
-                    {isUpdateEventOpen && <Button type='primary' icon={<DeleteOutlined/>} onClick={() => {
-                        onDelete(event.id)
-                    }}></Button>}
-                </Col>
+                        <Row className={'row-participants'} >
+                            <Form.Item name={'sharedUsers'} style={{marginBottom: '8px'}}>
+                                <Select required maxTagCount={0} fieldNames={{label: 'name', value: 'id'}}
+                                        maxTagPlaceholder={'Add Participants'}
+                                        placeholder="Add Participants" mode="tags" allowClear={false} options={users}
+                                        onChange={onChangeParticipants} style={{width: 200}}/>
+                            </Form.Item>
 
-                <Col>
-                    <Button onClick={onCancel}>Cancel</Button>
-                </Col>
+                            <AvatarDisplay selectedUsers={formData.sharedUsers}></AvatarDisplay>
+                        </Row>
+
+                        <Row>
+
+                        </Row>
+
+                    </Col>
 
 
-                <Col>
-                    <Form.Item>
-                        <Button type="primary" htmlType={"submit"}>Save</Button>
-                    </Form.Item>
-                </Col>
-            </Row>
+                    <Col span={12}>
+                        <div className='inset-shadow'>
+                        <Row gutter={[0, 16]}>
+                            <Form.Item label={'Location'} name={'isOnSite'}>
+                                <Switch checked={formData.isOnSite} checkedChildren={'On Site'}
+                                        unCheckedChildren={'Remote'}
+                                        onChange={(e) => {
+                                            setFormData((prevFormData) => ({
+                                                ...prevFormData, isOnSite: e
+                                            }))
+                                        }}/>
+                            </Form.Item>
+                        </Row>
 
+                        {formData.isOnSite && <Row className={'row-navigate'} >
+                            <Form.Item label={'Room'} name={'room'}>
+                                <Space.Compact style={{width: '100%'}}>
+                                    <Input defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
+                                        setFormData((prevFormData) => ({
+                                            ...prevFormData, room: event.target.value
+                                        }))
+                                    }}/>
+                                </Space.Compact>
+                            </Form.Item>
+                            <Image width={400} src={`https://nav.tum.de/api/preview/${formData.room}`}
+                                   fallback={fallbackImgRoomfinder}/>
+                        </Row>}
 
-        </Form>
-    </Modal>);
+                        {!formData.isOnSite && <Row>
+
+                            <Form.Item name={'remoteLink'} label={'Link'}>
+                                <Space.Compact style={{width: '100%'}}>
+                                    <Input placeholder={'Insert Meeting Link'}
+                                           defaultValue={formData.remoteLink} onChange={(event) => {
+                                        setFormData((prevFormData) => ({
+                                            ...prevFormData, remoteLink: event.target.value
+                                        }))
+                                    }}/>
+                                    <Button onClick={onClickRemoteLink}>Open Meeting</Button>
+                                </Space.Compact>
+                            </Form.Item>
+                        </Row>}
+                    </div>
+
+                        <Row >
+                            <Form.Item name={'isMilestone'}>
+                                <Switch checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
+                                        onChange={(e) => {
+                                            setFormData((prevFormData) => ({
+                                                ...prevFormData, isMilestone: e
+                                            }))
+                                        }}/>
+                            </Form.Item>
+                        </Row>
+                    </Col>
+                </Row>
+            </Form>
+        </Modal>);
 
 };
 
