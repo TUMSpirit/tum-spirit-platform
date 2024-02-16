@@ -5,7 +5,7 @@ import { Button, FloatButton, Input } from "antd";
 const Chatbot = () => {
   // State to hold messages
   const [messages, setMessages] = useState([
-    { text: "How can I help you?", sender: "bot" },
+    { role: "assistant", content: "Hello, how can I help you?" },
   ]);
   // State to hold the current input
   const [inputValue, setInputValue] = useState("");
@@ -17,18 +17,35 @@ const Chatbot = () => {
   const handleInputChange = (event) => setInputValue(event.target.value);
 
   // Function to send the message
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputValue.trim()) {
       // Add user message to the chat
-      setMessages([...messages, { text: inputValue, sender: "user" }]);
+      setMessages([...messages, { role: "user", content: inputValue }]);
       // Clear the input
       setInputValue("");
 
-      // Here you would typically call an AI service or your backend to get the response
-      const botResponse = "This is a placeholder response.";
+      // post request to the backend to get the bot response
+      const botResponse = await fetch("http://localhost:8000/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, { role: "user", content: inputValue }],
+        }),
+      });
+
+      if (!botResponse.ok) {
+        throw new Error("Failed to get bot response");
+      }
+
+      const response = await botResponse.json();
+
+      console.log(response.choices[0].message.content);
+
       setMessages((prevMessages) => [
         ...prevMessages,
-        { text: botResponse, sender: "bot" },
+        { content: response.choices[0].message.content, role: "assistant" },
       ]);
     }
   };
@@ -82,10 +99,10 @@ const Chatbot = () => {
                 <div
                   style={{
                     fontSize: 16,
-                    color: message.sender === "bot" ? "gray" : "black",
+                    color: message.role === "assistant" ? "gray" : "black",
                   }}
                 >
-                  {message.text}
+                  {message.content}
                 </div>
               </div>
             ))}
@@ -115,7 +132,9 @@ const Chatbot = () => {
         onClick={() => {
           if (opened) {
             setOpened(false);
-            setMessages([{ text: "How can I help you?", sender: "bot" }]);
+            setMessages([
+              { content: "How can I help you?", role: "assistant" },
+            ]);
           } else {
             setOpened(true);
           }
