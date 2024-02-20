@@ -16,7 +16,7 @@ import {
     Space,
     Image,
     Switch,
-    Flex
+    Radio , TimePicker
 } from "antd";
 import './AddEventPopup.css';
 import dayjs from "dayjs";
@@ -71,6 +71,10 @@ const AddEventPopup = ({
             rangepicker: [dayjs(formData.start), dayjs(formData.end)],
             textArea: formData.textArea,
             sharedUsers: formData.sharedUsers.map(user => user.id),
+            datepickerStart: dayjs(formData.start),
+            timepickerStart: dayjs(formData.start),
+            datepickerEnd: dayjs(formData.end),
+            timepickerEnd: dayjs(formData.end)
         }
     }
 
@@ -84,20 +88,21 @@ const AddEventPopup = ({
     //---------------------------------- form functions ---------------------------------------
     const fillNewEvent = (fieldsValue) => {
         console.log('fieldsValue: ', fieldsValue)
+        console.log('formdata: ', formData.isOnSite)
         let color = fieldsValue['colorPicker'];
 
 
-        const startYear = fieldsValue["rangepicker"][0].format('YYYY');
-        const startMonth = transformMonth(fieldsValue["rangepicker"][0].format('MM'));
+        const startYear = fieldsValue["datepickerStart"].format('YYYY');
+        const startMonth = transformMonth(fieldsValue["datepickerStart"].format('MM'));
 
-        const startDay = fieldsValue["rangepicker"][0].format('DD');
-        const startHour = fieldsValue["rangepicker"][0].format('HH');
-        const startMinute = fieldsValue["rangepicker"][0].format('mm');
-        const endYear = fieldsValue["rangepicker"][1].format('YYYY');
-        const endMonth = transformMonth(fieldsValue["rangepicker"][1].format('MM'));
-        const endDay = fieldsValue["rangepicker"][1].format('DD');
-        const endHour = fieldsValue["rangepicker"][1].format('HH');
-        const endMinute = fieldsValue["rangepicker"][1].format('mm');
+        const startDay = fieldsValue["datepickerStart"].format('DD');
+        const startHour = fieldsValue["timepickerStart"].format('HH');
+        const startMinute = fieldsValue["timepickerStart"].format('mm');
+        const endYear = fieldsValue["datepickerEnd"].format('YYYY');
+        const endMonth = transformMonth(fieldsValue["datepickerEnd"].format('MM'));
+        const endDay = fieldsValue["datepickerEnd"].format('DD');
+        const endHour = fieldsValue["timepickerEnd"].format('HH');
+        const endMinute = fieldsValue["timepickerEnd"].format('mm');
         console.log('users: ', users)
         const newEvent = {
             id: formData.id,
@@ -116,26 +121,34 @@ const AddEventPopup = ({
         return newEvent;
     }
     const onSubmit = async (fieldsValue) => {
-        const newEvent = fillNewEvent(fieldsValue); //get rid of id
-        if (isCreateEventOpen) {
-            const createdEvent = await createEntry(newEvent)
-            if (fieldsValue['files']) {
-                console.log('created event', createdEvent)
-                uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+            const newEvent = fillNewEvent(fieldsValue); //get rid of id
+            if(newEvent.start > newEvent.end)
+            {
+                message.error('End Date must be greater than Start Date')
             }
 
-        } else {
-            const createdEvent = await updateEntry(newEvent)
-            if (fieldsValue['files']) {
-                console.log('updated event id', createdEvent._id)
-                uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
-            }
-        }
+            else {
+                if (isCreateEventOpen) {
+                    console.log('new event', newEvent)
+                    const createdEvent = await createEntry(newEvent)
+                    console.log('created event', createdEvent)
+                    if (fieldsValue['files']) {
+                        uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+                    }
 
-        form.resetFields()
-        setIsCreateEventOpen(false);
-        setIsUpdateEventOpen(false);
-        //form.resetFields();
+                } else {
+                    const createdEvent = await updateEntry(newEvent)
+                    if (fieldsValue['files']) {
+                        console.log('updated event id', createdEvent._id)
+                        uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
+                    }
+                }
+
+                form.resetFields()
+                setIsCreateEventOpen(false);
+                setIsUpdateEventOpen(false);
+                //form.resetFields();
+            }
     }
 
     const onCancel = () => {
@@ -187,8 +200,8 @@ const AddEventPopup = ({
     }
 
     const defFileList = () => {
-        //console.log('file: ', event.files)
-        if (event?.files) {
+        if (isUpdateEventOpen) {
+            //console.log('file: ', event.files)
             return event.files.map(file => ({
                 uid: file.fileRef,
                 name: file.filename,
@@ -204,7 +217,7 @@ const AddEventPopup = ({
     const beforeUpload = (file) => {
         const isLt2M = file.size / 1024 / 1024 < 2;
         if (!isLt2M) {
-            message.error('Image must smaller than 2MB!');
+            message.error('File must smaller than 2MB!');
         }
         return isLt2M;
     }
@@ -251,11 +264,11 @@ const AddEventPopup = ({
                ]}
         >
             <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef}
-                  initialValues={getInitialFormValues()}>
+                  initialValues={getInitialFormValues()} requiredMark={false} >
                 <Row gutter={[32, 16]}>
                     <Col span={12}>
                         <Row gutter={[0, 16]}>
-                            <Form.Item label={"Title"} name="title">
+                            <Form.Item rules={[{ required: true, message: 'This field is required' }]} label={"Title"} name="title">
                                 <Input required placeholder={"Enter Title"} onChange={(e) => {
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, title: e.target.value
@@ -277,11 +290,32 @@ const AddEventPopup = ({
                             </Form.Item>
                         </Row>
 
-                        <Row gutter={[0, 16]}>
-                            <Form.Item label={"Date"} name="rangepicker">
-                                <RangePicker format="DD.MM.YYYY HH:mm" showTime={{format: 'HH:mm'}}
-                                             required></RangePicker>
+                        <Row gutter={[16, 16]}>
+                            <Col>
+                            <Form.Item label={"Start"}  name="datepickerStart">
+                                <DatePicker format="DD.MM.YYYY" placeholder={"start date"}></DatePicker>
                             </Form.Item>
+                            </Col>
+
+                            <Col>
+                                <Form.Item label={' '}   name="timepickerStart">
+                                    <TimePicker format="HH:mm" placeholder={"start time"}></TimePicker>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+
+                        <Row gutter={[16, 16]}>
+                            <Col>
+                                <Form.Item label={"End"}  name="datepickerEnd">
+                                    <DatePicker format="DD.MM.YYYY" placeholder={"end date"}></DatePicker>
+                                </Form.Item>
+                            </Col>
+
+                            <Col>
+                                <Form.Item label={' '}   name="timepickerEnd">
+                                    <TimePicker format="HH:mm" placeholder={"end time"}></TimePicker>
+                                </Form.Item>
+                            </Col>
                         </Row>
 
                         <Row className={'row-upload'} gutter={[0, 16]}>
@@ -324,13 +358,14 @@ const AddEventPopup = ({
                         <div className='inset-shadow'>
                         <Row gutter={[0, 16]}>
                             <Form.Item label={'Location'} name={'isOnSite'}>
-                                <Switch checked={formData.isOnSite} checkedChildren={'On Site'}
-                                        unCheckedChildren={'Remote'}
-                                        onChange={(e) => {
-                                            setFormData((prevFormData) => ({
-                                                ...prevFormData, isOnSite: e
-                                            }))
-                                        }}/>
+                                <Radio.Group defaultValue={formData.isOnSite? 'onSite' : 'remote'} onChange={(e) => {
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData, isOnSite: !(formData.isOnSite)
+                                    }))
+                                }}>
+                                    <Radio.Button value={'onSite'}>On Site</Radio.Button>
+                                    <Radio.Button value={'remote'}>Remote</Radio.Button>
+                                </Radio.Group>
                             </Form.Item>
                         </Row>
 

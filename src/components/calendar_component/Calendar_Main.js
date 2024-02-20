@@ -17,6 +17,7 @@ import {
 import UploadImportPopup from "./calendar_additional_components/UploadImportPopup";
 import TimelinePopup from "./calendar_additional_components/TimelinePopup";
 import {Button, Modal} from "antd";
+import TutorialPopup from "./calendar_additional_components/Tutorial Popup";
 
 
 const localizer = momentLocalizer(moment);
@@ -25,7 +26,8 @@ const currentUser = {
     name: "Josef Suckart",
     id: "123456",
     color: "green",
-    initialen: "JS"
+    initialen: "JS",
+    isFirstLogin: true
 };
 
 const users = [
@@ -33,21 +35,24 @@ const users = [
         name: "Josef Suckart",
         id: "123456",
         color: "green",
-        initialen: "JS"
+        initialen: "JS",
+        isFirstLogin: true
     },
 
     {
         name: "Jonas Bender",
         id: "420420",
         color: "blue",
-        initialen: "JB"
+        initialen: "JB",
+        isFirstLogin: false
     },
 
     {
         name: "Degenhardt Hardt",
         id: "808080",
         color: "red",
-        initialen: "DH"
+        initialen: "DH",
+        isFirstLogin: false
     },
 
 ]
@@ -77,6 +82,7 @@ const Calendar_Main = () => {
     const [isUploadImportPopupOpen, setIsUploadImportPopupOpen] = useState(false)
     const [isTimelineOpen, setIsTimelineOpen] = useState(false)
     const [currentEvent, setCurrentEvent] = useState(null)
+    const [isFirstLogin, setIsFirstLogin] = useState(currentUser.isFirstLogin)
 
     //------------------------- Button Events Handler -------------------------------------------
 
@@ -140,14 +146,14 @@ const Calendar_Main = () => {
                 />
 
                 <Button onClick={() => {setIsTimelineOpen(!isTimelineOpen)}}>Project Schedule</Button>
-                <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen}></TimelinePopup>
-
+                <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries} users={users} currentUser={currentUser}></TimelinePopup>
+                <TutorialPopup isFirstLogin={isFirstLogin} setISFirstLogin={setIsFirstLogin}></TutorialPopup>
             </div>
         </div>
 
     );
 }
-
+//<TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries}></TimelinePopup>
 /*
 {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true} users={users} currentUser={currentUser}/>}
             {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg} users={users}/>}

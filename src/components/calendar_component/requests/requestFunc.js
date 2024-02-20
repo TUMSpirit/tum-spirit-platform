@@ -39,7 +39,7 @@ const postEntry = async (newEntry) => {
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
         allDay: newEntry.allDay? newEntry.allDay : false,
-        isOnSite: newEntry.isOnSite? newEntry.isOnSite : true,
+        isOnSite: newEntry.isOnSite? newEntry.isOnSite : false,
         textArea: newEntry.textArea? newEntry.textArea : '',
         room: newEntry.room? newEntry.room : null,
         remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
