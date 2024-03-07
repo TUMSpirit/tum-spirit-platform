@@ -20,9 +20,14 @@ import {
 } from "antd";
 import './AddEventPopup.css';
 import dayjs from "dayjs";
-import {DeleteOutlined, DownloadOutlined, UploadOutlined} from "@ant-design/icons";
+import {
+    DeleteOutlined,
+    DownloadOutlined,
+    QuestionCircleOutlined,
+    QuestionOutlined,
+    UploadOutlined
+} from "@ant-design/icons";
 import moment from "moment";
-import axios from "axios";
 import {
     useCreateEntries, useDeleteEntries, useDeleteFile, useUpdateEntries, useUploadFile
 } from "../requests/requestFunc";
@@ -215,11 +220,11 @@ const AddEventPopup = ({
     };
 
     const beforeUpload = (file) => {
-        const isLt2M = file.size / 1024 / 1024 < 2;
-        if (!isLt2M) {
-            message.error('File must smaller than 2MB!');
+        const isLt16M = file.size / 1024 / 1024 < 16;
+        if (!isLt16M) {
+            message.error('File must smaller than 16MB!');
         }
-        return isLt2M;
+        return isLt16M;
     }
 
     const onRemoveUpload = (file) => {
@@ -258,18 +263,19 @@ const AddEventPopup = ({
         <Modal open={isCreateEventOpen || isUpdateEventOpen} closeIcon={false} title={"Details"}
                className={'modal-addEvent'}
                footer={[
-                   isUpdateEventOpen && (<Button type='primary' onClick={() => onDelete(event.id)} icon={<DeleteOutlined/>}/>),
+                   isUpdateEventOpen && (<Button data-testid='deleteEventButton' type='primary' onClick={() => onDelete(event.id)} icon={<DeleteOutlined/>}/>),
                    <Button onClick={onCancel}>Cancel</Button>,
-                   <Button key="submit" type='primary' onClick={form.submit}>Save</Button>
+                   <Button data-testid='saveEventButton' key="submit" type='primary' onClick={form.submit}>Save</Button>
                ]}
         >
+
             <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef}
                   initialValues={getInitialFormValues()} requiredMark={false} >
                 <Row gutter={[32, 16]}>
                     <Col span={12}>
                         <Row gutter={[0, 16]}>
                             <Form.Item rules={[{ required: true, message: 'This field is required' }]} label={"Title"} name="title">
-                                <Input required placeholder={"Enter Title"} onChange={(e) => {
+                                <Input data-testid='titleInput' required placeholder={"Enter Title"} onChange={(e) => {
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, title: e.target.value
                                     }))
@@ -372,7 +378,7 @@ const AddEventPopup = ({
                         {formData.isOnSite && <Row className={'row-navigate'} >
                             <Form.Item label={'Room'} name={'room'}>
                                 <Space.Compact style={{width: '100%'}}>
-                                    <Input defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
+                                    <Input data-testid='roomNumberInput' defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
                                         setFormData((prevFormData) => ({
                                             ...prevFormData, room: event.target.value
                                         }))
@@ -401,7 +407,7 @@ const AddEventPopup = ({
 
                         <Row >
                             <Form.Item name={'isMilestone'}>
-                                <Switch checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
+                                <Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
                                         onChange={(e) => {
                                             setFormData((prevFormData) => ({
                                                 ...prevFormData, isMilestone: e

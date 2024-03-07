@@ -27,7 +27,7 @@ const currentUser = {
     id: "123456",
     color: "green",
     initialen: "JS",
-    isFirstLogin: true
+    isFirstLogin: false
 };
 
 const users = [
@@ -41,7 +41,7 @@ const users = [
 
     {
         name: "Jonas Bender",
-        id: "420420",
+        id: "333333",
         color: "blue",
         initialen: "JB",
         isFirstLogin: false
@@ -49,7 +49,7 @@ const users = [
 
     {
         name: "Degenhardt Hardt",
-        id: "808080",
+        id: "444444",
         color: "red",
         initialen: "DH",
         isFirstLogin: false
@@ -124,16 +124,16 @@ const Calendar_Main = () => {
     }
 
     return (
-        <div>
+        <div style={{padding: "20px"}}>
             {(isUpdateEventPopupOpen || isCreateEventPopupOpen) && <AddEventPopup isUpdateEventOpen={isUpdateEventPopupOpen} isCreateEventOpen={isCreateEventPopupOpen}
                            setIsCreateEventOpen={setIsCreateEventPopupOpen} setIsUpdateEventOpen={setIsUpdateEventPopupOpen}
                            event={currentEvent}
                            users={users} currentUser={currentUser}/>}
-            {isUploadImportPopupOpen && <UploadImportPopup onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>}
-            <div style={{height: "75vh"}}>
+            {isUploadImportPopupOpen && <UploadImportPopup user={currentUser} isUploadImportPopupOpen={isUploadImportPopupOpen} onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>}
+            <div style={{height: "80vh"}} className="kachel">
                 <Calendar
                     components={{
-                        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
+                        toolbar: props => (<CustomToolbar {...props} isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
                     }}
                     views={['month', 'week', 'day']}
                     onSelectEvent ={onClickEvent}
@@ -144,11 +144,10 @@ const Calendar_Main = () => {
                     toolbar={true}
                     eventPropGetter={(eventStyleGetter)}
                 />
-
-                <Button onClick={() => {setIsTimelineOpen(!isTimelineOpen)}}>Project Schedule</Button>
                 <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries} users={users} currentUser={currentUser}></TimelinePopup>
                 <TutorialPopup isFirstLogin={isFirstLogin} setISFirstLogin={setIsFirstLogin}></TutorialPopup>
             </div>
+
         </div>
 
     );

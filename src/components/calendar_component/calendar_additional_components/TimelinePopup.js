@@ -40,14 +40,14 @@ const TimelinePopup = ({isTimelineOpen, setIsTimelineOpen, events, users, curren
     //console.log('initialValues: ', initialValues)
     return (
         <div>
-       <Modal closable={false} open={isTimelineOpen} footer={[
+       <Modal width={'70%'} title={'Project Schedule'} closable={false} open={isTimelineOpen} footer={[
            // Custom footer without a cancel button
            <Button key="submit" type="primary" onClick={() => {setIsTimelineOpen(false)}}>
                OK
            </Button>,
        ]}>
            {(milestones?.length === 0) ? "you don't have any Milestone Meetings scheduled" : ''}
-           <Steps labelPlacement="vertical" style={{padding: "10%"}} current={findCurrent()} items={milestones?.map((m, i) => ({title: m.title, icon: <Button style={{backgroundColor: lighten(0.42, m.color)}} onClick={() => onClickEvent(i)}>{i+1}</Button> }))} mode={'right'}></Steps>
+           <Steps labelPlacement="vertical" style={{padding: "5%"}} current={findCurrent()} items={milestones?.map((m, i) => ({title: m.title, icon: <Button style={{backgroundColor: lighten(0.42, m.color)}} onClick={() => onClickEvent(i)}>{i+1}</Button> }))} mode={'right'}></Steps>
        </Modal>
 
     {(isUpdateEventOpen) && <AddEventPopup isUpdateEventOpen={isUpdateEventOpen} isCreateEventOpen={false}

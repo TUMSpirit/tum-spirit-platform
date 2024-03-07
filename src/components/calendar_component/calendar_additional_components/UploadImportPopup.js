@@ -83,11 +83,9 @@ const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen}) => {
                     </Upload>
                     </div>
                 </Form.Item>
-                <div className={"formButtons"}>
+                <div  style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button onClick={onCancel} style={{marginRight: '10px'}}>Cancel</Button>
                     <Button type="primary" htmlType={"submit"} onClick={() => {onClickUpload(uploadFileContent)}}>Save</Button>
-
-
-                    <Button onClick={onCancel}>Cancel</Button>
                 </div>
                 </Form>
             </div>
