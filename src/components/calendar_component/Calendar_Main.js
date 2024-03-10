@@ -133,7 +133,7 @@ const Calendar_Main = () => {
             <div style={{height: "80vh"}} className="kachel">
                 <Calendar
                     components={{
-                        toolbar: props => (<CustomToolbar {...props} isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
+                        toolbar: props => (<CustomToolbar data-testid='Toolbar' {...props} isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
                     }}
                     views={['month', 'week', 'day']}
                     onSelectEvent ={onClickEvent}

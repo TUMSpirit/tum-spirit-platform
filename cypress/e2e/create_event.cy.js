@@ -1,4 +1,48 @@
-describe('template spec', () => {
+import 'cypress-file-upload';
+describe('workflow test', () => {
+
+  it('checks import feature', () => {
+    //open app
+    cy.visit('http://localhost:3000/calendar')
+    cy.get('[data-testid=\'openImportButton\']').click()
+
+    cy.get('[data-testid=\'import-upload\']').attachFile({
+      filePath:'../../src/components/calendar_component/test/Test Events Import.csv'
+    })
+    cy.get('[data-testid=\'import-save\']').click()
+
+    //Navigate to march
+    function navigateToMonth(destMonth) {
+      cy.get('body').then($body => {
+        if (!$body.text().includes(destMonth)) {
+          cy.get('[data-testid=\'navigate-left\']').click();
+          cy.wait(500);
+          navigateToMonth(destMonth); // recursive call until detsMonth is reached
+        }
+      });
+    }
+
+    // Navigate to each month, check if event is there and delete it
+    navigateToMonth('March 2024');
+    cy.contains('Import Test 3').should('be.visible');
+    cy.contains('Import Test 3').click()
+    cy.get('[data-testid=\'deleteEventButton\']').click()
+    cy.contains('Import Test 3').should('not.exist');
+
+    navigateToMonth('February 2024');
+    cy.contains('Import Test 2').should('be.visible');
+    cy.contains('Import Test 2').click()
+    cy.get('[data-testid=\'deleteEventButton\']').click()
+    cy.contains('Import Test 2').should('not.exist');
+
+    navigateToMonth('January 2024');
+    cy.contains('Import Test 1').should('be.visible');
+    cy.contains('Import Test 1').click()
+    cy.get('[data-testid=\'deleteEventButton\']').click()
+    cy.contains('Import Test 1').should('not.exist');
+  });
+
+
   it('creates event', () => {
     //open app
     cy.visit('http://localhost:3000/calendar')
@@ -32,3 +76,20 @@ describe('template spec', () => {
 
   })
 })
+
+const clickUntil = (clickCommand, condition, options = {}) => {
+  const { timeout = Cypress.config('defaultCommandTimeout'), interval = 100 } = options;
+  let promise = clickCommand();
+
+  const checkCondition = () => {
+    return Promise.resolve(condition())
+        .then(result => {
+          if (!result) {
+            promise = clickCommand();
+            return cy.wait(interval).then(checkCondition);
+          }
+        });
+  };
+
+  return cy.wrap(promise).then(checkCondition).timeout(timeout);
+};

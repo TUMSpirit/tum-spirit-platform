@@ -50,13 +50,13 @@ const CustomToolbar = ({
             <div className="toolbarWrapper">
                 <div className="viewSwitch"><Radio.Group buttonStyle={"solid"} options={views} optionType={"button"} onChange={onChangeView} value={view}></Radio.Group></div>
                 <div >
-                    <Button icon={<LeftOutlined />} onClick={() => onNavigate(navigate.PREVIOUS)} type={"text"}></Button>
+                    <Button data-testid='navigate-left' icon={<LeftOutlined />} onClick={() => onNavigate(navigate.PREVIOUS)} type={"text"}></Button>
                     {label}
                     <Button icon={<RightOutlined />} onClick={() => onNavigate(navigate.NEXT)} type={"text"}></Button>
                 </div>
                 <div className="viewSwitch" >
                     <Button type={"primary"} style={{marginRight: "10px"}} onClick={() => {setIsTimelineOpen(!isTimelineOpen)}} icon={<UnorderedListOutlined />}></Button>
-                    <Button type={"primary"} onClick={onOpenUploadImportPopup} style={{marginRight: "10px"}} icon={<UploadOutlined />}></Button>
+                    <Button data-testid='openImportButton' type={"primary"} onClick={onOpenUploadImportPopup} style={{marginRight: "10px"}} icon={<UploadOutlined />}></Button>
                     <Button data-testid='addEventButton' type={"primary"} onClick={onOpenAddEvent}>+ add Event</Button>
                 </div>
             </div>
