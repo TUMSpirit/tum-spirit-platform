@@ -1964,7 +1964,6 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav
   line-height: 40px;
 }
 .ant-btn {
-  box-shadow: 0 2px 4px rgb(0 0 0 / 7%);
   border-radius: 6px;
 }
 .layout-sign-up .ant-layout-footer {
@@ -2264,7 +2263,7 @@ button.ant-btn.bell strong {
 
 .layout-dashboard .ant-layout-content {
   padding: 0;
-  margin: 0 20px 0;
+  margin: 20px 20px 0;
 }
 .m-10,
 .mr-10,

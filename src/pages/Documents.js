@@ -179,7 +179,7 @@ function Documents() {
           <Col xs="24" xl={24}>
             <Card
               bordered={false}
-              className="criclebox tablespace mb-24"
+              className="criclebox tablespace"
             >
               <div className="table-responsive">
                 <Table

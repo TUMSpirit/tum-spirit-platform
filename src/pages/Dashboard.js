@@ -9,7 +9,7 @@
   =========================================================
   * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   Card,
@@ -33,6 +33,7 @@ import Paragraph from "antd/lib/typography/Paragraph";
 
 import Echart from "../components/chart/EChart";
 import LineChart from "../components/chart/LineChart";
+import Chart from 'chart.js/auto';
 
 import ava1 from "../assets/images/logo-shopify.svg";
 import ava2 from "../assets/images/logo-atlassian.svg";
@@ -141,10 +142,10 @@ function Dashboard() {
   ];
   const count = [
     {
-      today: "Today’s Sales",
-      title: "$53,000",
-      persent: "+30%",
-      icon: dollor,
+      today: "Subjectivity",
+      title: "42.21",
+      persent: "+9%",
+      icon: undefined,
       bnb: "bnb2",
     },
     {
@@ -340,15 +341,58 @@ function Dashboard() {
     },
   };
 
+  useEffect(() => {
+
+    var options = {
+      responsive: true,
+      maintainAspectRatio: true,
+      scale: {
+          min: 0,
+          max: 5,
+      }
+    };
+
+    var dataLiteracy = {
+      labels: ["Extraversion","Conscientiousness ", "Agreeableness ", "Neuroticism ", "Openness"],
+      datasets: [{
+        label: "Literacy",
+        backgroundColor: "rgba(179,181,198,0.2)",
+        borderColor: "rgba(179,181,198,1)",
+        pointBackgroundColor: "rgba(179,181,198,1)",
+        pointBorderColor: "#fff",
+        pointHoverBackgroundColor: "#fff",
+        pointHoverBorderColor: "rgba(179,181,198,1)",
+        data: [
+          0.5, 3, 4, 1, 2
+        ]
+      }]
+    };
+
+    var ctx = document.getElementById("spider-container");
+    var myRadarChart = new Chart(ctx, {
+      type: 'radar',
+      data: dataLiteracy,
+      options: options
+    });
+    // Your code here
+  }, []);
+
+
   return (
     <>
       <div className="layout-content">
         <Row className="rowgap-vbox" gutter={[24, 0]}>
+          <Col xs={12}>
+            <Title level={2}>
+              Spider Chart
+            </Title>
+            <canvas id="spider-container"></canvas>
+          </Col>
           {count.map((c, index) => (
             <Col
               key={index}
-              xs={24}
-              sm={24}
+              xs={12}
+              sm={12}
               md={12}
               lg={6}
               xl={6}
@@ -357,14 +401,11 @@ function Dashboard() {
               <Card bordered={false} className="criclebox ">
                 <div className="number">
                   <Row align="middle" gutter={[24, 0]}>
-                    <Col xs={18}>
+                    <Col xs={24}>
                       <span>{c.today}</span>
                       <Title level={3}>
                         {c.title} <small className={c.bnb}>{c.persent}</small>
                       </Title>
-                    </Col>
-                    <Col xs={6}>
-                      <div className="icon-box">{c.icon}</div>
                     </Col>
                   </Row>
                 </div>
@@ -374,12 +415,7 @@ function Dashboard() {
         </Row>
 
         <Row gutter={[24, 0]}>
-          <Col xs={24} sm={24} md={12} lg={12} xl={10} className="mb-24">
-            <Card bordered={false} className="criclebox h-full">
-              <Echart />
-            </Card>
-          </Col>
-          <Col xs={24} sm={24} md={12} lg={12} xl={14} className="mb-24">
+          <Col xs={24} sm={24} md={24} lg={24} xl={24} className="mb-24">
             <Card bordered={false} className="criclebox h-full">
               <LineChart />
             </Card>
@@ -483,72 +519,6 @@ function Dashboard() {
                 >
                   {<MenuUnfoldOutlined />} REVERSE
                 </Button>
-              </div>
-            </Card>
-          </Col>
-        </Row>
-
-        <Row gutter={[24, 0]}>
-          <Col xs={24} md={12} sm={24} lg={12} xl={14} className="mb-24">
-            <Card bordered={false} className="criclebox h-full">
-              <Row gutter>
-                <Col
-                  xs={24}
-                  md={12}
-                  sm={24}
-                  lg={12}
-                  xl={14}
-                  className="mobile-24"
-                >
-                  <div className="h-full col-content p-20">
-                    <div className="ant-muse">
-                      <Text>Built by developers</Text>
-                      <Title level={5}>Muse Dashboard for Ant Design</Title>
-                      <Paragraph className="lastweek mb-36">
-                        From colors, cards, typography to complex elements, you
-                        will find the full documentation.
-                      </Paragraph>
-                    </div>
-                    <div className="card-footer">
-                      <a className="icon-move-right" href="#pablo">
-                        Read More
-                        {<RightOutlined />}
-                      </a>
-                    </div>
-                  </div>
-                </Col>
-                <Col
-                  xs={24}
-                  md={12}
-                  sm={24}
-                  lg={12}
-                  xl={10}
-                  className="col-img"
-                >
-                  <div className="ant-cret text-right">
-                    <img src={card} alt="" className="border10" />
-                  </div>
-                </Col>
-              </Row>
-            </Card>
-          </Col>
-
-          <Col xs={24} md={12} sm={24} lg={12} xl={10} className="mb-24">
-            <Card bordered={false} className="criclebox card-info-2 h-full">
-              <div className="gradent h-full col-content">
-                <div className="card-content">
-                  <Title level={5}>Work with the best</Title>
-                  <p>
-                    Wealth creation is an evolutionarily recent positive-sum
-                    game. It is all about who take the opportunity first.
-                  </p>
-                </div>
-                <div className="card-footer">
-                  <a className="icon-move-right" href="#pablo">
-                    Read More
-                    <RightOutlined />
-                  </a>
-                </div>
               </div>
             </Card>
           </Col>
