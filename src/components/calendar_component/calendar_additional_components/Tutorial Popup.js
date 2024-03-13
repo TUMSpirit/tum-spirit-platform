@@ -9,7 +9,10 @@ import {momentLocalizer} from "react-big-calendar";
 import './TutorialPopup.css'
 
 const image1 = require('../img/T_left.png')
-const image2 = require('../img/T_right.png')
+const T1 = require('../img/Tut1.png')
+const T2 = require('../img/Tut2.png')
+const T3 = require('../img/Tut3.png')
+const T4 = require('../img/Tut4.png')
 
 const TutorialPopup = ({isFirstLogin, setISFirstLogin}) => {
 
@@ -37,16 +40,16 @@ const TutorialPopup = ({isFirstLogin, setISFirstLogin}) => {
                <Col span={14}>
            <Carousel  afterChange={(slide) => setCurrentSlide(slide)} ref={carouselRef} infinite={false}>
                <div style={{ position: 'relative', display: 'inline-block' }}>
-                   <Image preview={false} src={image2} />
+                   <Image preview={false} src={T1} />
                </div>
                <div style={{ position: 'relative', display: 'inline-block' }}>
-                   <Image preview={false} src={image2} />
+                   <Image preview={false} src={T2} />
                </div>
                <div style={{ position: 'relative', display: 'inline-block' }}>
-                   <Image preview={false} src={image2} />
+                   <Image preview={false} src={T3} />
                </div>
                <div style={{ position: 'relative', display: 'inline-block' }}>
-                   <Image preview={false} src={image2} />
+                   <Image preview={false} src={T4} />
                </div>
            </Carousel>
            <Button style={{ position: 'absolute', top: '92%', left: 20, transform: 'translateY(-50%)' }} onClick={() => setISFirstLogin(false)}>Skip</Button>

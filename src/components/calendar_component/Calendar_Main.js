@@ -27,7 +27,7 @@ const currentUser = {
     id: "123456",
     color: "green",
     initialen: "JS",
-    isFirstLogin: false
+    isFirstLogin: true
 };
 
 const users = [

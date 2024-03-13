@@ -16,7 +16,7 @@ import {
     Space,
     Image,
     Switch,
-    Radio , TimePicker
+    Radio, TimePicker, Tooltip
 } from "antd";
 import './AddEventPopup.css';
 import dayjs from "dayjs";
@@ -66,6 +66,7 @@ const AddEventPopup = ({
 
 
     const [formData, setFormData] = useState(init_formData)
+    const [isLocationHelpOpen, setIsLocationHelpOpen] = useState(false)
     const [form] = Form.useForm();
     const formRef = useRef(null);
 
@@ -363,6 +364,7 @@ const AddEventPopup = ({
                     <Col span={12}>
                         <div className='inset-shadow'>
                         <Row gutter={[0, 16]}>
+                            <Col>
                             <Form.Item label={'Location'} name={'isOnSite'}>
                                 <Radio.Group defaultValue={formData.isOnSite? 'onSite' : 'remote'} onChange={(e) => {
                                     setFormData((prevFormData) => ({
@@ -373,6 +375,18 @@ const AddEventPopup = ({
                                     <Radio.Button value={'remote'}>Remote</Radio.Button>
                                 </Radio.Group>
                             </Form.Item>
+                            </Col>
+
+                        <Col style={{marginLeft: '30%'}}>
+                            <Tooltip title={'Can\'t decide remote/online?'}>
+                                <Button style={{width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex'}} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />}/>
+                            </Tooltip>
+
+                            <Modal title={'Location'} open={isLocationHelpOpen} footer={<Button type='primary' onClick={() => {setIsLocationHelpOpen(false)}}>ok</Button>}>
+                                In the initial phase of the project, you should mainly plan on-site meetings to strengthen team building. Later on, you can also schedule more and more remote meetings
+                            </Modal>
+
+                         </Col>
                         </Row>
 
                         {formData.isOnSite && <Row className={'row-navigate'} >

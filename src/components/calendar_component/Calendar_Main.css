@@ -18,10 +18,6 @@ code {
 }
 */
 /*---------------------------Custom---------------------------*/
-.viewSwitch {
-    display: flex;
-    justify-content: space-between;
-}
 
 .kachel {
     background-color: white; /* Weiße Hintergrundfarbe */
