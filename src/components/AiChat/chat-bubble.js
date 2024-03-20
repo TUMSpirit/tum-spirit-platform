@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { MessageOutlined, SmileOutlined } from "@ant-design/icons"; // Assuming you're using Ant Design
+import { MessageOutlined } from "@ant-design/icons"; // Assuming you're using Ant Design
 import { Button, FloatButton, Input } from "antd";
-
+import logo from "../../assets/images/ghost.png";
 const Chatbot = () => {
   // State to hold messages
   const [messages, setMessages] = useState([
@@ -99,9 +99,18 @@ const Chatbot = () => {
               borderTopRightRadius: 25,
             }}
           >
-            <div style={{ marginRight: 10, fontSize: 28, color: "white" }}>
-              👻
-            </div>
+            <img
+              style={{
+                marginRight: 10,
+                fontSize: 28,
+                color: "white",
+                height: 32,
+                width: 32,
+              }}
+              src={logo}
+              alt="Ghost"
+            />
+
             <div style={{ fontSize: 15, fontWeight: "bold", color: "white" }}>
               Hi I'm Spirit!
             </div>
