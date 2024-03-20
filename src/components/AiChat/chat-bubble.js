@@ -30,8 +30,14 @@ const Chatbot = () => {
       // Clear the input
       setInputValue("");
 
+      console.log(
+        JSON.stringify({
+          messages: [...messages, { role: "user", content: inputValue }],
+        })
+      );
+
       // post request to the backend to get the bot response
-      const botResponse = await fetch("http://localhost:8000/generate", {
+      const botResponse = await fetch("http://129.187.135.9:8000/ai/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
