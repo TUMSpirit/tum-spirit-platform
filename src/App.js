@@ -12,12 +12,14 @@ import Documents from "./pages/Documents";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
 
+import Walkthrough from "./components/LoginWalkthrough/LoginWalkthrough";
+
 
 function App() {
   return (
     <div className="App">
       <Switch>
-        <Route path="/sign-in" exact component={SignIn} />
+        <Route path="/sign-in" exact component={Walkthrough} />
         <Main>
           <Route exact path="/calendar" component={Calendar} />
           <Route exact path="/chat" component={Chat} />
@@ -26,7 +28,7 @@ function App() {
           <Route exact path="/documents" component={Documents} />
           <Route exact path="/dashboard" component={Dashboard} />
 
-          <Redirect from="*" to="/calendar" />
+          <Redirect from="*" to="/sign-in" />
         </Main>
       </Switch>
     </div>
