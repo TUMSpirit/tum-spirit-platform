@@ -13,6 +13,8 @@ import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
 
 import Walkthrough from "./components/LoginWalkthrough/LoginWalkthrough";
+import PostLoginOverview from "./components/LoginWalkthrough/PostLoginOverview";
+import CountdownMatchmaking from "./components/LoginWalkthrough/CountdownMatchmaking";
 
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
     <div className="App">
       <Switch>
         <Route path="/sign-in" exact component={Walkthrough} />
+        <Route exact path="/overview" component={PostLoginOverview} />
+        <Route exact path="/matchmaking" component={CountdownMatchmaking} />
         <Main>
           <Route exact path="/calendar" component={Calendar} />
           <Route exact path="/chat" component={Chat} />
@@ -27,6 +31,7 @@ function App() {
           <Route exact path="/team" component={Team} />
           <Route exact path="/documents" component={Documents} />
           <Route exact path="/dashboard" component={Dashboard} />
+
 
           <Redirect from="*" to="/sign-in" />
         </Main>
