@@ -18,9 +18,12 @@ code {
 }
 */
 /*---------------------------Custom---------------------------*/
-.viewSwitch {
-    display: flex;
-    justify-content: space-between;
+
+.kachel {
+    background-color: white; /* Weiße Hintergrundfarbe */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Leichter Schatten */
+    padding: 20px; /* Innenabstand */
+    border-radius: 8px; /* Randradius für weichere Ecken */
 }
 
 .layout-dashboard .ant-layout-content {

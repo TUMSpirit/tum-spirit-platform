@@ -31,6 +31,7 @@ export const useEntries = (userId) => {
 
 //-------------------------------------------------------post-------------------------------------------------
 const postEntry = async (newEntry) => {
+    console.log('new Entry: ', newEntry)
     const {data} = await axios.post('http://localhost:8000/calendar', {
 
         title: newEntry.title,
@@ -38,9 +39,11 @@ const postEntry = async (newEntry) => {
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
         allDay: newEntry.allDay? newEntry.allDay : false,
-        isOnSite: newEntry.isOnSite? newEntry.isOnSite : true,
+        isOnSite: newEntry.isOnSite? newEntry.isOnSite : false,
+        textArea: newEntry.textArea? newEntry.textArea : '',
         room: newEntry.room? newEntry.room : null,
         remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
+        isMilestone:  newEntry.isMilestone? newEntry.isMilestone : false,
         users: newEntry.users,
 
     });
@@ -58,7 +61,7 @@ export const useCreateEntries = () => {
 //-------------------------------------------------------put-------------------------------------------------
 
 const putEntry = async (newEntry) => {
-    //console.log('putEntry: ', newEntry)
+    console.log('putEntry: ', newEntry)
     const {data} = await axios.put('http://localhost:8000/calendar/' + newEntry.id, {
 
         title: newEntry.title,
@@ -66,9 +69,11 @@ const putEntry = async (newEntry) => {
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
         allDay: newEntry.allDay? newEntry.allDay : false,
-        isOnSite: newEntry.isOnSite? newEntry.isOnSite : true,
+        isOnSite: newEntry.isOnSite? newEntry.isOnSite : false,
+        textArea: newEntry.textArea? newEntry.textArea : '',
         room: newEntry.room? newEntry.room : null,
         remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
+        isMilestone:  newEntry.isMilestone? newEntry.isMilestone : false,
         users: newEntry.users,
     });
     return data;

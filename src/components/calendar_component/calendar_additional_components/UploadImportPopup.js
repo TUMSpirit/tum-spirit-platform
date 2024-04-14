@@ -9,7 +9,7 @@ import {func, object} from "prop-types";
 import {useCreateEntries} from "../requests/requestFunc";
 
 
-const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen}) => {
+const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen, user}) => {
     const {mutateAsync: createEntry} = useCreateEntries()
     const [data, setData] = useState([])
 
@@ -43,6 +43,7 @@ const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen}) => {
                     end: new Date(year, month - 1, day, hourBis, minuteBis),
                     color: '#1677FF',
                     allDay: false,
+                    users: [user.id]
                 }
                 createEntry(calendarEntry)
             })
@@ -63,7 +64,7 @@ const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen}) => {
                 <Form >
                 <Form.Item name='file' valuePropName="fileList" rules={[{required: true, message:'please add a file'}]}>
                     <div className={'upload'}>
-                    <Upload action="/upload.do" listType="picture-card" maxCount={1} accept=".txt, .csv"
+                    <Upload data-testid='import-upload' action="/upload.do" listType="picture-card" maxCount={1} accept=".txt, .csv"
                             beforeUpload={file => {
                                 const reader = new FileReader();
 
@@ -83,11 +84,9 @@ const UploadImportPopup = ({ onCancel,setIsUploadImportPopupOpen}) => {
                     </Upload>
                     </div>
                 </Form.Item>
-                <div className={"formButtons"}>
-                    <Button type="primary" htmlType={"submit"} onClick={() => {onClickUpload(uploadFileContent)}}>Save</Button>
-
-
-                    <Button onClick={onCancel}>Cancel</Button>
+                <div  style={{ display: 'flex', justifyContent: 'center' }}>
+                    <Button onClick={onCancel} style={{marginRight: '10px'}}>Cancel</Button>
+                    <Button data-testid='import-save' type="primary" htmlType={"submit"} onClick={() => {onClickUpload(uploadFileContent)}}>Save</Button>
                 </div>
                 </Form>
             </div>

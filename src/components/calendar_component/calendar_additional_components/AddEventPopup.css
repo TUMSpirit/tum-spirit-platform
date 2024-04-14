@@ -33,6 +33,31 @@
     flex-basis: 100%;
 }
 
+.modal-addEvent {
+    padding: 2%;
+    width: 700px !important;
+}
+
+.row-upload {
+    display: flex;
+    flex-direction: column;
+}
+
+.row-participants {
+    display: flex;
+    flex-direction: column;
+}
+
+.row-navigate {
+
+}
+
+.inset-shadow {
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 4px 0px inset;
+    padding: 5%;
+    margin-bottom: 5%;
+}
+
 /*---------------------------------test----------------------------*/
 
 .title {

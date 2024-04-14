@@ -1,0 +1,7 @@
+.ant-carousel .slick-dots li button {
+    background: cornflowerblue; /* Color of the dots */
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+    background: cornflowerblue; /* Color of the active dot */
+}
