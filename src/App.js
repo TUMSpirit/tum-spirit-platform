@@ -10,29 +10,30 @@ import Team from "./pages/Team";
 import Documents from "./pages/Documents";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
+import Timeline from "./pages/Timeline";
 import Chat from "./pages/Chat";
 import socketIO from "socket.io-client"
 
 const socket = socketIO.connect("http://localhost:4000")
 
-
 function App() {
   return (
-    <div className="App">
-      <Switch>
-        <Route path="/" exact component={SignIn} />
-        <Main>
-          <Route exact path="/calendar" component={Calendar} />
-          <Route path="/chat" component={Chat}></Route>
-          <Route exact path="/kanban" component={Kanban} />
-          <Route exact path="/team" component={Team} />
-          <Route exact path="/documents" component={Documents} />
-          <Route exact path="/dashboard" component={Dashboard} />
+      <div className="App">
+        <Switch>
+          <Route path="/" exact component={SignIn} />
+          <Main>
+            <Route exact path="/calendar" component={Calendar} />
+            <Route path="/chat" component={Chat}></Route>
+            <Route exact path="/kanban" component={Kanban} />
+            <Route exact path="/team" component={Team} />
+            <Route exact path="/documents" component={Documents} />
+            <Route exact path="/dashboard" component={Dashboard} />
+            <Route exact path="/timeline" component={Timeline} />
 
-          <Redirect from="*" to="/calendar" />
-        </Main>
-      </Switch>
-    </div>
+            <Redirect from="*" to="/chat" />
+          </Main>
+        </Switch>
+      </div>
   );
 }
 

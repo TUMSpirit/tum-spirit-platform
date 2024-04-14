@@ -80,7 +80,7 @@ const Column = ({
 					}}
 				>
 					{item.issues.map(issue => (
-						<List.Item style={{ height: '220px', marginTop: '30px', paddingLeft: 0, marginBottom: '90px' }}>
+						<List.Item style={{ height: '220px', marginTop: '30px', paddingLeft: 0 }}>
 							<Issue
 								key={issue.id}
 								item={issue}

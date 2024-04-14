@@ -13,9 +13,11 @@ import { PlusOutlined, ExclamationOutlined } from "@ant-design/icons";
 import mastercard from "../assets/images/mastercard-logo.png";
 import paypal from "../assets/images/paypal-logo-2.png";
 import visa from "../assets/images/visa-logo.png";
-import Board from "../components/Board";
+import Home from "../components/Board_new/Home";
+import Timeline from '../components/Timeline';
 
 function Kanban() {
+
     const data = [
         {
             title: "March, 01, 2021",
@@ -46,7 +48,7 @@ function Kanban() {
 
     return (
         <>
-            <Board/>
+            <Home/>
         </>
     );
 }

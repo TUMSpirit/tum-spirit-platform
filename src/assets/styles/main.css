@@ -2318,11 +2318,8 @@ section.ant-layout.layout-content .ant-layout-content.content-ant {
   margin-bottom: 45px;
   font-size: 20px;
 }
-.ant-card-head-wrapper {
-  min-height: 72px;
-}
 .card-credit .ant-card-body {
-  padding-top: 15px;
+  padding-top: 10px;
 }
 .card-credit .card-footer {
   display: flex;
@@ -3029,7 +3026,6 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile
 .layout-dashboard .ant-affix .ant-layout-header {
   background: #fff;
   box-shadow: 0 20px 27px rgb(0 0 0 / 5%);
-  margin: 10px 20px;
   z-index: 10;
 }
 
