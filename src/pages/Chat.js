@@ -1,15 +1,34 @@
 import React, {useEffect, useState, useRef} from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
-//import '../components/chat/index.css';
+import '../components/chat/index.css';
 import socketIO from "socket.io-client"
+import {Typography} from "antd";
 
+const {Title} = Typography;
 const socket = socketIO.connect("http://localhost:4000")
+
 
 const Chat = () => {
 
-    const [messages, setMessages] = useState([])
+    const [messages, setMessages] = useState([]);
+    const [currentTab, setCurrentTab] = useState('1');
+    const [editingMessage, setEditingMessage] = useState(null);
     const lastMessageRef = useRef(null);
+    const handleRemoveReaction = (updatedMessages) => {
+        setMessages(updatedMessages);
+    };
+
+
+    useEffect(() => {
+        function fetchMessages() {
+            fetch(`http://localhost:4000/api?chatId=${currentTab}`)
+                .then(response => response.json())
+                .then(data => setMessages(data.messages || []));
+        }
+
+        fetchMessages();
+    }, [currentTab]);
 
     useEffect(() => {
         socket.on("messageResponse", data => setMessages([...messages, data]))
@@ -20,14 +39,70 @@ const Chat = () => {
         lastMessageRef.current?.scrollIntoView({behavior: 'smooth'});
     }, [messages]);
 
+    useEffect(() => {
+        socket.on('messageUpdated', (updatedMessage) => {
+            setMessages(prevMessages => {
+                const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
+                if (index !== -1) {
+                    const newMessages = [...prevMessages];
+                    newMessages[index] = updatedMessage;
+                    return newMessages;
+                }
+                return prevMessages;
+            });
+        });
+        return () => socket.off('messageUpdated');
+    }, [socket]);
+
+    const handleDeleteMessage = (messageId) => {
+        socket.emit('deleteMessage', messageId);
+        setMessages(messages => messages.map(msg => {
+            if (msg.id === messageId) {
+                return {...msg, deleted: true};
+            }
+            return msg;
+        }));
+    };
+
+    useEffect(() => {
+        socket.on('emojiReactionRemoved', (updatedMessage) => {
+            setMessages(currentMessages => currentMessages.map(msg => {
+                if (msg.id === updatedMessage.id) {
+                    const updatedMsg = {...msg};
+                    delete updatedMsg.reaction;
+                    return updatedMsg;
+                }
+                return msg;
+            }));
+        });
+        return () => {
+            socket.off('emojiReactionRemoved');
+        };
+    }, [socket]);
+
+    useEffect(() => {
+        socket.on('emojiReactionUpdated', (updatedMessage) => {
+            setMessages(currentMessages => currentMessages.map(msg => {
+                if (msg.id === updatedMessage.id) {
+                    return updatedMessage;
+                }
+                return msg;
+            }));
+        });
+        return () => socket.off('emojiReactionUpdated');
+    }, [socket]);
+
+
     return (
         <div className="chat">
             <div className='chat__main'>
-                <ChatBody messages={messages} lastMessageRef={lastMessageRef}/>
-                <ChatFooter socket={socket}/>
+                <ChatBody currentTab={currentTab} setCurrentTab={setCurrentTab} messages={messages}
+                          onRemoveReaction={handleRemoveReaction} lastMessageRef={lastMessageRef}
+                          setEditingMessage={setEditingMessage} onDeleteMessage={handleDeleteMessage} socket={socket}/>
+                <ChatFooter socket={socket} editingMessage={editingMessage} setEditingMessage={setEditingMessage}/>
             </div>
         </div>
-    )
+    );
 };
 
 export default Chat;
