@@ -37,8 +37,8 @@ const DashboardTabs = () => {
             value={{ startDate, endDate, setStartDate, setEndDate }}
         >
             {showFilter && (
-                <div className="md:tw-absolute tw-justify-center tw-right-6 tw-top-0 tw-pt-2 tw-flex tw-gap-2 tw-items-baseline">
-                    <span className="tw-font-bold">Filter:</span>
+                <div className="md:absolute justify-center right-6 top-0 pt-2 flex gap-2 items-baseline">
+                    <span className="font-bold">Filter:</span>
                     <RangePicker
                         onChange={(values) => {
                             setStartDate(values ? values[0] : undefined);
@@ -48,7 +48,7 @@ const DashboardTabs = () => {
                 </div>
             )}
             <Tabs
-                className="tw-px-6"
+                className="px-6"
                 defaultActiveKey="1"
                 items={items}
                 onChange={(key) => setShowFilter(key !== "1")}

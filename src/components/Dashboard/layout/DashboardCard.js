@@ -29,14 +29,14 @@ export const DashboardCard = forwardRef(
             <div
                 className={twMerge(
                     className,
-                    "tw-rounded-xl tw-bg-white tw-shadow-sm tw-p-4"
+                    "rounded-xl bg-white shadow-sm p-4"
                 )}
                 {...props}
                 ref={ref}
             >
-                <div className="tw-flex tw-items-center tw-gap-2 tw-justify-between">
-                    <div className="tw-flex tw-items-baseline tw-gap-2 tw-text-md">
-                        <h3 className="tw-text-gray-500 tw-font-bold tw-uppercase">
+                <div className="flex items-center gap-2 justify-between">
+                    <div className="flex items-baseline gap-2 text-md">
+                        <h3 className="text-gray-500 font-bold uppercase">
                             {caption}
                         </h3>
                         {helpContent ? (
@@ -45,7 +45,7 @@ export const DashboardCard = forwardRef(
                                 title={caption + " Explanation"}
                                 trigger="click"
                             >
-                                <QuestionCircleOutlined className="tw-text-blue-400 tw-cursor-pointer" />
+                                <QuestionCircleOutlined className="text-blue-400 cursor-pointer" />
                             </Popover>
                         ) : (
                             <></>
@@ -53,10 +53,10 @@ export const DashboardCard = forwardRef(
                     </div>
                     {deleteButton && (
                         <button
-                            className="tw-h-6 tw-w-6 tw-rounded-full hover:tw-bg-gray-100 tw-flex tw-justify-center tw-items-center"
+                            className="h-6 w-6 rounded-full hover:bg-gray-100 flex justify-center items-center"
                             onClick={deleteButton}
                         >
-                            <DeleteOutlined className="tw-text-red-400 tw-cursor-pointer" />
+                            <DeleteOutlined className="text-red-400 cursor-pointer" />
                         </button>
                     )}
                     {tabs && (

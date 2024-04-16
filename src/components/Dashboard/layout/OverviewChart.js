@@ -29,7 +29,7 @@ export const OverviewChart = () => {
                 <DashboardCard
                     ref={ref}
                     caption="Overview"
-                    className="tw-h-40 tw-w-full tw-mt-4 tw-pb-8 tw-fixed"
+                    className="h-40 w-full mt-4 pb-8 fixed"
                 >
                     <MainChart />
                 </DashboardCard>

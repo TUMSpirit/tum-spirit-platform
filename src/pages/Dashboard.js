@@ -3,7 +3,7 @@ import DashboardTabs from "../components/Dashboard/layout/Tabs";
 function Dashboard() {
     return (
         <>
-            <div className="tw-relative tw-w-full">
+            <div className="relative w-full">
                 <DashboardTabs />
             </div>
         </>

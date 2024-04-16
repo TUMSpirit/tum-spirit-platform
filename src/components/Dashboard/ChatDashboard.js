@@ -18,28 +18,28 @@ export const ChatDashboard = () => {
             caption: "Sentiment",
             value: "0.4",
             change: "+3.2%",
-            changeCls: "tw-text-green-500",
+            changeCls: "text-green-500",
             helpContent: "Plah Plah Plah",
         },
         {
             caption: "Subjectivity",
             value: "0.6",
             change: "+9%",
-            changeCls: "tw-text-red-500",
+            changeCls: "text-red-500",
             helpContent: "Plah Plah Plah",
         },
         {
             caption: "Grammar",
             value: "0.43",
             change: "-20%",
-            changeCls: "tw-text-red-500",
+            changeCls: "text-red-500",
             helpContent: "Plah Plah Plah",
         },
         {
             caption: "Precision",
             value: "0.7",
             change: "10%",
-            changeCls: "tw-text-blue-500",
+            changeCls: "text-blue-500",
             helpContent: "Plah Plah Plah",
         },
     ];
@@ -63,9 +63,9 @@ export const ChatDashboard = () => {
         <DashboardGraphsContext.Provider
             value={{ extraGraphs, setExtraGraphs }}
         >
-            <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
-                <div className="lg:tw-col-span-3 tw-grid tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-2 tw-auto-rows-min">
-                    <ChatDisplay className="tw-col-span-2" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-2 auto-rows-min">
+                    <ChatDisplay className="col-span-2" />
                     {stats.map((entry, index) => (
                         <StatCard key={index} {...entry} />
                     ))}
@@ -74,7 +74,7 @@ export const ChatDashboard = () => {
                     if (key === "sentiment")
                         return (
                             <DashboardCard
-                                className="tw-h-96 tw-pb-6"
+                                className="h-96 pb-6"
                                 caption="Sentiment"
                                 helpContent={getHelpContent(key)}
                                 key={key}
@@ -86,7 +86,7 @@ export const ChatDashboard = () => {
                     else if (key === "subjectivity")
                         return (
                             <DashboardCard
-                                className="tw-h-96 tw-pb-6"
+                                className="h-96 pb-6"
                                 caption="Subjectivity"
                                 helpContent={getHelpContent(key)}
                                 key={key}
@@ -98,7 +98,7 @@ export const ChatDashboard = () => {
                     else if (key === "language_3dscatter")
                         return (
                             <DashboardCard
-                                className="tw-h-96"
+                                className="h-96"
                                 caption="Language Analysis 3D Scatter"
                                 helpContent={getHelpContent(key)}
                                 key={key}
@@ -110,13 +110,13 @@ export const ChatDashboard = () => {
                     else if (key === "messages_heatmap")
                         return (
                             <DashboardCard
-                                className="tw-h-96"
+                                className="h-96"
                                 caption="Messages per Day Heatmap"
                                 helpContent={getHelpContent(key)}
                                 key={key}
                                 deleteButton={() => deleteFromExtraGraphs(key)}
                             >
-                                <div className="tw-flex tw-h-full tw-w-full tw-items-center *:tw-w-full">
+                                <div className="flex h-full w-full items-center *:w-full">
                                     <MessagesPerDayHeatmap />
                                 </div>
                             </DashboardCard>

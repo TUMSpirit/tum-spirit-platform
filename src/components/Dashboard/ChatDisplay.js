@@ -36,7 +36,7 @@ export const ChatDisplay = (props) => {
                 }}
             >
                 <Timeline
-                    className="timelinelist tw-mt-4 -tw-mb-8"
+                    className="timelinelist mt-4 -mb-8"
                     items={timelineList}
                 />
             </ConfigProvider>

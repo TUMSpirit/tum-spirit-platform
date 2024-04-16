@@ -35,7 +35,7 @@ export const AddDisplay = () => {
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-p-10 tw-border-2 tw-border-dashed tw-border-gray-300 tw-text-gray-500"
+                className="flex items-center justify-center rounded-lg p-10 border-2 border-dashed border-gray-300 text-gray-500"
             >
                 Add Graph
             </button>
@@ -51,14 +51,14 @@ export const AddDisplay = () => {
                     <Button
                         onClick={onOk}
                         type="primary"
-                        className="tw-bg-blue-500"
+                        className="bg-blue-500"
                         disabled={typeof currentSelection === "undefined"}
                     >
                         Add
                     </Button>,
                 ]}
             >
-                <div className="tw-flex">
+                <div className="flex">
                     <Menu
                         onSelect={onSelect}
                         style={{
@@ -78,8 +78,8 @@ export const AddDisplay = () => {
                             },
                         ]}
                     />
-                    <div className="tw-px-6">
-                        <h1 className="tw-text-xl tw-font-bold tw-mb-2">
+                    <div className="px-6">
+                        <h1 className="text-xl font-bold mb-2">
                             {
                                 stateGraphOptions.find(
                                     (el) => el.key === currentSelection

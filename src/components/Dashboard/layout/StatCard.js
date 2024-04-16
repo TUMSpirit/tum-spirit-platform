@@ -10,14 +10,9 @@ export const StatCard = ({
 }) => {
     return (
         <DashboardCard caption={caption} helpContent={helpContent}>
-            <div className="tw-flex tw-items-baseline tw-gap-2">
-                <h3 className="tw-font-semibold tw-text-4xl">{value}</h3>
-                <small
-                    className={twMerge(
-                        "tw-text-lg tw-font-semibold",
-                        changeCls
-                    )}
-                >
+            <div className="flex items-baseline gap-2">
+                <h3 className="font-semibold text-4xl">{value}</h3>
+                <small className={twMerge("text-lg font-semibold", changeCls)}>
                     {change}
                 </small>
             </div>

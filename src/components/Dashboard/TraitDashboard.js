@@ -44,15 +44,15 @@ export const TraitDashboard = () => {
     );
 
     return (
-        <div className="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {chart}
 
             <DashboardCard
                 caption="Big 5 Explanation"
-                className="lg:tw-col-span-2"
+                className="lg:col-span-2"
             >
                 <p>{getHelpContent("big5")}</p>
-                <h1 className="tw-text-2xl tw-text-center">
+                <h1 className="text-2xl text-center">
                     {[
                         ["O", 4],
                         ["C", 1],
@@ -64,8 +64,8 @@ export const TraitDashboard = () => {
                             key={key}
                             className={
                                 currentIndex === index
-                                    ? "tw-font-black"
-                                    : "tw-font-normal tw-text-gray-500"
+                                    ? "font-black"
+                                    : "font-normal text-gray-500"
                             }
                         >
                             {char}
@@ -153,12 +153,12 @@ export const TraitDashboard = () => {
                 ].map(([char, index], key) => (
                     <p
                         key={key}
-                        className={currentIndex === index ? "" : "tw-hidden"}
+                        className={currentIndex === index ? "" : "hidden"}
                     >
                         {char}
                     </p>
                 ))}
-                <p className="tw-hidden">
+                <p className="hidden">
                     The exploration of personality in psychology has led to
                     various theories and models aiming to encapsulate the broad
                     spectrum of human traits and behaviors. Among these, the Big
