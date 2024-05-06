@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useState } from "react";
 import { Board } from "../data/board";
@@ -16,7 +16,7 @@ const Home = () => {
 	const [selectedColumn, setSelectedColumn] = useState("");
 
 
-	const openModal = (columnId: any) => {
+	const openModal = (columnId) => {
 		setSelectedColumn(columnId);
 		setModalOpen(true);
 	};
@@ -25,7 +25,7 @@ const Home = () => {
 		setModalOpen(false);
 	};
 
-	const handleAddTask = (taskData: any) => {
+	const handleAddTask = (taskData) => {
 		const newBoard = { ...columns };
 		newBoard[selectedColumn].items.push(taskData);
 	};
@@ -33,9 +33,9 @@ const Home = () => {
 	return (
 		<>
 			<SubHeader><Button onClick={() => openModal()}>Test</Button></SubHeader>
-			<DragDropContext onDragEnd={(result: any) => onDragEnd(result, columns, setColumns)}>
+			<DragDropContext onDragEnd={(result) => onDragEnd(result, columns, setColumns)}>
 				<div className="w-full flex items-start justify-between px-5 pb-8 md:gap-0 gap-10">
-					{Object.entries(columns).map(([columnId, column]: any) => (
+					{Object.entries(columns).map(([columnId, column]) => (
 						<div
 							className="w-full flex flex-col gap-0 px-2 items-center"
 							key={columnId}
@@ -44,7 +44,7 @@ const Home = () => {
 								droppableId={columnId}
 								key={columnId}
 							>
-								{(provided: any) => (
+								{(provided) => (
 									<div
 										ref={provided.innerRef}
 										{...provided.droppableProps}
@@ -53,13 +53,13 @@ const Home = () => {
 										<div className="flex items-center justify-center py-[10px] w-full bg-white rounded-lg shadow-sm text-[#555] font-medium text-[15px]">
 											{column.name}
 										</div>
-										{column.items.map((task: any, index: any) => (
+										{column.items.map((task, index) => (
 											<Draggable
 												key={task.id.toString()}
 												draggableId={task.id.toString()}
 												index={index}
 											>
-												{(provided: any) => (
+												{(provided) => (
 													<>
 														<Task
 															provided={provided}

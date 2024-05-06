@@ -2,20 +2,23 @@
   "name": "tum-spirit-dashboard",
   "version": "1.0.0",
   "private": true,
-  "homepage": "/sign-in",
+  "homepage": "/kanban",
   "dependencies": {
     "@ant-design/icons": "^4.8.0",
     "@tanstack/react-query": "^5.14.1",
     "antd": "^5.12.1",
     "apexcharts": "^3.36.3",
     "axios": "^1.6.2",
+    "baseui": "^14.0.0",
     "chart.js": "^4.4.1",
     "clsx": "^2.0.0",
     "cors": "^2.8.5",
     "date-fns": "^2.30.0",
     "express": "^4.18.2",
+    "formik": "^2.4.6",
     "install": "^0.13.0",
     "jquery": "^3.7.1",
+    "js-cookie": "^3.0.5",
     "moment": "^2.30.1",
     "nodemon": "^3.0.3",
     "papaparse": "^5.4.1",
@@ -23,12 +26,13 @@
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.0",
+    "react-auth-kit": "^2.1.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-big-calendar": "^1.8.5",
     "react-chrono": "^2.6.0",
     "react-datepicker": "^4.24.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "6",
     "react-scripts": "^5.0.1",
     "reshake": "^2.0.0",
     "socket.io": "^4.7.4",
@@ -46,8 +50,7 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
@@ -80,10 +83,5 @@
     "react-responsive": "^9.0.2",
     "tailwindcss": "^3.4.1",
     "uuid": "^9.0.0"
-  },
-  "jest": {
-    "setupFilesAfterEnv": [
-      "@testing-library/jest-dom/extend-expect"
-    ]
   }
 }

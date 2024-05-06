@@ -1,3 +1,4 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any @typescript-eslint/no-explicit-any*/
 const colors = {
 	red: { bg: "#fee2e2", text: "#dc2626" },
 	rose: { bg: "#ffe4e6", text: "#e11d48" },
