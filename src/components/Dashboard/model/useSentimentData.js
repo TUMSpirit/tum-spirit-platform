@@ -4,15 +4,18 @@ import { useDataFetcher } from "./utils/useDataFetcher";
 const dates = Array.from({ length: 50 }, (_, i) => dateHelper(i));
 
 const demoData = dates.map((date) => ({
-    x: date,
-    y: randomHelper(-0.3, 0.7),
+  date,
+  sentiment: {
+    polarity: randomHelper(-0.3, 0.7),
+    subjectivity: randomHelper(0.3, 0.7),
+  },
 }));
 
 export const useSentimentData = () => {
-    const { data } = useDataFetcher({ url: "/api/sentiment", demoData });
-    console.log(data);
-    return {
-        yData: data.map((entry) => entry.y),
-        xData: data.map((entry) => entry.x),
-    };
+  const { data } = useDataFetcher({ url: "/language/sentiment", demoData });
+  console.log(data);
+  return {
+    yData: data.map((entry) => entry.sentiment.polarity),
+    xData: data.map((entry) => entry.date),
+  };
 };
