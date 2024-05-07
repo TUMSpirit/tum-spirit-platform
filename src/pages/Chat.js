@@ -21,9 +21,18 @@ function Chat() {
   const data = [];
 
   return (
-    <>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh", // This makes the div fill the entire height of the viewport
+        width: "100vw", // To explicitly ensure it also covers the full width of the viewport
+        background: "#ffffff", // Corrected the color code for white
+      }}
+    >
       <Chatbot />
-    </>
+    </div>
   );
 }
 

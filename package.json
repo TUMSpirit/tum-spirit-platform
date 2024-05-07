@@ -61,6 +61,6 @@
     "gh-pages": "^3.2.3",
     "prop-types": "^15.8.1",
     "react-responsive": "^9.0.2",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   }
 }

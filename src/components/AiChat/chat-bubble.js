@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MessageOutlined } from "@ant-design/icons"; // Assuming you're using Ant Design
 import { Button, FloatButton, Input } from "antd";
 import logo from "../../assets/images/ghost.png";
+import { v4 as uuidv4 } from "uuid";
+
 const Chatbot = () => {
   // State to hold messages
   const [messages, setMessages] = useState([
@@ -9,6 +11,9 @@ const Chatbot = () => {
   ]);
   // State to hold the current input
   const [inputValue, setInputValue] = useState("");
+
+  // Unique session ID for the chat
+  const [sessionId, setSessionId] = useState("");
 
   // State ho hold the opened/closed state of the chat
   const [opened, setOpened] = useState(false);
@@ -37,31 +42,7 @@ const Chatbot = () => {
       );
 
       // post request to the backend to get the bot response
-      const botResponse = await fetch("http://129.187.135.9:8000/ai/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, { role: "user", content: inputValue }],
-        }),
-      });
-
-      if (!botResponse.ok) {
-        throw new Error("Failed to get bot response");
-      }
-
-      const response = await botResponse.json();
-
-      console.log(response.choices[0].message.content);
-
-      //set loading to false
-      setLoading(false);
-
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { content: response.choices[0].message.content, role: "assistant" },
-      ]);
+      return;
     }
   };
 
@@ -72,6 +53,27 @@ const Chatbot = () => {
     }
   };
 
+  useEffect(() => {
+    // Generate and set a unique session ID when the component mounts
+    const newSessionId = uuidv4();
+    setSessionId(newSessionId);
+
+    // Then, send a "loaded chatbox" event to the backend with the sessionId
+    fetch("http://129.187.135.9:8000/ai/analytics", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        event_type: "loaded_chatbox",
+        session_id: newSessionId,
+        data: {},
+      }),
+    });
+
+    // This empty dependency array ensures this effect runs once, at mount time
+  }, []);
+
   return (
     <>
       {opened && (
@@ -79,7 +81,7 @@ const Chatbot = () => {
           style={{
             position: "fixed",
             bottom: 100,
-            right: 20,
+            right: 25,
             zIndex: 1000,
             backgroundColor: "white",
             width: 350,
@@ -87,6 +89,7 @@ const Chatbot = () => {
             borderRadius: 25,
             borderEndEndRadius: 10,
             borderEndStartRadius: 10,
+            boxShadow: "0 0 10px rgba(0, 0, 0, 0.4)",
           }}
         >
           <div
@@ -189,14 +192,41 @@ const Chatbot = () => {
         </div>
       )}
       <FloatButton
+        style={{
+          boxShadow: "0 0 10px rgba(0, 0, 0, 0.4)",
+        }}
         onClick={() => {
           if (opened) {
             setOpened(false);
+            // send a "closed chatbox" event to the backend
+            fetch("http://129.187.135.9:8000/ai/analytics", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                event_type: "closed_chatbox",
+                session_id: sessionId,
+                data: {},
+              }),
+            });
             setMessages([
               { content: "How can I help you?", role: "assistant" },
             ]);
           } else {
             setOpened(true);
+            // send a "opened chatbox" event to the backend
+            fetch("http://129.187.135.9:8000/ai/analytics", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                event_type: "opened_chatbox",
+                session_id: sessionId,
+                data: {},
+              }),
+            });
           }
         }}
         icon={<MessageOutlined style={{ fontSize: 20, color: "gray" }} />}
