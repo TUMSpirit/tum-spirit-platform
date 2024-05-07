@@ -1,4 +1,0 @@
-"WOCHENTAG";"DATUM";"VON";"BIS";"DAUER_IN_MINUTEN";"LV_NUMMER";"TITEL";"LV_ART";"LV_GRUPPE";"ORT";"LERNEINHEIT";"UNTERRICHTSEINHEIT";"EREIGNIS_TYP";"TERMIN_TYP";"VORTRAGENDER_KONTAKTPERSON";"ANMERKUNG"
-"MI";"03.01.2024";"16:00";"16:30";"30";"";"Import Test 1";"";"";"";"";"";"kein Ereignistyp";"fix";"";""
-"FR";"16.02.2024";"10:00";"11:30";"90";"";"Import Test 2";"";"";"";"";"";"kein Ereignistyp";"fix";"";""
-"SO";"09.03.2024";"14:00";"16:00";"120";"";"Import Test 3";"";"";"";"";"";"kein Ereignistyp";"fix";"";""

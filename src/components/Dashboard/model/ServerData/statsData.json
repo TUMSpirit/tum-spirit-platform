@@ -1,7 +1,0 @@
-{
-    "sentiment": { "current": 42, "lastPeriod": 38 },
-    "subjectivity": { "current": 42, "lastPeriod": 38 },
-    "polarity": { "current": 42, "lastPeriod": 38 },
-    "grammar": { "current": 42, "lastPeriod": 38 },
-    "precision": { "current": 42, "lastPeriod": 38 }
-}
