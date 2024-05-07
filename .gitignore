@@ -107,3 +107,8 @@ dist
 .idea
 .idea/workspace.xml
 .idea/vcs.xml
+
+# yarn 
+yarn.lock
+
+/build

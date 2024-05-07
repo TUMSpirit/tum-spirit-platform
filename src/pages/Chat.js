@@ -7,10 +7,10 @@ import {Typography} from "antd";
 
 const {Title} = Typography;
 const socket = socketIO.connect("http://localhost:4000")
-
+import Chatbot from "../components/AiChat/chat-bubble";
 
 const Chat = () => {
-
+    const data = [];
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
     const [editingMessage, setEditingMessage] = useState(null);
@@ -92,9 +92,20 @@ const Chat = () => {
         return () => socket.off('emojiReactionUpdated');
     }, [socket]);
 
-
     return (
         <div className="chat">
+          <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh", // This makes the div fill the entire height of the viewport
+                width: "100vw", // To explicitly ensure it also covers the full width of the viewport
+                background: "#ffffff", // Corrected the color code for white
+              }}
+          >
+            <Chatbot />
+          </div>
             <div className='chat__main'>
                 <ChatBody currentTab={currentTab} setCurrentTab={setCurrentTab} messages={messages}
                           onRemoveReaction={handleRemoveReaction} lastMessageRef={lastMessageRef}
@@ -103,6 +114,6 @@ const Chat = () => {
             </div>
         </div>
     );
-};
+}
 
 export default Chat;
