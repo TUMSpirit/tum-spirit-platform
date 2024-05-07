@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 # import routers
-from .src.routers import ai
-from .src.routers import db
+#from .src.routers import ai
+#from .src.routers import db
 from .src.routers import language
-from .src.routers import chat
+#from .src.routers import chat
 
 
 def application_setup() -> FastAPI:
@@ -16,9 +16,9 @@ def application_setup() -> FastAPI:
     application = FastAPI()
 
     # Mapping api routes
-    application.include_router(ai.router)
-    application.include_router(db.router)
-    application.include_router(chat.router)
+    #application.include_router(ai.router)
+    #application.include_router(db.router)
+    #application.include_router(chat.router)
     application.include_router(language.router)
 
     # Allow cors
