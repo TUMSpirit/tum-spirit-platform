@@ -63,9 +63,8 @@ celery.conf.update(
 fake_users_db = {
     "john@test.de": {
         "username": "john@test.de",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
         "role": "admin",
+        "team": "bamboleo",
         "hashed_password": "$2b$12$kySG7cpEzUULLrkh/N8iS.TlhRufh.7Lp4JmiTl.OCaHc7S8LI0VS",
         "disabled": False,
     }
@@ -154,11 +153,15 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
     return user
 
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+async def check_role(
+    current_user: Annotated[User, Depends(get_current_user)], role:str
 ):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    if current_user.role != role:
+        raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     return current_user
 
 # Celery worker function
@@ -172,8 +175,8 @@ def start_celery_worker():
 def execute_scheduled_task(task_name: str, team_name: str):
     print(f"Executing task: {task_name}")
     # Create team in database
-    #team = {"name": team_name, "created_at": datetime.utcnow()}
-    #team_collection.insert_one(team)
+    team = {"name": team_name, "created_at": datetime.utcnow()}
+    team_collection.insert_one(team)
     #print(f"Team created: {team}")
 
 # Background task to schedule a task for future execution
@@ -249,3 +252,13 @@ async def read_own_items(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
+
+
+@app.post("/create-calendar-entry")
+async def login_for_access_token(calendar_entry: object
+):
+    user = get_current_user(form_data.token)
+    team_id = user.team
+    
+    #calendar_collection.insert_one({team_id: calendar_entry})
+
