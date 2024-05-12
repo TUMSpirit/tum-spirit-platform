@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import { getRandomColors } from "../helpers/getRandomColors";
 import { v4 as uuidv4 } from "uuid";
+import {Button, Modal, Row, Col, Form, Input} from "antd";
+import {DeleteOutlined} from "@ant-design/icons";
 
-const AddModal = ({ isOpen, onClose, setOpen, handleAddTask }) => {
+const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
 	const initialTaskData = {
 		id: uuidv4(),
 		title: "",
@@ -57,7 +59,93 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask }) => {
 	};
 
 	return (
-		<div
+		<Modal closeIcon={false} title={"Task"} open={isOpen}
+			className={"modal-addEvent"}
+			   footer={[
+				   <Button onClick={closeModal}>Cancel</Button>,
+				   <Button
+					   data-testid='saveEventButton' key="submit" type='primary'
+					   onClick={handleSubmit}
+				   >
+					   Save
+				   </Button>
+			   ]}
+		>
+
+			<Form layout={'vertical'} onFinish={handleSubmit} requiredMark={false} >
+						<Form.Item label={"Title"} name="title">
+							<Input 	type="text"
+									  name="title"
+									  defaultValue={taskData.title}
+									  onChange={handleChange}
+									  placeholder="Title"
+							/>
+						</Form.Item>
+				<Form.Item label={"Description"}  name="description">
+					<Input name="description"
+						   defaultValue={taskData.description}
+						   onChange={handleChange}
+						   placeholder="Description"
+					/>
+				</Form.Item>
+			<Form.Item label={"Priority"}  name="priority">
+			<select
+					name="priority"
+					onChange={handleChange}
+					defaultValue={taskData.priority}
+					className="w-full h-12 px-2 outline-none rounded-md bg-slate-100 border border-slate-300 text-sm"
+				>
+					<option value="">Priority</option>
+					<option value="low">Low</option>
+					<option value="medium">Medium</option>
+					<option value="high">High</option>
+				</select>
+			</Form.Item>
+				<Form.Item label={"Estimated Time"}  name="estimate">
+				<input
+					type="number"
+					name="deadline"
+					defaultValue={taskData.deadline}
+					onChange={handleChange}
+					placeholder="Deadline"
+					className="w-full h-12 px-3 outline-none rounded-md bg-slate-100 border border-slate-300 text-sm"
+				/>
+				</Form.Item>
+				<Form.Item label={"Tags"}  name="tags">
+				<input
+					type="text"
+					defaultValue={tagTitle}
+					onChange={(e) => setTagTitle(e.target.value)}
+					placeholder="Tag Title"
+					className="w-full h-12 px-3 outline-none rounded-md bg-slate-100 border border-slate-300 text-sm mb-4"
+				/>
+				<button
+					className="w-full rounded-md h-9 bg-slate-500 text-amber-50 font-medium mb-2"
+					onClick={handleAddTag}
+				>
+					Add Tag
+				</button>
+				<div className="w-full">
+					{taskData.tags && <span>Tags:</span>}
+					{taskData.tags.map((tag, index) => (
+						<div
+							key={index}
+							className="inline-block mx-1 px-[10px] py-[2px] text-[13px] font-medium rounded-md"
+							style={{ backgroundColor: tag.bg, color: tag.text }}
+						>
+							{tag.title}
+						</div>
+					))}
+				</div>
+				</Form.Item>
+			</Form>
+		</Modal>
+	);
+};
+
+export default AddModal;
+
+/*<div
 			className={`w-screen h-screen place-items-center fixed top-0 left-0 ${
 				isOpen ? "grid" : "hidden"
 			}`}
@@ -134,9 +222,4 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask }) => {
 					Submit Task
 				</button>
 			</div>
-		</div>
-	);
-};
-
-export default AddModal;
-
+		</div>*/

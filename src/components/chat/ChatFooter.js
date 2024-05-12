@@ -43,20 +43,18 @@ const ChatFooter = ({socket, editingMessage, setEditingMessage, onAddIssue}) => 
 
             //Automatische Antwort falls für Eye Test notwendig
 
-            //   const botMessage = {
-            //      text: `Hallo ${userMessage.name}! Ich habe gerade gesehen, dass du am 13. Februar ein Meeting
-            //      geplant hast. Gerne würde ich die Aufgabe xy übernehmen. Könntest du bitte dazu eine Karte
-            //      im Kanban Board erstellen und mir zuweisen? Danke! 🙂`,
-            //      name: 'Martin',
-            //      id: `${socket.id}${Math.random()}`,
-            //      socketID: socket.id,
-            //      timestamp: Date.now(),
-            //    };
+               const botMessage = {
+                  text: `Hi! Perfekt, danke fürs Erstellen - LG`,
+                  name: 'Martin',
+                  id: `${socket.id}${Math.random()}`,
+                  socketID: socket.id,
+                  timestamp: Date.now(),
+                };
 
             socket.emit('message', userMessage);
             setTimeout(() => {
-                //      socket.emit('message', botMessage);
-                //      messageSound.play();
+                      socket.emit('message', botMessage);
+                      messageSound.play();
             }, 2200);
         }
         setMessage('');

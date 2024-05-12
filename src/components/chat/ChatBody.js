@@ -4,6 +4,7 @@ import Search from "antd/es/input/Search";
 import './index.css';
 import {EditOutlined, DeleteOutlined, CloseOutlined, CheckOutlined} from '@ant-design/icons';
 import Picker from "emoji-picker-react";
+import {SubHeader} from "../layout/SubHeader";
 
 const tabsItems = [
     {
@@ -133,14 +134,15 @@ const ChatBody = ({
 
     return (
         <div>
-            <div className="fixed top-24 p-4 bg-white w-[calc(100vw-250px)] flex items-center justify-between"
+            <SubHeader>
+            <div className="bg-white w-[calc(100vw-250px)] flex items-center justify-between "
                  style={{borderBottom: '2px solid #efefef'}}>
                 <div className="flex-grow-0">
                     <Tabs activeKey={currentTab} onChange={handleTabChange} items={tabsItems} size={"large"}/>
                 </div>
                 <div className="flex-grow" style={{display: 'flex', justifyContent: 'center'}}>
                     <div className="flex items-center font-bold gap-4"
-                         style={{backgroundColor: '#f5f7fb', borderRadius: '18px', padding: '8px 10px'}}>
+                         style={{backgroundColor: '#f5f7fb', borderRadius: '6px', padding: '6px 8px'}}>
                         <Button className="bg-white shadow-button">Kanban Cards</Button>
                         <Button className="bg-white shadow-button">Calendar Entries</Button>
                         <Button className="bg-white shadow-button">Polls</Button>
@@ -165,6 +167,7 @@ const ChatBody = ({
                     </form>
                 </div>
             </div>
+            </SubHeader>
             <div className='message__container' style={{ paddingTop: '20px' }}>
                 {messages.map((message) => {
                     if (message.deleted) {

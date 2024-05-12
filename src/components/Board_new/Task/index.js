@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserAddOutlined } from '@ant-design/icons';
 
-const Task = ({ task, provided }) => {
+const Task = ({ task, provided, editModal }) => {
 	const { title, description, priority, deadline, image, alt, tags } = task;
 
 	return (
@@ -9,7 +9,8 @@ const Task = ({ task, provided }) => {
 			ref={provided.innerRef}
 			{...provided.draggableProps}
 			{...provided.dragHandleProps}
-			className="w-full cursor-grab bg-[#fff] flex flex-col justify-between gap-3 items-start shadow-sm rounded-xl px-3 py-4"
+			className="w-full cursor-pointer important bg-[#fff] flex flex-col justify-between gap-3 items-start shadow-sm rounded-xl px-3 py-4"
+			onClick={() => editModal(task)}
 		>
 			{image && alt && (
 				<img
@@ -22,7 +23,7 @@ const Task = ({ task, provided }) => {
 				{tags.map((tag) => (
 					<span
 						key={tag.title}
-						className="px-[10px] py-[2px] text-[13px] font-medium rounded-md"
+						className="px-[10px] py-[2px] text-[15px] font-medium rounded-md"
 						style={{ backgroundColor: tag.bg, color: tag.text }}
 					>
 						{tag.title}
