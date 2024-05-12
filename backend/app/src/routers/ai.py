@@ -2,15 +2,12 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from openai import OpenAI
-from bson import ObjectId
 from datetime import datetime
 from typing import List
-from dotenv import load_dotenv
+
 import os
 from pymongo import MongoClient
 
-# Load environment variables from a .env file
-load_dotenv()
 
 # Define a BaseModel for representing a single message
 
@@ -37,11 +34,12 @@ router = APIRouter()
 
 
 # Access environment variables for database credentials
-MONGO_USER = os.getenv("MONGO_USER")
-MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
-MONGO_HOST = os.getenv("MONGO_HOST")
-MONGO_PORT = os.getenv("MONGO_PORT")
-MONGO_DB = os.getenv("MONGO_DB")
+# Retrieve MongoDB credentials and database info
+MONGO_USER = "root"
+MONGO_PASSWORD = "example"
+MONGO_HOST = "mongo"
+MONGO_PORT = "27017"
+MONGO_DB = "TUMSpirit"
 # Add an environment variable for OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
