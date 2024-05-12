@@ -1,31 +1,16 @@
 import React, {useState, useEffect} from 'react';
 import {Button, Tabs} from "antd";
 import Search from "antd/es/input/Search";
-import './index.css';
-import {EditOutlined, DeleteOutlined, CloseOutlined, CheckOutlined} from '@ant-design/icons';
-import Picker from "emoji-picker-react";
+import {EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined} from '@ant-design/icons';
+import {Dropdown, Menu} from 'antd';
+import {MoreOutlined} from '@ant-design/icons';
+import {useSubHeaderContext} from "../layout/SubHeaderContext";
 
 const tabsItems = [
-    {
-        key: '1',
-        label: 'Group Chat',
-        children: '',
-    },
-    {
-        key: '2',
-        label: 'Martin',
-        children: '',
-    },
-    {
-        key: '3',
-        label: 'Peter',
-        children: '',
-    },
-    {
-        key: '4',
-        label: 'Sophie',
-        children: '',
-    },
+    {key: '1', label: 'Group Chat', children: ''},
+    {key: '2', label: 'Martin', children: ''},
+    {key: '3', label: 'Peter', children: ''},
+    {key: '4', label: 'Sophie', children: ''},
 ];
 
 const ChatBody = ({
@@ -36,22 +21,16 @@ const ChatBody = ({
                       lastMessageRef,
                       setEditingMessage,
                       onDeleteMessage,
-                      onRemoveReaction
+                      onRemoveReaction,
+                      setReplyingTo,
                   }) => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(null);
-    const [messageReactions, setMessageReactions] = useState({});
-    const [isConfirmDialogVisible, setIsConfirmDialogVisible] = useState(false);
-    const [messageIdToBeDeleted, setMessageIdToBeDeleted] = useState(null);
-    const [confirmDialogPosition, setConfirmDialogPosition] = useState({top: 0, left: 0});
+    const {updateSubHeader} = useSubHeaderContext();
     const senderIcon = require('../../assets/images/avatar3.png');
     const recipientIcon = require('../../assets/images/avatar2.png');
-    const handleTabChange = (key) => {
-        setCurrentTab(key);
-    };
 
     const canEditOrDelete = (timestamp) => {
         const now = Date.now();
@@ -71,192 +50,267 @@ const ChatBody = ({
         return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     };
 
-    const handleSearch = (term) => {
-        if (!term.trim()) {
+    const handleSearch = (value) => {
+        setSearchTerm(value);
+        if (!value.trim()) {
             setSearchResults([]);
             setCurrentResultIndex(-1);
-            return;
+        } else {
+            const lowerCaseTerm = value.toLowerCase();
+            const foundIndexes = messages
+                .map((message, index) => ({text: message.text.toLowerCase(), index}))
+                .filter(message => message.text.includes(lowerCaseTerm))
+                .map(message => message.index)
+                .reverse();
+
+            setSearchResults(foundIndexes);
+            if (foundIndexes.length > 0) {
+                setCurrentResultIndex(0);
+                scrollToMessage(foundIndexes[0]);
+            }
         }
-
-        const lowerCaseTerm = term.toLowerCase();
-        const foundIndexes = messages
-            .map((message, index) => ({text: message.text.toLowerCase(), index}))
-            .filter(message => message.text.includes(lowerCaseTerm))
-            .map(message => message.index)
-            .reverse();
-
-        setSearchResults(foundIndexes);
-        setCurrentResultIndex(0);
     };
 
-    const navigateSearchResults = (direction) => {
-        if (searchResults.length === 0) return;
-        setCurrentResultIndex(prev => {
-            let newIndex = prev + direction;
-            if (newIndex < 0) newIndex = searchResults.length - 1;
-            else if (newIndex >= searchResults.length) newIndex = 0;
-            return newIndex;
-        });
+    const navigateSearchResults = () => {
+        if (searchResults.length > 1) {
+            setCurrentResultIndex(prev => {
+                const nextIndex = (prev + 1) % searchResults.length;
+                scrollToMessage(searchResults[nextIndex]);
+                return nextIndex;
+            });
+        }
     };
 
-    const highlightText = (text, term) => {
-        if (!term) return text;
-        const parts = text.split(new RegExp(`(${term})`, 'gi'));
-        return parts.map((part, index) =>
-            part.toLowerCase() === term.toLowerCase() ?
-                <span key={index} style={{backgroundColor: 'yellow'}}>{part}</span> : part
+    const scrollToMessage = (index) => {
+        const messageId = messages[index].id;
+        const element = document.getElementById(`message-${messageId}`);
+        if (element) {
+            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        }
+    };
+
+    const highlightText = (text) => {
+        const parts = !searchTerm ? [text] : text.split(new RegExp(`(${searchTerm})`, 'gi'));
+        return (
+            <p className={`text-xl`}>
+                {parts.map((part, index) =>
+                    searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
+                        <span key={index} style={{backgroundColor: 'yellow'}}>{part}</span>
+                    ) : part
+                )}
+            </p>
         );
     };
 
-    const toggleEmojiPicker = messageId => {
-        setShowEmojiPicker(showEmojiPicker === messageId ? null : messageId);
+    const getMessageStyle = (messageText) => {
+        const length = messageText.length;
+        if (length <= 15) {
+            return "text-xl px-7 py-2 pt-7 min-w-[10%] flex";
+        } else if (length <= 50) {
+            return "text-md px-7 py-2 pt-7 min-w-[30%] flex";
+        } else {
+            return "px-7 py-2 pt-7 flex";
+        }
     };
 
-    const onEmojiClick = (messageId, emojiObject) => {
-        socket.emit('emojiReaction', {messageId, emoji: emojiObject.emoji});
+    const menu = (messageId) => (
+        <Menu onClick={(e) => handleMenuClick(e, messageId)}>
+            <Menu.Item key="edit" icon={<EditOutlined/>}>Edit</Menu.Item>
+            <Menu.SubMenu
+                key="delete"
+                icon={<DeleteOutlined/>}
+                title="Delete"
+            >
+                <Menu.Item key="confirmDelete">
+                    Confirm Delete
+                </Menu.Item>
+                <Menu.Item key="cancelDelete">
+                    Cancel
+                </Menu.Item>
+            </Menu.SubMenu>
+        </Menu>
+    );
+
+    const handleMenuClick = (e, messageId) => {
+        if (e.key === "edit") {
+            editMessage(messageId);
+        } else if (e.key === "confirmDelete") {
+            onDeleteMessage(messageId);
+        }
+    };
+
+    const onEmojiClick = (messageId, fixedEmoji) => {
+        socket.emit('emojiReaction', {messageId, emoji: fixedEmoji});
 
         const updatedMessages = messages.map(msg => {
             if (msg.id === messageId) {
-                return {...msg, reaction: emojiObject.emoji};
+                return {...msg, reaction: fixedEmoji};
             }
             return msg;
         });
         onRemoveReaction(updatedMessages);
     };
 
-    useEffect(() => {
-        if (searchResults.length > 0 && currentResultIndex !== -1) {
-            const messageId = messages[searchResults[currentResultIndex]].id;
-            document.getElementById(messageId).scrollIntoView({behavior: "smooth", block: "center"});
+    const menuRe = (messageId) => (
+        <Menu onClick={(e) => handleMenuClickRe(e, messageId)}>
+            <Menu.SubMenu
+                key="delete"
+                icon={<SmileOutlined/>}
+                title="Reaction"
+            >
+                <Menu.Item key="firstEmote">
+                    👍
+                </Menu.Item>
+                <Menu.Item key="secondEmote">
+                    ❌
+                </Menu.Item>
+                <Menu.Item key="thirdEmote">
+                    🤔
+                </Menu.Item>
+                <Menu.Item key="fourthEmote">
+                    🔃
+                </Menu.Item>
+            </Menu.SubMenu>
+            <Menu.Item key="reply" icon={<MessageOutlined/>}>Reply</Menu.Item>
+        </Menu>
+    );
+
+
+    const handleMenuClickRe = (e, messageId, messageText) => {
+        if (e.key === "firstEmote") {
+            onEmojiClick(messageId, "👍");
+        } else if (e.key === "secondEmote") {
+            onEmojiClick(messageId, "❌");
+        } else if (e.key === "thirdEmote") {
+            onEmojiClick(messageId, "🤔");
+        } else if (e.key === "fourthEmote") {
+            onEmojiClick(messageId, "🔃");
+        } else if (e.key === "reply") {
+            const messageToReplyTo = messages.find(msg => msg.id === messageId);
+            if (messageToReplyTo) {
+                setReplyingTo({messageId: messageToReplyTo.id, text: messageToReplyTo.text});
+            }
         }
-    }, [currentResultIndex, searchResults, messages]);
+    };
+
+    const truncateText = (text, maxLength = 70) => {
+        if (text.length > maxLength) {
+            return text.substring(0, maxLength) + '...';
+        }
+        return text;
+    };
+
+
+    useEffect(() => {
+        const subHeaderContent = (
+            <div className="flex justify-between items-center w-full py-1 px-3 -mb-6">
+                <Tabs activeKey={currentTab} onChange={(key) => setCurrentTab(key)} items={tabsItems} size="large"/>
+                <div className="hidden md:flex flex-grow justify-center">
+                    <div className="flex items-center gap-4 bg-chat-filter rounded-xl py-2 px-3 ">
+                        <Button className="bg-white shadow-sm">Kanban Cards</Button>
+                        <Button className="bg-white shadow-sm">Calendar Entries</Button>
+                        <Button className="bg-white shadow-sm">Polls</Button>
+                        <Button className="bg-white shadow-sm">Documents</Button>
+                    </div>
+                </div>
+                <div className="hidden md:block">
+                    <Search
+                        placeholder="input search text"
+                        size="large"
+                        value={searchTerm}
+                        onChange={e => handleSearch(e.target.value)}
+                        onSearch={handleSearch}
+                        onPressEnter={navigateSearchResults}
+                        className="max-w-[300px]"
+                    />
+                </div>
+            </div>
+        );
+        updateSubHeader(subHeaderContent);
+        return () => updateSubHeader(null);
+    }, [currentTab, searchTerm, updateSubHeader]);
+
+    useEffect(() => {
+        if (searchTerm && currentResultIndex !== -1 && searchResults.length > 0) {
+            scrollToMessage(searchResults[currentResultIndex]);
+        }
+    }, [currentResultIndex, searchResults, messages, searchTerm]);
+
+    useEffect(() => {
+        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }, [messages]);
 
     return (
-        <div>
-            <div className="fixed top-24 p-4 bg-white w-[calc(100vw-250px)] flex items-center justify-between"
-                 style={{borderBottom: '2px solid #efefef'}}>
-                <div className="flex-grow-0">
-                    <Tabs activeKey={currentTab} onChange={handleTabChange} items={tabsItems} size={"large"}/>
-                </div>
-                <div className="flex-grow" style={{display: 'flex', justifyContent: 'center'}}>
-                    <div className="flex items-center font-bold gap-4"
-                         style={{backgroundColor: '#f5f7fb', borderRadius: '18px', padding: '8px 10px'}}>
-                        <Button className="bg-white shadow-button">Kanban Cards</Button>
-                        <Button className="bg-white shadow-button">Calendar Entries</Button>
-                        <Button className="bg-white shadow-button">Polls</Button>
-                        <Button className="bg-white shadow-button">Documents</Button>
-                    </div>
-                </div>
-                <div className="flex-grow-0">
-                    <form onSubmit={(e) => {
-                        e.preventDefault();
-                        navigateSearchResults(1);
-                    }}>
-                        <Search
-                            className="customSearchIcon"
-                            placeholder="input search text"
-                            size="large"
-                            style={{maxWidth: '300px'}}
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            onSearch={handleSearch}
-                            onPressEnter={() => navigateSearchResults(1)}
-                        />
-                    </form>
-                </div>
-            </div>
-            <div className='message__container' style={{ paddingTop: '20px' }}>
-                {messages.map((message) => {
-                    if (message.deleted) {
-                        return null;
-                    }
-                    return (
-                        <div key={message.id} id={message.id}
-                             className={message.name === localStorage.getItem("userName") ? "message__sender__format" : "message__recipient__format"}>
-                            {message.name === localStorage.getItem("userName") && canEditOrDelete(message.timestamp) && (
-                                <div className="message__edit__delete">
-                                    <EditOutlined onClick={() => editMessage(message.id)}
-                                                  style={{marginRight: 8, fontSize: '16px'}}/>
-                                    <DeleteOutlined
-                                        onClick={(e) => {
-                                            const messageRect = e.target.closest('.message__sender__format, .message__recipient__format').getBoundingClientRect();
-                                            const dialogWidthEstimate = -1480;
-                                            const leftPosition = messageRect.left - dialogWidthEstimate - 10;
+        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-2 border-chat-grid">
+            {messages.map((message, index) => {
 
-                                            setConfirmDialogPosition({top: messageRect.top, left: leftPosition});
-                                            setMessageIdToBeDeleted(message.id);
-                                            setIsConfirmDialogVisible(true);
-                                        }}
-                                        style={{fontSize: '16px'}}
-                                    />
-                                </div>
-                            )}
-                            {message.name === localStorage.getItem("userName") ? (
-                                <>
-                                    <div className='message__sender'>
-                                        <p>{highlightText(message.text, searchTerm)}</p>
-                                        <span className="message-timestamp">{formatTimestamp(message.timestamp)}</span>
-                                    </div>
-                                    <img src={senderIcon} alt="Sender Icon" className="message__sender__icon"/>
-                                </>
-                            ) : (
-                                <>
-                                    <img src={recipientIcon} alt="Recipient Icon" className="message__recipient__icon"/>
-                                    <div className='message__recipient'>
-                                        <p>{highlightText(message.text, searchTerm)}</p>
-                                        {message.reaction && (
-                                            <span style={{marginLeft: '10px', cursor: 'pointer'}} onClick={() => {
-                                                socket.emit('removeEmojiReaction', {messageId: message.id});
-                                            }}>{message.reaction}</span>
-                                        )}
-                                        <span className="message-timestamp">{formatTimestamp(message.timestamp)}</span>
-                                    </div>
-                                    <button onClick={() => toggleEmojiPicker(message.id)} className="emoji-button">😀
-                                    </button>
-                                    {showEmojiPicker === message.id && (
-                                        <div className="emoji-picker-container">
-                                            <Picker onEmojiClick={(emojiData) => onEmojiClick(message.id, emojiData)}/>
+                if (message.deleted) {
+                    return null;
+                }
+
+                const isSender = message.name === localStorage.getItem("userName");
+                const messageStyle = getMessageStyle(message.text);
+                const messageMarginTop = index === 0 ? "mt-6" : "";
+                const messageMarginBottom = "mb-6";
+                const isReplyingTo = messages.find(m => m.id === message.replyingTo);
+                return (
+                    <div key={message.id} id={`message-${message.id}`}
+                         className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                        {isSender && canEditOrDelete(message.timestamp) && (
+                            <div className="flex justify-end items-center">
+                                <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
+                                          className="p-2">
+                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                </Dropdown>
+                            </div>
+                        )}
+
+                        {isSender ? (
+                            <>
+                                <div
+                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                    {isReplyingTo && (
+                                        <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
+                                            <span className="font-semibold">{truncateText(isReplyingTo.text)}</span>
                                         </div>
                                     )}
-                                </>
-                            )}
-                        </div>
-                    );
-                })}
-                <div ref={lastMessageRef}/>
-            </div>
-            {isConfirmDialogVisible && (
-                <div style={{
-                    position: 'absolute',
-                    top: `${confirmDialogPosition.top}px`,
-                    left: `${confirmDialogPosition.left}px`,
-                    zIndex: 1000,
-                    backgroundColor: 'white',
-                    padding: '20px',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                    width: '200px',
-                }}>
-                    <p>Delete this message?</p>
-                    <div style={{display: 'flex', justifyContent: 'space-around', marginTop: '10px'}}>
-                        <Button
-                            icon={<CloseOutlined/>}
-                            onClick={() => {
-                                setIsConfirmDialogVisible(false);
-                                setMessageIdToBeDeleted(null);
-                            }}
-                        >No</Button>
-                        <Button
-                            icon={<CheckOutlined/>}
-                            onClick={() => {
-                                onDeleteMessage(messageIdToBeDeleted);
-                                setIsConfirmDialogVisible(false);
-                                setMessageIdToBeDeleted(null);
-                            }}
-                        >Yes</Button>
+                                    <p>{highlightText(message.text, searchTerm)}</p>
+                                    <span
+                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                </div>
+                                <img src={senderIcon} alt="Sender Icon"
+                                     className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"/>
+                            </>
+                        ) : (
+                            <>
+                                <img src={recipientIcon} alt="Recipient Icon"
+                                     className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full"/>
+                                <div
+                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                    <div>
+                                        <p>{highlightText(message.text, searchTerm)}</p>
+                                        {message.reaction && (
+                                            <span className="ml-2 cursor-pointer text-lg md:text-xl lg:text-2xl"
+                                                  onClick={() => socket.emit('removeEmojiReaction', {messageId: message.id})}>{message.reaction}
+                                            </span>)}
+                                    </div>
+                                    <div className="flex justify-end items-center">
+                                    </div>
+
+                                    <span
+                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                </div>
+                                <Dropdown overlay={menuRe(message.id)} trigger={['click']}
+                                          placement="bottomLeft"
+                                          className="p-2">
+                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                </Dropdown>
+                            </>
+                        )}
                     </div>
-                </div>
-            )}
+                );
+            })}
+            <div ref={lastMessageRef}/>
         </div>
     );
 };

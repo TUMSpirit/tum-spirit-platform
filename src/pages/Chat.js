@@ -1,7 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
-import '../components/chat/index.css';
 import socketIO from "socket.io-client"
 import {Typography} from "antd";
 
@@ -18,7 +17,19 @@ const Chat = () => {
     const handleRemoveReaction = (updatedMessages) => {
         setMessages(updatedMessages);
     };
+    const HEADER_HEIGHT_PX = 256;
 
+    const [replyingTo, setReplyingTo] = useState(null);
+
+    const handleDeleteMessage = (messageId) => {
+        socket.emit('deleteMessage', messageId);
+        setMessages(messages => messages.map(msg => {
+            if (msg.id === messageId) {
+                return {...msg, deleted: true};
+            }
+            return msg;
+        }));
+    };
 
     useEffect(() => {
         function fetchMessages() {
@@ -36,7 +47,7 @@ const Chat = () => {
 
 
     useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({behavior: 'smooth'});
+        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
     }, [messages]);
 
     useEffect(() => {
@@ -53,16 +64,6 @@ const Chat = () => {
         });
         return () => socket.off('messageUpdated');
     }, [socket]);
-
-    const handleDeleteMessage = (messageId) => {
-        socket.emit('deleteMessage', messageId);
-        setMessages(messages => messages.map(msg => {
-            if (msg.id === messageId) {
-                return {...msg, deleted: true};
-            }
-            return msg;
-        }));
-    };
 
     useEffect(() => {
         socket.on('emojiReactionRemoved', (updatedMessage) => {
@@ -94,13 +95,18 @@ const Chat = () => {
 
 
     return (
-        <div className="chat">
-            <div className='chat__main'>
-                <ChatBody currentTab={currentTab} setCurrentTab={setCurrentTab} messages={messages}
-                          onRemoveReaction={handleRemoveReaction} lastMessageRef={lastMessageRef}
-                          setEditingMessage={setEditingMessage} onDeleteMessage={handleDeleteMessage} socket={socket}/>
-                <ChatFooter socket={socket} editingMessage={editingMessage} setEditingMessage={setEditingMessage}/>
-            </div>
+        <div
+            className="mx-auto flex flex-col"
+            style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
+        >
+            <ChatBody currentTab={currentTab} setCurrentTab={setCurrentTab} messages={messages}
+                      onRemoveReaction={handleRemoveReaction} lastMessageRef={lastMessageRef}
+                      setEditingMessage={setEditingMessage} onDeleteMessage={handleDeleteMessage} socket={socket}
+                      replyingTo={replyingTo}
+                      setReplyingTo={setReplyingTo}/>
+            <ChatFooter socket={socket} editingMessage={editingMessage} setEditingMessage={setEditingMessage}
+                        replyingTo={replyingTo}
+                        setReplyingTo={setReplyingTo}/>
         </div>
     );
 };
