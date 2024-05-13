@@ -42,15 +42,18 @@ const Chatbot = () => {
       );
 
       // post request to the backend to get the bot response
-      const botResponse = await fetch("http://129.187.135.9:8000/ai/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, { role: "user", content: inputValue }],
-        }),
-      });
+      const botResponse = await fetch(
+        "https://spirit.lfe.ed.tum.de/api/ai/generate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [...messages, { role: "user", content: inputValue }],
+          }),
+        }
+      );
 
       if (!botResponse.ok) {
         throw new Error("Failed to get bot response");
@@ -85,7 +88,7 @@ const Chatbot = () => {
     setSessionId(newSessionId);
 
     // Then, send a "loaded chatbox" event to the backend with the sessionId
-    fetch("http://129.187.135.9:8000/ai/analytics", {
+    fetch("https://spirit.lfe.ed.tum.de/api/ai/analytics", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -225,7 +228,7 @@ const Chatbot = () => {
           if (opened) {
             setOpened(false);
             // send a "closed chatbox" event to the backend
-            fetch("http://129.187.135.9:8000/ai/analytics", {
+            fetch("https://spirit.lfe.ed.tum.de/api/ai/analytics", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -242,7 +245,7 @@ const Chatbot = () => {
           } else {
             setOpened(true);
             // send a "opened chatbox" event to the backend
-            fetch("http://129.187.135.9:8000/ai/analytics", {
+            fetch("https://spirit.lfe.ed.tum.de/api/ai/analytics", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
