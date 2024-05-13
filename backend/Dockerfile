@@ -12,7 +12,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Copy the .env file into the container at /app
-COPY .env .
+COPY /app/.env .
 
 # Install any necessary dependencies
 RUN pip install -r requirements.txt
