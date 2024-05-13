@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
 # import routers
 from .src.routers import ai
 from .src.routers import db
@@ -12,20 +11,20 @@ from .src.routers import celery
 
 
 def application_setup() -> FastAPI:
-    ''' Configure, start and return the application '''
+    ''' Configure, start, and return the application '''
 
     # Start FastApi App
     application = FastAPI()
 
-    # Mapping api routes
-    application.include_router(ai.router)
-    application.include_router(db.router)
-   # application.include_router(chat.router)
-    # application.include_router(language.router)
-    application.include_router(auth.router)
-    application.include_router(celery.router)
+    # Mapping api routes with '/api' prefix
+    application.include_router(ai.router, prefix="/api")
+    application.include_router(db.router, prefix="/api")
+    # application.include_router(chat.router, prefix="/api")
+    # application.include_router(language.router, prefix="/api")
+    application.include_router(auth.router, prefix="/api")
+    application.include_router(celery.router, prefix="/api")
 
-    # Allow cors
+    # Allow CORS
     application.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
