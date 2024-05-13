@@ -42,7 +42,7 @@ const Chatbot = () => {
       );
 
       // post request to the backend to get the bot response
-      const botResponse = await fetch("http://127.0.0.1:8000/ai/generate", {
+      const botResponse = await fetch("http://129.187.135.9:8000/ai/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
