@@ -50,7 +50,7 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chatbot_analytics']
 
-# Endpoint to generate AI responses using OpenAI Library
+# Endpoint to generate AI responses using OpenAI
 
 
 @router.post("/ai/generate", tags=["ai"])
@@ -58,13 +58,13 @@ async def generate(messages: MessageList):
 
     # Initialize OpenAI client
     client = OpenAI(
-        base_url='http://127.0.0.1:11434/v1',
+        base_url='http://ollama:11434/v1',
         api_key="NO_API_KEY_NEEDED_FOR_LOCAL_SERVER",
     )
 
     # Prepare the request data using the provided messages
     response = client.chat.completions.create(
-        model="llama3:8b",
+        model="llama3",
         messages=messages.messages
     )
 
@@ -73,6 +73,13 @@ async def generate(messages: MessageList):
 
     # Return the OpenAI response object
     return response
+
+
+# Simple endpoint to return a "Hello World" message
+@router.get("/ai/hello", tags=["ai"])
+async def generate():
+
+    return {"message": "Hello World"}
 
 
 @router.post("/ai/analytics", tags=["ai"])
