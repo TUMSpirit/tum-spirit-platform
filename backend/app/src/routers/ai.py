@@ -65,7 +65,7 @@ async def generate(messages: MessageList):
 
     # Prepare the request data using the provided messages
     response = client.chat.completions.create(
-        model="llama2",
+        model="llama3",
         messages=messages.messages
     )
 
