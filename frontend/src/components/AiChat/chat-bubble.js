@@ -42,6 +42,32 @@ const Chatbot = () => {
       );
 
       // post request to the backend to get the bot response
+      const botResponse = await fetch("http://127.0.0.1:8000/ai/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, { role: "user", content: inputValue }],
+        }),
+      });
+
+      if (!botResponse.ok) {
+        throw new Error("Failed to get bot response");
+      }
+
+      const response = await botResponse.json();
+
+      console.log(response.choices[0].message.content);
+
+      //set loading to false
+      setLoading(false);
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { content: response.choices[0].message.content, role: "assistant" },
+      ]);
+
       return;
     }
   };

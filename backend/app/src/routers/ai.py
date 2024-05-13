@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from openai import OpenAI
 from datetime import datetime
 from typing import List
-
+import pytz
 import os
 from pymongo import MongoClient
 
@@ -40,18 +40,17 @@ MONGO_PASSWORD = "example"
 MONGO_HOST = "mongo"
 MONGO_PORT = "27017"
 MONGO_DB = "TUMSpirit"
-# Add an environment variable for OpenAI API key
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 
 # Construct the MongoDB connection URI
-MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}"
+MONGO_URI = "mongodb://root:example@129.187.135.9:27017/mydatabase?authSource=admin"
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chatbot_analytics']
 
-# Endpoint to generate AI responses using OpenAI
+# Endpoint to generate AI responses using OpenAI Library
 
 
 @router.post("/ai/generate", tags=["ai"])
@@ -60,12 +59,12 @@ async def generate(messages: MessageList):
     # Initialize OpenAI client
     client = OpenAI(
         base_url='http://127.0.0.1:11434/v1',
-        api_key=OPENAI_API_KEY,
+        api_key="NO_API_KEY_NEEDED_FOR_LOCAL_SERVER",
     )
 
     # Prepare the request data using the provided messages
     response = client.chat.completions.create(
-        model="llama3",
+        model="llama3:8b",
         messages=messages.messages
     )
 
@@ -76,14 +75,6 @@ async def generate(messages: MessageList):
     return response
 
 
-# Simple endpoint to return a "Hello World" message
-@router.get("/ai/hello", tags=["ai"])
-async def generate():
-
-    return {"message": "Hello World"}
-
-
-# Define a route to insert analytics records into the database
 @router.post("/ai/analytics", tags=["ai"])
 def insert_record(event: AnalyticsRecord):
     try:
@@ -91,7 +82,7 @@ def insert_record(event: AnalyticsRecord):
         record = {
             "event_type": event.event_type,
             "session_id": event.session_id,
-            'timestamp': datetime.now(datetime.UTC),
+            'timestamp': datetime.now(pytz.UTC),
             "data": event.data
         }
         # Inserting the record into the database
@@ -99,5 +90,6 @@ def insert_record(event: AnalyticsRecord):
         # Return the ID of the inserted record
         return {"id": str(result.inserted_id)}
     except Exception as e:
+        print(e)
         # If something goes wrong, raise an HTTP exception
         raise HTTPException(status_code=500, detail=str(e))
