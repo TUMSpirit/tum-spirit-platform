@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Board } from "../data/board";
 import { Columns } from "../types";
 import { onDragEnd } from "../helpers/onDragEnd";
@@ -9,12 +9,15 @@ import AddModal from "../Modals/AddModal";
 import Task from "../Task";
 import {Row, Col, Button} from "antd";
 import {SubHeader} from '../../layout/SubHeader'
+import { v4 as uuidv4 } from "uuid";
+import AddEventPopup from "../../calendar_component/calendar_additional_components/AddEventPopup";
 
 const Home = () => {
 	const [columns, setColumns] = useState(Board);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedColumn, setSelectedColumn] = useState("");
 	const [initValues, setInitValues] = useState({
+		id: uuidv4(),
 		title: "",
 		description: "",
 		priority: "",
@@ -24,28 +27,55 @@ const Home = () => {
 		tags: [],
 	});
 
+	const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false)
+	const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false)
+	const [currentEvent, setCurrentEvent] = useState(null)
+
 
 	const openModal = (columnId) => {
 		setSelectedColumn(columnId);
-		/*setInitValues({
-			title: columnId.title,
-			description: columnId.description,
-			priority: "",
-			deadline: 0,
-			image: "",
-			alt: "",
-			tags: [],
-		});*/
-		setModalOpen(true);
+		setIsCreateEventPopupOpen(true);
+	};
+
+	const editModal = (task) => {
+		setCurrentEvent(task);
+		setIsUpdateEventPopupOpen(true);
 	};
 
 	const closeModal = () => {
-		setModalOpen(false);
+		setIsCreateEventPopupOpen(false);
+		setIsUpdateEventPopupOpen(false);
 	};
 
 	const handleAddTask = (taskData) => {
 		const newBoard = { ...columns };
 		newBoard[selectedColumn].items.push(taskData);
+	};
+
+	const handleEditTask = (taskData) => {
+		const newBoard = { ...columns };
+		setIsUpdateEventPopupOpen(false);
+		setCurrentEvent(null);
+		for (let newBoardKey in newBoard) {
+			const index = newBoard[newBoardKey].items.findIndex(task => task.id === taskData.id);
+			// Wenn das Objekt gefunden wurde, ersetze es durch das neue Objekt
+			if (index !== -1) {
+				newBoard[newBoardKey].items[index] = taskData;
+			}
+		}
+	};
+
+	const deleteTask = (id) => {
+		const newBoard = { ...columns };
+		setIsUpdateEventPopupOpen(false);
+		setCurrentEvent(null);
+		for (let newBoardKey in newBoard) {
+			const index = newBoard[newBoardKey].items.findIndex(task => task.id === id);
+			// Wenn das Objekt gefunden wurde, ersetze es durch das neue Objekt
+			if (index !== -1) {
+				newBoard[newBoardKey].items.splice(index, 1);
+			}
+		}
 	};
 
 	return (
@@ -81,7 +111,7 @@ const Home = () => {
 														<Task
 															provided={provided}
 															task={task}
-															editModal={openModal}
+															editModal={editModal}
 														/>
 													</>
 												)}
@@ -103,13 +133,15 @@ const Home = () => {
 				</div>
 			</DragDropContext>
 
-			<AddModal
-				isOpen={modalOpen}
+			{(isUpdateEventPopupOpen || isCreateEventPopupOpen) && <AddModal
 				onClose={closeModal}
-				setOpen={setModalOpen}
+				isCreateEventOpen={isCreateEventPopupOpen}
+				isUpdateEventOpen={isUpdateEventPopupOpen}
 				handleAddTask={handleAddTask}
-				initValues={initValues}
-			/>
+				handleEditTask={handleEditTask}
+				handleDeleteTask={deleteTask}
+				initValues={currentEvent}
+			/>}
 		</>
 	);
 };

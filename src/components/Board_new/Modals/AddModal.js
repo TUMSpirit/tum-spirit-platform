@@ -1,24 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, {useRef, useState} from "react";
 import { getRandomColors } from "../helpers/getRandomColors";
 import { v4 as uuidv4 } from "uuid";
-import {Button, Modal, Row, Col, Form, Input} from "antd";
+import {Button, Modal, Row, Col, Form, Input, message} from "antd";
 import {DeleteOutlined} from "@ant-design/icons";
+import dayjs from "dayjs";
 
-const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
+const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, initValues }) => {
 	const initialTaskData = {
-		id: uuidv4(),
-		title: "",
-		description: "",
-		priority: "",
-		deadline: 0,
-		image: "",
-		alt: "",
-		tags: [],
-	};
+		id: isUpdateEventOpen?initValues.id:uuidv4(),
+		title: isUpdateEventOpen?initValues.title:"",
+		description: isUpdateEventOpen?initValues.description:"",
+		priority: isUpdateEventOpen?initValues.priority:"",
+		deadline: isUpdateEventOpen?initValues.deadline:"",
+		image: isUpdateEventOpen?initValues.image:"",
+		alt: isUpdateEventOpen?initValues.alt:"",
+		tags: isUpdateEventOpen?initValues.tags:[]
+	}
 
-	const [taskData, setTaskData] = useState(initialTaskData);
+	const [taskData, setTaskData] = useState(initialTaskData)
 	const [tagTitle, setTagTitle] = useState("");
+	const [form] = Form.useForm();
+	const formRef = useRef(null);
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
@@ -48,42 +51,59 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
 	};
 
 	const closeModal = () => {
-		setOpen(false);
+		form.resetFields();
 		onClose();
-		setTaskData(initialTaskData);
 	};
 
 	const handleSubmit = () => {
-		handleAddTask(taskData);
+		if(isUpdateEventOpen){
+			handleEditTask(taskData);
+		} else {
+			handleAddTask(taskData);
+		}
+		form.resetFields();
 		closeModal();
 	};
 
+	const handleDelete = (id) => {
+		form.resetFields();
+		handleDeleteTask(id);
+	}
+
+
+	const getInitialFormValues = () => {
+		return {
+			id: taskData.id,
+			title: taskData.title,
+			description: taskData.description,
+			priority: taskData.priority,
+			deadline: taskData.deadline,
+			image: taskData.image,
+			alt: taskData.alt,
+			tags: taskData.tags
+		}
+	}
+
 	return (
-		<Modal closeIcon={false} title={"Task"} open={isOpen}
+		<Modal closeIcon={false} title={"Task"} open={isCreateEventOpen || isUpdateEventOpen}
 			className={"modal-addEvent"}
 			   footer={[
+				   isUpdateEventOpen && (<Button data-testid='deleteEventButton' onClick={() => handleDelete(taskData.id)} type='primary' icon={<DeleteOutlined/>}/>),
 				   <Button onClick={closeModal}>Cancel</Button>,
-				   <Button
-					   data-testid='saveEventButton' key="submit" type='primary'
-					   onClick={handleSubmit}
-				   >
-					   Save
-				   </Button>
+				   <Button data-testid='saveEventButton' key="submit" type='primary' onClick={form.submit}>Save</Button>
 			   ]}
 		>
 
-			<Form layout={'vertical'} onFinish={handleSubmit} requiredMark={false} >
+			<Form layout={'vertical'} onFinish={handleSubmit} requiredMark={false} form={form} ref={formRef} initialValues={getInitialFormValues()}>
 						<Form.Item label={"Title"} name="title">
 							<Input 	type="text"
 									  name="title"
-									  defaultValue={taskData.title}
 									  onChange={handleChange}
 									  placeholder="Title"
 							/>
 						</Form.Item>
 				<Form.Item label={"Description"}  name="description">
 					<Input name="description"
-						   defaultValue={taskData.description}
 						   onChange={handleChange}
 						   placeholder="Description"
 					/>
@@ -92,7 +112,6 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
 			<select
 					name="priority"
 					onChange={handleChange}
-					defaultValue={taskData.priority}
 					className="w-full h-12 px-2 outline-none rounded-md bg-slate-100 border border-slate-300 text-sm"
 				>
 					<option value="">Priority</option>
@@ -101,11 +120,10 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
 					<option value="high">High</option>
 				</select>
 			</Form.Item>
-				<Form.Item label={"Estimated Time"}  name="estimate">
+				<Form.Item label={"Estimated Time (Minutes)"}  name="deadline">
 				<input
 					type="number"
 					name="deadline"
-					defaultValue={taskData.deadline}
 					onChange={handleChange}
 					placeholder="Deadline"
 					className="w-full h-12 px-3 outline-none rounded-md bg-slate-100 border border-slate-300 text-sm"
@@ -114,17 +132,10 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
 				<Form.Item label={"Tags"}  name="tags">
 				<input
 					type="text"
-					defaultValue={tagTitle}
 					onChange={(e) => setTagTitle(e.target.value)}
 					placeholder="Tag Title"
 					className="w-full h-12 px-3 outline-none rounded-md bg-slate-100 border border-slate-300 text-sm mb-4"
 				/>
-				<button
-					className="w-full rounded-md h-9 bg-slate-500 text-amber-50 font-medium mb-2"
-					onClick={handleAddTag}
-				>
-					Add Tag
-				</button>
 				<div className="w-full">
 					{taskData.tags && <span>Tags:</span>}
 					{taskData.tags.map((tag, index) => (
@@ -139,6 +150,12 @@ const AddModal = ({ isOpen, onClose, setOpen, handleAddTask, initValues }) => {
 				</div>
 				</Form.Item>
 			</Form>
+			<button
+				className="w-full rounded-md h-9 bg-slate-500 text-amber-50 font-medium mb-2"
+				onClick={handleAddTag}
+			>
+				Add Tag
+			</button>
 		</Modal>
 	);
 };
