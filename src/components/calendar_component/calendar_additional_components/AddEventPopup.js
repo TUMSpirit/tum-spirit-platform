@@ -326,7 +326,7 @@ const AddEventPopup = ({
                         </Row>
 
                         <Row className={'row-upload'} gutter={[0, 16]}>
-                            <Form.Item name={'textArea'} label="TextArea">
+                            <Form.Item name={'textArea'} label="Info">
                                 <TextArea rows={4} onChange={(e) => {
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, textArea: e.target.value
@@ -420,7 +420,7 @@ const AddEventPopup = ({
                     </div>
 
                         <Row >
-                            <Form.Item name={'isMilestone'}>
+                            <Form.Item name={'isMilestone'} label={'Meeting Type'}>
                                 <Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
                                         onChange={(e) => {
                                             setFormData((prevFormData) => ({

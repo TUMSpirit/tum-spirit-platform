@@ -251,7 +251,7 @@ function Header({
 
     return (
         <>
-            <Row gutter={[24, 0]}>
+            <Row style={{ paddingBottom: "20px" }} gutter={[24, 0]}>
                 <Col span={24} md={6}>
                     <div className="ant-page-header-heading">
                         <span

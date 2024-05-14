@@ -26,32 +26,32 @@ const currentUser = {
     name: "Josef Suckart",
     id: "123456",
     color: "green",
-    initialen: "JS",
+    initialen: "YOU",
     isFirstLogin: true
 };
 
 const users = [
     {
-        name: "Josef Suckart",
+        name: "You",
         id: "123456",
         color: "green",
-        initialen: "JS",
+        initialen: "You",
         isFirstLogin: true
     },
 
     {
-        name: "Jonas Bender",
+        name: "Clara Copyright",
         id: "333333",
         color: "blue",
-        initialen: "JB",
+        initialen: "CC",
         isFirstLogin: false
     },
 
     {
-        name: "Degenhardt Hardt",
+        name: "Max Muster",
         id: "444444",
         color: "red",
-        initialen: "DH",
+        initialen: "MM",
         isFirstLogin: false
     },
 
@@ -145,14 +145,14 @@ const Calendar_Main = () => {
                     eventPropGetter={(eventStyleGetter)}
                 />
                 <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries} users={users} currentUser={currentUser}></TimelinePopup>
-                <TutorialPopup isFirstLogin={isFirstLogin} setISFirstLogin={setIsFirstLogin}></TutorialPopup>
             </div>
 
         </div>
 
     );
 }
-//<TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries}></TimelinePopup>
+//    <TutorialPopup isFirstLogin={isFirstLogin} setISFirstLogin={setIsFirstLogin}></TutorialPopup>
+// <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries}></TimelinePopup>
 /*
 {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true} users={users} currentUser={currentUser}/>}
             {isUpdateEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isExistingOpen={true} event={currentEvent} deleteEntry={deleteEntryFuncArg} users={users}/>}
