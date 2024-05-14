@@ -4,10 +4,10 @@ import ChatFooter from '../components/chat/ChatFooter';
 import '../components/chat/index.css';
 import socketIO from "socket.io-client"
 import {Typography} from "antd";
+import Chatbot from "../components/AiChat/chat-bubble";
 
 const {Title} = Typography;
 const socket = socketIO.connect("http://localhost:4000")
-import Chatbot from "../components/AiChat/chat-bubble";
 
 const Chat = () => {
     const data = [];

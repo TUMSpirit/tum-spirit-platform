@@ -1,39 +1,57 @@
-import {Route, Switch, Redirect} from "react-router-dom";
-import SignUp from "./pages/SignUp";
-import SignIn from "./pages/SignIn";
+import React from "react";
+import logo from "./assets/images/avatar1.png";
+import styled from "styled-components";
+import { Route, Routes, Navigate } from "react-router-dom";
+import { RequireAuth } from "react-auth-kit";
+
 import Main from "./components/layout/Main";
 import "antd/dist/reset.css";
 import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
+import Login from "./pages/Login.js";
 import Kanban from "./pages/Kanban";
+import Chat from "./pages/Chat";
 import Team from "./pages/Team";
 import Documents from "./pages/Documents";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
-import Timeline from "./pages/Timeline";
-import Chat from "./pages/Chat";
-import socketIO from "socket.io-client"
+import socketIO from "socket.io-client";
 
-const socket = socketIO.connect("http://localhost:4000")
+const socket = socketIO.connect("http://localhost:4000");
+
+const AppContainer = styled.div`
+  width: 100%;
+  height: 100%;
+`;
 
 function App() {
   return (
-      <div className="App">
-        <Switch>
-          <Route path="/" exact component={SignIn} />
-          <Main>
-            <Route exact path="/calendar" component={Calendar} />
-            <Route path="/chat" component={Chat}></Route>
-            <Route exact path="/kanban" component={Kanban} />
-            <Route exact path="/team" component={Team} />
-            <Route exact path="/documents" component={Documents} />
-            <Route exact path="/dashboard" component={Dashboard} />
-            <Route exact path="/timeline" component={Timeline} />
-
-            <Redirect from="*" to="/chat" />
-          </Main>
-        </Switch>
-      </div>
+    <>
+      <Routes>
+        <Route
+          path="*"
+          element={
+            <RequireAuth loginPath="/login">
+                <Main>
+                  <Routes>
+                  <Route path="/calendar" element={<Calendar/>} />
+                  <Route path="/chat" element={<Chat/>} />
+                  <Route path="/kanban" element={<Kanban/>} />
+                  <Route path="/team" element={<Team/>} />
+                  <Route path="/documents" element={<Documents/>} />
+                  <Route path="/dashboard" element={<Dashboard/>} />
+                  <Route
+                        path="*"
+        element={<Navigate to="/kanban" replace />}
+    />
+                  </Routes>
+                </Main>
+            </RequireAuth>
+          }
+        ></Route>
+        <Route path="/login" element={<Login />}></Route>
+      </Routes>
+    </>
   );
 }
 
