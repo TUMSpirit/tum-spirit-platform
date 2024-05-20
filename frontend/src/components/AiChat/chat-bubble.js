@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MessageOutlined } from "@ant-design/icons"; // Assuming you're using Ant Design
+import { MessageOutlined } from "@ant-design/icons";
 import { Button, FloatButton, Input } from "antd";
 import logo from "../../assets/images/ghost.png";
 import { v4 as uuidv4 } from "uuid";
@@ -35,12 +35,6 @@ const Chatbot = () => {
       // Clear the input
       setInputValue("");
 
-      console.log(
-        JSON.stringify({
-          messages: [...messages, { role: "user", content: inputValue }],
-        })
-      );
-
       // post request to the backend to get the bot response
       const botResponse = await fetch(
         "https://spirit.lfe.ed.tum.de/api/ai/generate",
@@ -61,11 +55,10 @@ const Chatbot = () => {
 
       const response = await botResponse.json();
 
-      console.log(response.choices[0].message.content);
-
       //set loading to false
       setLoading(false);
 
+      // Add bot response to the chat
       setMessages((prevMessages) => [
         ...prevMessages,
         { content: response.choices[0].message.content, role: "assistant" },
