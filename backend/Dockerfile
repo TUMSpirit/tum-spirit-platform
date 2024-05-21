@@ -19,8 +19,8 @@ RUN pip install -r requirements.txt
 
 # Copy the FastAPI app files to the container
 COPY app /app/app
-COPY BigFiveModels /app/BigFiveModel
-COPY MTBIModels /app/MTBIModel
+#COPY BigFiveModels /app/BigFiveModel
+#COPY MTBIModels /app/MTBIModel
 
 # Expose the port that Uvicorn will run on
 EXPOSE 8000

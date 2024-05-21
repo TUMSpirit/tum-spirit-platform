@@ -43,7 +43,7 @@ const Chatbot = () => {
 
       // post request to the backend to get the bot response
       const botResponse = await fetch(
-        "https://spirit.lfe.ed.tum.de/api/ai/generate",
+        "http://localhost:8000/api/ai/generate",
         {
           method: "POST",
           headers: {
@@ -88,7 +88,7 @@ const Chatbot = () => {
     setSessionId(newSessionId);
 
     // Then, send a "loaded chatbox" event to the backend with the sessionId
-    fetch("https://spirit.lfe.ed.tum.de/api/ai/analytics", {
+    fetch("http://localhost:8000/api/ai/analytics", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -228,7 +228,7 @@ const Chatbot = () => {
           if (opened) {
             setOpened(false);
             // send a "closed chatbox" event to the backend
-            fetch("https://spirit.lfe.ed.tum.de/api/ai/analytics", {
+            fetch("http://localhost:8000/api/ai/analytics", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -245,7 +245,7 @@ const Chatbot = () => {
           } else {
             setOpened(true);
             // send a "opened chatbox" event to the backend
-            fetch("https://spirit.lfe.ed.tum.de/api/ai/analytics", {
+            fetch("http://localhost:8000/api/ai/analytics", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

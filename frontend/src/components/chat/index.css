@@ -6,7 +6,6 @@
     height: 990px;
     background-color: #f5f7fb;
     overflow-y: auto;
-    margin-top: 74px;
 }
 
 .form {
@@ -194,4 +193,9 @@
 
 .message__container {
     scrollbar-width: none;
+}
+
+
+.ant-tabs-nav{
+    margin: 0 !important;
 }

@@ -2,10 +2,14 @@
 import { Menu, Button } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/images/Spirit.png";
+import { CalendarFilled } from '@ant-design/icons';
+import { Typography } from 'antd';
+
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
   const page = pathname.replace("/", "");
+  const { Title, Text } = Typography;
 
   const calendar = [
     <svg
@@ -171,6 +175,9 @@ function Sidenav({ color }) {
         <img src={logo} alt="" />
       </div>
       <hr />
+      <Title strong style={{marginTop:30,marginBottom:15,
+        paddingLeft:20, fontWeight: 900
+      }} level={5}>TUMuchToManage</Title>
       <Menu defaultSelectedKeys={"2"} theme="light" mode="inline">
 
         <Menu.Item key="1">
@@ -181,7 +188,7 @@ function Sidenav({ color }) {
                   background: page === "calendar" ? color : "",
                 }}
             >
-              {chat}
+              <CalendarFilled></CalendarFilled>
             </span>
             <span className="label">Calendar</span>
           </NavLink>
@@ -253,7 +260,18 @@ function Sidenav({ color }) {
             <span className="label">Dashboard</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="7">
+        <Menu.ItemGroup title="Issues" className="menu-item-header" key="8">
+        </Menu.ItemGroup>
+      </Menu>
+      <div className="aside-footer">
+      </div>
+    </>
+  );
+}
+
+export default Sidenav;
+/*
+      <Menu.Item key="7">
           <NavLink to="/timeline">
             <span
                 className="icon"
@@ -266,16 +284,8 @@ function Sidenav({ color }) {
             <span className="label">Timeline</span>
           </NavLink>
         </Menu.Item>
-        <Menu.ItemGroup title="Issues" className="menu-item-header" key="8">
-        </Menu.ItemGroup>
-      </Menu>
-      <div className="aside-footer">
-      </div>
-    </>
-  );
-}
+ */
 
-export default Sidenav;
 /*
   <Menu.Item key="2">
           <NavLink to="/tables">

@@ -43,7 +43,7 @@ MONGO_DB = "TUMSpirit"
 
 
 # Construct the MongoDB connection URI
-MONGO_URI = "mongodb://root:example@129.187.135.9:27017/mydatabase?authSource=admin"
+MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)

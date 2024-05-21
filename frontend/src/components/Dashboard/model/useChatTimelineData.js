@@ -2,16 +2,15 @@ import { useDataFetcher } from "./utils/useDataFetcher";
 
 const demoData = [
     {
-        sender: "Norbert",
-        message: "Hi Daniel, ist dein Feature soweit?",
-        date: "10/02/2024",
+        sender: "Martin",
+        message: "Hi! Perfekt, danke fürs Erstellen - LG 🙂",
+        date: "13/05/2024",
     },
-    { sender: "You", message: "Ja sieht gut aus!", date: "10/02/2024" },
     {
-        sender: "Alina",
-        message: "Perfekt, ich bin mit meinem auch bald fertig :)",
-        date: "10/02/2024",
-    },
+        sender: "You",
+        message: "Hey, Ich habe einen Termin für nächste Woche angelegt.",
+        date: "13/05/2024",
+    }
 ];
 
 export const useChatTimelineData = () => {

@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Union
+from typing import Annotated, Any, Union
 from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pymongo import MongoClient
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel, PlainSerializer, WithJsonSchema
 from datetime import datetime, timedelta
-
+from bson import ObjectId
+from bson.errors import InvalidId
 
 from dotenv import load_dotenv
 
@@ -18,7 +19,7 @@ load_dotenv()
 
 # to get a string like this run:
 # openssl rand -hex 32
-SECRET_KEY = ""  # ADD SECRETS
+SECRET_KEY = "b84be05f4f7e6307639b11d5be65d3c4e53bb2142a83e07b643953709e29b3a5"  # ADD SECRETS
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -34,7 +35,7 @@ MONGO_PORT = "27017"
 MONGO_DB = "TUMSpirit"
 
 # connection string
-MONGO_URI = "mongodb://root:example@129.187.135.9:27017/mydatabase?authSource=admin"
+MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
 
 
 # Connect to MongoDB
@@ -43,6 +44,21 @@ db = client[MONGO_DB]
 user_collection = db['users']
 team_collection = db["teams"]
 
+
+def validate_object_id(v: Any) -> ObjectId:
+    if isinstance(v, ObjectId):
+        return v
+    if ObjectId.is_valid(v):
+        return ObjectId(v)
+    raise ValueError("Invalid ObjectId")
+
+PyObjectId = Annotated[
+    Union[str, ObjectId],
+    AfterValidator(validate_object_id),
+    PlainSerializer(lambda x: str(x), return_type=str),
+    WithJsonSchema({"type": "string"}, mode="serialization"),
+]
+# Register the custom encoder for PyObjectI
 
 class Token(BaseModel):
     access_token: str
@@ -55,11 +71,13 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     username: str
-    email: Union[str, None] = None
-    full_name: Union[str, None] = None
-    disabled: Union[bool, None] = None
     role: str
+    team_id: PyObjectId
 
+    class Config:
+            allow_population_by_field_name = True
+            arbitrary_types_allowed = True #required for the _id 
+            json_encoders = {ObjectId: str}
 
 class UserInDB(User):
     password: str
@@ -73,7 +91,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user_db(email: str):
+def get_user_db(username: str):
     """
     Fetch user from MongoDB by email.
     Args:
@@ -81,12 +99,11 @@ def get_user_db(email: str):
     Returns:
         UserInDB | None: UserInDB instance if user is found, else None
     """
-    user_data = user_collection.find_one({"username": email})
+    user_data = user_collection.find_one({"username": username})
     if user_data:
         return user_data
 
-
-def authenticate_user_db(email: str, password: str):
+def authenticate_user_db(username: str, password: str):
     """
     Authenticates a user using MongoDB.
     Args:
@@ -95,7 +112,7 @@ def authenticate_user_db(email: str, password: str):
     Returns:
         User | bool: The authenticated User object, or False if authentication fails.
     """
-    user = get_user_db(email)
+    user = get_user_db(username)
     if not user:
         return False
     if not verify_password(password, user.get("password")):
@@ -169,6 +186,11 @@ async def check_role(
         )
     return current_user
 
+@ router.get("/me", response_model=User)
+async def read_users_me(
+         current_user: Annotated[User, Depends(get_current_user)],
+):
+    return current_user 
 
 @ router.post("/login")
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],) -> Token:
@@ -192,7 +214,6 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    print(user)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.get("username")}, expires_delta=access_token_expires
@@ -229,3 +250,9 @@ async def login_for_access_token(
         data={"sub": user.get("username")}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+##   email: Union[str, None] = None
+  ##  full_name: Union[str, None] = None
+  ##  disabled: Union[bool, None] = None
+ ##   role: str
