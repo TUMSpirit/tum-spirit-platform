@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { MessageOutlined } from "@ant-design/icons";
+import { CloseOutlined, MessageOutlined } from "@ant-design/icons";
 import { Button, FloatButton, Input } from "antd";
 import logo from "../../assets/images/ghost.png";
 import { v4 as uuidv4 } from "uuid";
 
-const Chatbot = () => {
+const Chatbot = ({ opened, setOpened }) => {
   // State to hold messages
   const [messages, setMessages] = useState([
     { role: "assistant", content: "Hello, how can I help you?" },
@@ -14,9 +14,6 @@ const Chatbot = () => {
 
   // Unique session ID for the chat
   const [sessionId, setSessionId] = useState("");
-
-  // State ho hold the opened/closed state of the chat
-  const [opened, setOpened] = useState(false);
 
   // Function to handle input change
   const handleInputChange = (event) => setInputValue(event.target.value);
@@ -36,18 +33,15 @@ const Chatbot = () => {
       setInputValue("");
 
       // post request to the backend to get the bot response
-      const botResponse = await fetch(
-        "http://localhost:8000/api/ai/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messages: [...messages, { role: "user", content: inputValue }],
-          }),
-        }
-      );
+      const botResponse = await fetch("http://localhost:8000/api/ai/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, { role: "user", content: inputValue }],
+        }),
+      });
 
       if (!botResponse.ok) {
         throw new Error("Failed to get bot response");
@@ -102,7 +96,7 @@ const Chatbot = () => {
         <div
           style={{
             position: "fixed",
-            bottom: 100,
+            bottom: 25,
             right: 25,
             zIndex: 1000,
             backgroundColor: "white",
@@ -139,6 +133,17 @@ const Chatbot = () => {
             <div style={{ fontSize: 15, fontWeight: "bold", color: "white" }}>
               Hi I'm Spirit!
             </div>
+            <button
+              style={{
+                marginLeft: "auto",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              onClick={() => setOpened(false)}
+            >
+              <CloseOutlined style={{ fontSize: 20, color: "white" }} />
+            </button>
           </div>
           <div
             style={{ height: 390, overflow: "auto", flex: "1", padding: 12 }}
@@ -213,47 +218,6 @@ const Chatbot = () => {
           </div>
         </div>
       )}
-      <FloatButton
-        style={{
-          boxShadow: "0 0 10px rgba(0, 0, 0, 0.4)",
-        }}
-        onClick={() => {
-          if (opened) {
-            setOpened(false);
-            // send a "closed chatbox" event to the backend
-            fetch("http://localhost:8000/api/ai/analytics", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                event_type: "closed_chatbox",
-                session_id: sessionId,
-                data: {},
-              }),
-            });
-            setMessages([
-              { content: "How can I help you?", role: "assistant" },
-            ]);
-          } else {
-            setOpened(true);
-            // send a "opened chatbox" event to the backend
-            fetch("http://localhost:8000/api/ai/analytics", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                event_type: "opened_chatbox",
-                session_id: sessionId,
-                data: {},
-              }),
-            });
-          }
-        }}
-        icon={<MessageOutlined style={{ fontSize: 20, color: "gray" }} />}
-        shape="square"
-      />
     </>
   );
 };
