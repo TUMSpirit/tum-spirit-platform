@@ -2,12 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # import routers
-from .src.routers import ai
-from .src.routers import db
-# from .src.routers import language
-# from .src.routers import chat
 from .src.routers import auth
 from .src.routers import celery
+
+from .src.routers import ai
+from .src.routers import kanban
+# from .src.routers import language
+# from .src.routers import chat
 
 
 def application_setup() -> FastAPI:
@@ -17,12 +18,12 @@ def application_setup() -> FastAPI:
     application = FastAPI()
 
     # Mapping api routes with '/api' prefix
-    application.include_router(ai.router, prefix="/api")
-    application.include_router(db.router, prefix="/api")
-    # application.include_router(chat.router, prefix="/api")
-    # application.include_router(language.router, prefix="/api")
     application.include_router(auth.router, prefix="/api")
     application.include_router(celery.router, prefix="/api")
+
+    application.include_router(ai.router, prefix="/api")
+    application.include_router(kanban.router, prefix="/api")
+    # application.include_router(language.router, prefix="/api")
 
     # Allow CORS
     application.add_middleware(
@@ -37,3 +38,37 @@ def application_setup() -> FastAPI:
 
 
 app = application_setup()
+
+
+app.openapi_schema = None
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="FastAPI OAuth2 JWT",
+        version="1.0.0",
+        description="Dies ist eine sehr sichere App mit OAuth2 JWT Authentifizierung",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "OAuth2PasswordBearer": {
+            "type": "oauth2",
+            "flows": {
+                "password": {
+                    "tokenUrl": "/api/token",
+                    "scopes": {}
+                }
+            }
+        }
+    }
+    for path in openapi_schema["paths"].values():
+        for method in path.values():
+            method["security"] = [{"OAuth2PasswordBearer": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+
+# Abhängigkeitsimport für OpenAPI
+from fastapi.openapi.utils import get_openapi

@@ -13,7 +13,7 @@ function Main({ children }) {
     const [placement, setPlacement] = useState("right");
     const [sidenavColor, setSidenavColor] = useState("#1890ff");
     const [sidenavType, setSidenavType] = useState("#fff");
-    const [fixed, setFixed] = useState(false);
+    const [fixed, setFixed] = useState(true);
 
     const openDrawer = () => setVisible(!visible);
     const handleSidenavType = (type) => setSidenavType(type);
@@ -115,7 +115,7 @@ function Main({ children }) {
                         </AntHeader>
                     )}
                     <Content className="content-ant">{children}</Content>
-                    <Footer />
+            
                 </SubHeaderContextProvider>
             </Layout>
         </Layout>
@@ -123,3 +123,4 @@ function Main({ children }) {
 }
 
 export default Main;
+/*   <Footer />*/

@@ -33,13 +33,13 @@ def create_team(team_entry):
         # Create a record with a random ID (ObjectId) and a timestamp
         record = {
             '_id': ObjectId(),
-            'project': timeline_entry.projectId,
-            'name': timeline_entry.title,
-            'members': timeline_entry.description,
+            'project': team_entry.projectId,
+            'name': team_entry.title,
+            'members': team_entry.description,
             'timestamp': datetime.utcnow()
         }
         # Inserting the record into the database
-        result = timeline.insert_one(record)
+        result = collection.insert_one(record)
         # Return the ID of the inserted record
         return {"id": str(result.inserted_id)}
     except Exception as e:
@@ -52,7 +52,7 @@ def update_timelineEntry(team_id, newValues):
     try:
         query = { '_id': team_id }
         # Updating the record into the database
-        result = timeline.update_one(query, values)
+        result = collection.update_one(query, values)
         # Return the ID of the inserted record
         return result
     except Exception as e:
@@ -66,7 +66,7 @@ def insert_timelineEntry(team_id):
         # Create a record with a random ID (ObjectId) and a timestamp
         query = { '_id': team_id }
         # Inserting the record into the database
-        result = timeline.remove(query)
+        result = collection.remove(query)
         # Return the ID of the inserted record
         return result
     except Exception as e:

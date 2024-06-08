@@ -4,106 +4,84 @@ import taskImage2 from "../task3.jpg"
 import taskImage3 from "../task3.jpg"
 import { getRandomColors } from "../helpers/getRandomColors"
 
+
+export const Tasks = [
+	{
+		title: "Intro Presentation",
+		column: "Backlog",
+		description: "Erstelle eine Präsentation für die Einführung des Projekts",
+		priority: "low",
+		deadline: 50,
+		tags: [
+			{ title: "Orga", ...{ bg: "#fef3c7", text: "#d97706" } }
+		]
+
+	}];
+
 export const Board = {
 	backlog: {
 		name: "Backlog",
 		items: [
 			{
 				id: uuidv4(),
-				title: "Admin Panel Front-end",
-				description: "Lorem ipsum dolor sit amet ..",
-				priority: "medium",
-				deadline: 50,
-				image: taskImage2,
-				alt: "task image",
-				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
-				]
-			},
-			{
-				id: uuidv4(),
-				title: "Admin Panel Back-end",
-				description: "Lorem ipsum dolor sit amet ..",
+				title: "Intro Presentation",
+				description: "Erstelle eine Präsentation für die Einführung des Projekts",
 				priority: "low",
 				deadline: 50,
 				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
+					{ title: "Orga", ...{ bg: "#fef3c7", text: "#d97706" } }
 				]
 			}
 		]
 	},
 	pending: {
-		name: "Pending",
+		name: "Doing",
 		items: [
 			{
 				id: uuidv4(),
-				title: "Admin Panel Back-end",
-				description: "Lorem ipsum dolor sit amet ..",
+				title: "Nutzerbefragung",
+				description: "Nutzerbefragung zum Thema Online-Learning",
 				priority: "high",
 				deadline: 50,
 				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
+					{ title: "Analysis", ...{ bg: "#dbeafe", text: "#2563eb" } }
 				]
 			},
 			{
 				id: uuidv4(),
-				title: "Admin Panel Front-end",
-				description: "Lorem ipsum dolor sit amet ..",
+				title: "Tech Setup",
+				description: "Erstellen einer Entwicklungsumgebung für die Zusammenarbeit",
 				priority: "low",
 				deadline: 50,
 				image: taskImage,
 				alt: "task image",
 				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
-				]
-			}
-		]
-	},
-	todo: {
-		name: "To Do",
-		items: [
-			{
-				id: uuidv4(),
-				title: "Admin Panel Front-end",
-				description: "Lorem ipsum dolor sit amet ..",
-				priority: "medium",
-				deadline: 50,
-				image: taskImage3,
-				alt: "task image",
-				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
+					{ title: "Development", ...{ bg: "#ecfccb", text: "#65a30d" } }
 				]
 			}
 		]
 	},
 	doing: {
-		name: "Doing",
+		name: "Testing",
 		items: [
 			{
 				id: uuidv4(),
-				title: "Admin Panel Front-end",
-				description: "Lorem ipsum dolor sit amet ..",
+				title: "Ideation",
+				description: "Ideengenerierung im Mindmap-Stil",
 				priority: "low",
 				deadline: 50,
 				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
+					{ title: "Analysis", ...{ bg: "#dbeafe", text: "#2563eb" } }
 				]
 			},
 			{
 				id: uuidv4(),
-				title: "Admin Panel Back-end",
-				description: "Lorem ipsum dolor sit amet ..",
+				title: "Projektplan erarbeiten",
+				description: "Erstellen eines Projektplans in Excel (Gantt-Chart auch möglich)",
 				priority: "medium",
 				deadline: 50,
 				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
+					{ title: "Orga", ...{ bg: "#fef3c7", text: "#d97706" } }
 				]
 			}
 		]
@@ -113,15 +91,12 @@ export const Board = {
 		items: [
 			{
 				id: uuidv4(),
-				title: "Admin Panel Front-end",
-				description: "Lorem ipsum dolor sit amet ..",
+				title: "Mail an Project Lead",
+				description: "Formuliere eine kurze Mail an den Projekt Lead mit den wichtigsten Informationen zum Team",
 				priority: "high",
 				deadline: 50,
-				image: taskImage,
-				alt: "task image",
 				tags: [
-					{ title: "Test", ...getRandomColors() },
-					{ title: "Front", ...getRandomColors() }
+					{ title: "Orga", ...{ bg: "#fef3c7", text: "#d97706" } }
 				]
 			}
 		]

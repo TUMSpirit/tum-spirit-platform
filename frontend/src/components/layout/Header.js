@@ -14,20 +14,27 @@ import {
     Drawer,
     Typography,
     Switch,
+    Popover,
+    Icon,
+    Menu,
+    Space
 } from "antd";
 
 import {
-    SearchOutlined,
-    StarOutlined,
-    TwitterOutlined,
-    FacebookFilled,
+    SolutionOutlined,
     MenuUnfoldOutlined,
+    UserOutlined,
+    SettingOutlined,
+    LogoutOutlined
+
 } from "@ant-design/icons";
 
 import { NavLink, Link } from "react-router-dom";
 import styled from "styled-components";
 import avtar from "../../assets/images/team-2.jpg";
 import { useSubHeaderContext } from "./SubHeaderContext";
+import { useSignOut } from 'react-auth-kit';
+import { useNavigate } from 'react-router-dom';
 
 const ButtonContainer = styled.div`
     .ant-btn-primary {
@@ -228,6 +235,17 @@ const setting = [
     </svg>,
 ];
 
+const text = <span>Title</span>;
+const content = (
+  <div>
+    <p>Content</p>
+    <p>Content</p>
+  </div>
+);
+
+const buttonWidth = 70;
+
+
 function Header({
     placement,
     name,
@@ -241,6 +259,16 @@ function Header({
 
     const [visible, setVisible] = useState(false);
     const [sidenavType, setSidenavType] = useState("transparent");
+    
+    const logout = useSignOut();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+      // Aufruf der logout-Funktion, um den Benutzer abzumelden
+      logout();
+      // Optional: Hier könntest du zur Startseite oder einer anderen Seite weiterleiten
+      navigate("/");
+    };
 
     useEffect(() => window.scrollTo(0, 0));
 
@@ -249,10 +277,67 @@ function Header({
 
     const { subHeader } = useSubHeaderContext();
 
+
+    const items = [
+      {
+        label: <div className='pt-2 pb-2 pr-2'><Space><Avatar
+        className="cursor-pointer"
+        style={{ backgroundColor: '#87d068' }}
+        size="large"
+        icon={<UserOutlined />}
+      />Jonas</Space></div>,
+        key: '0'
+      },
+      {
+        type: 'divider',
+      },
+      {
+        label: <div>Settings</div>,
+        icon: <SettingOutlined/>,
+        key: '1',
+      },
+      {
+        label: <div>Impressum</div>,
+        icon: <SolutionOutlined/>,
+        key: '2',
+      },
+      {
+        label: 'Logout',
+        icon: <LogoutOutlined/>,
+        onClick: handleLogout,
+        key: '3',
+      },
+    ];
+  
+
     return (
         <>
-            <Row gutter={[24, 0]}>
-                <Col span={24} md={6}>
+        <div className="flex items-end justify-end">
+      <div className="mr-auto header-control">
+      <Button
+                icon={<MenuUnfoldOutlined />}
+                className="sidebar-toggler"
+                onClick={() => {
+                    onPress();
+                }}
+            />
+      </div>
+      <Dropdown
+    menu={{
+      items,
+    }}
+    trigger={['click']}
+  >
+        <Avatar
+          className="cursor-pointer"
+          style={{ backgroundColor: '#87d068' }}
+          size="large"
+          icon={<UserOutlined />}
+        />
+  </Dropdown>
+    </div>
+            <Row style={{ paddingBottom: "20px" }} gutter={[24, 0]}>
+                <Col span={24}>
                     <div className="ant-page-header-heading">
                         <span
                             className="ant-page-header-heading-title"
@@ -262,16 +347,6 @@ function Header({
                         </span>
                     </div>
                 </Col>
-
-                <Col span={24} md={18} className="header-control">
-                    <Button
-                        icon={<MenuUnfoldOutlined />}
-                        className="sidebar-toggler"
-                        onClick={() => {
-                            onPress();
-                        }}
-                    />
-                </Col>
             </Row>
             <Row gutter={[24, 0]}>{subHeader}</Row>
         </>
@@ -280,6 +355,71 @@ function Header({
 
 export default Header;
 /*
+
+
+        <Row >
+        <Col span={8} md={8} className="header-control">
+
+<Button
+                icon={<MenuUnfoldOutlined />}
+                className="sidebar-toggler"
+                onClick={() => {
+                    onPress();
+                }}
+            />
+            </Col>
+        <Col span={8} md={8} className="header-control flex-end">
+        <Row justify="end">
+                <Popover placement="bottomRight" title={text} content={content} trigger="click">
+                <Button type="primary" shape="circle" size="large" icon="download">
+                </Button>
+      </Popover>
+      </Row>
+
+    const [visible, setVisible] = useState(false);
+    const [visibleDropdown, setVisibleDropdown] = useState(false);
+    const [sidenavType, setSidenavType] = useState("transparent");
+    
+      const handleMenuClick = (e) => {
+        if (e.key === 'logout') {
+          // Hier könntest du die Abmelde-Logik einfügen
+          console.log('Benutzer abgemeldet');
+        } else if (e.key === 'settings') {
+          // Hier könntest du zur Einstellungsseite navigieren
+          console.log('Zu den Einstellungen navigiert');
+        }
+        setVisible(false);
+      };
+
+    useEffect(() => window.scrollTo(0, 0));
+
+    const showDrawer = () => setVisible(true);
+    const hideDrawer = () => setVisible(false);
+
+    const { subHeader } = useSubHeaderContext();
+  
+
+    return (
+        <>
+        <div className="flex items-center justify-end">
+      <div className="mr-auto">
+        <Button type="primary">Links</Button>
+      </div>
+      <Dropdown
+        menu={menu}
+        trigger={['click']}
+        open={visible}
+        onOpenChange={(flag) => setVisible(flag)}
+      >
+        <Avatar
+          className="cursor-pointer"
+          style={{ backgroundColor: '#87d068' }}
+          size="large"
+          icon={<UserOutlined />}
+        />
+      </Dropdown>
+    </div>
+
 
 
         <Badge size="small" count={4}>

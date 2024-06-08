@@ -75,7 +75,7 @@ const data = [
           <Avatar
             className="shape-avatar"
             shape="square"
-            size={40}
+            width={50}
             src={doctype}
           ></Avatar>
           <div className="avatar-info">
