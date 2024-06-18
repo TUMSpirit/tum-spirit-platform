@@ -7,6 +7,7 @@ from .src.routers import celery
 
 from .src.routers import ai
 from .src.routers import kanban
+from .src.routers import calendar
 # from .src.routers import language
 # from .src.routers import chat
 
@@ -23,6 +24,7 @@ def application_setup() -> FastAPI:
 
     application.include_router(ai.router, prefix="/api")
     application.include_router(kanban.router, prefix="/api")
+    application.include_router(calendar.router, prefix="/api")
     # application.include_router(language.router, prefix="/api")
 
     # Allow CORS
