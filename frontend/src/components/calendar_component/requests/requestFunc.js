@@ -3,6 +3,7 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import moment from "moment";
 import {queryClient} from "../../../index";
 import {message} from "antd";
+import { useAuthHeader } from 'react-auth-kit';
 
 /*
 export const getFn = async () => {
@@ -19,9 +20,14 @@ export const getFn = async () => {
 
 //-------------------------------------------------------get-------------------------------------------------
 export const useEntries = (userId) => {
+    const authHeader = useAuthHeader();
     return useQuery({
         queryFn: async () => {
-            const {data} = await axios.get(`http://localhost:8000/api/calendar/get-entries`);
+            const {data} = await axios.get(`http://localhost:8000/api/calendar/get-entries`, {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
             console.log('form Get: ', data)
             return data;
         },
@@ -30,9 +36,10 @@ export const useEntries = (userId) => {
 }
 
 //-------------------------------------------------------post-------------------------------------------------
-const postEntry = async (newEntry) => {
+const postEntry = async (newEntry, authHeader) => {
+
     console.log('new Entry: ', newEntry)
-    const {data} = await axios.post('http://localhost:8000/api/calendar/get-entries', {
+    const {data} = await axios.post('http://localhost:8000/api/calendar/add-entry', {
 
         title: newEntry.title,
         color: newEntry.color,
@@ -44,15 +51,21 @@ const postEntry = async (newEntry) => {
         room: newEntry.room? newEntry.room : null,
         remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
         isMilestone:  newEntry.isMilestone? newEntry.isMilestone : false,
+        files: [],
         users: newEntry.users,
 
+    }, {
+        headers: {
+            "Authorization": authHeader
+        }
     });
     return data;
 }
 
 export const useCreateEntries = () => {
+    const authHeader = useAuthHeader();
     return useMutation({
-        mutationFn: postEntry,
+        mutationFn: (newEntry) => postEntry(newEntry, authHeader()),
         onSuccess: () => {
             queryClient.invalidateQueries(['GET_ENTRIES']);
     }})
@@ -61,6 +74,7 @@ export const useCreateEntries = () => {
 //-------------------------------------------------------put-------------------------------------------------
 
 const putEntry = async (newEntry) => {
+    //const authHeader = useAuthHeader();
     console.log('putEntry: ', newEntry)
     const {data} = await axios.put('/api/calendar/update-entry/' + newEntry.id, {
 
@@ -75,7 +89,11 @@ const putEntry = async (newEntry) => {
         remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
         isMilestone:  newEntry.isMilestone? newEntry.isMilestone : false,
         users: newEntry.users,
-    });
+    }, /*{
+        headers: {
+            "Authorization": authHeader()
+        }
+    }*/);
     return data;
 
 }
@@ -89,8 +107,13 @@ export const useUpdateEntries = () => {
 
 //-------------------------------------------------delete--------------------------------------------
 const deleteEntry = async (id) => {
+    //const authHeader = useAuthHeader();
     console.log(id+' deleted')
-    const {data} = await axios.delete('http://localhost:8000/api/calendar/delete-entry/' + id);
+    const {data} = await axios.delete('http://localhost:8000/api/calendar/delete-entry/' + id/*, {
+        headers: {
+            "Authorization": authHeader()
+        }
+    }*/);
     return data;
 
 }
@@ -106,6 +129,7 @@ export const useDeleteEntries = () => {
 //----------------------------------------------post file-----------------------------------
 //TODO: Associate uploaded file with according event - due to new backend
 const postFiles = async ({files, eventID}) => {
+    //const authHeader = useAuthHeader();
     //console.log('event id aus req' , files, eventID)
     const formData = new FormData();
     files.fileList.forEach((file) => {
@@ -117,7 +141,8 @@ const postFiles = async ({files, eventID}) => {
     try {
         const response = await axios.post(`/api/files/upload`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data'
+                'Content-Type': 'multipart/form-data',
+                //"Authorization": authHeader()
             }
         });
         //message.success('File uploaded successfully');
@@ -138,8 +163,13 @@ export const useUploadFile = () => {
 
 //------------------------------ delete File ----------------------------------
 const deleteFile = async ({eventId, fileId}) => {
+    //const authHeader = useAuthHeader();
     console.log(fileId+' deleted, event id: ', eventId)
-    const {data} = await axios.delete(`/api/files/delete/` + fileId);
+    const {data} = await axios.delete(`/api/files/delete/` + fileId/*, {
+        headers: {
+            "Authorization": authHeader()
+        }
+    }*/);
     return data;
 
 }

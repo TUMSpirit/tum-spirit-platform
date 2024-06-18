@@ -24,7 +24,7 @@ const localizer = momentLocalizer(moment);
 
 const currentUser = {
     name: "Josef Suckart",
-    id: "123456",
+    id: "664be96862095d5c01fafb58",
     color: "green",
     initialen: "YOU",
     isFirstLogin: true
@@ -33,7 +33,7 @@ const currentUser = {
 const users = [
     {
         name: "You",
-        id: "123456",
+        id: "664be96862095d5c01fafb58",
         color: "green",
         initialen: "You",
         isFirstLogin: true
