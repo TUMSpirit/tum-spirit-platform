@@ -21,7 +21,7 @@ export const getFn = async () => {
 export const useEntries = (userId) => {
     return useQuery({
         queryFn: async () => {
-            const {data} = await axios.get(`http://localhost:8000/calendar/${userId}`);
+            const {data} = await axios.get(`http://localhost:8000/api/calendar/get-entries`);
             console.log('form Get: ', data)
             return data;
         },
@@ -32,7 +32,7 @@ export const useEntries = (userId) => {
 //-------------------------------------------------------post-------------------------------------------------
 const postEntry = async (newEntry) => {
     console.log('new Entry: ', newEntry)
-    const {data} = await axios.post('http://localhost:8000/calendar', {
+    const {data} = await axios.post('http://localhost:8000/api/calendar/get-entries', {
 
         title: newEntry.title,
         color: newEntry.color,
@@ -62,7 +62,7 @@ export const useCreateEntries = () => {
 
 const putEntry = async (newEntry) => {
     console.log('putEntry: ', newEntry)
-    const {data} = await axios.put('http://localhost:8000/calendar/' + newEntry.id, {
+    const {data} = await axios.put('/api/calendar/update-entry/' + newEntry.id, {
 
         title: newEntry.title,
         color: newEntry.color,
@@ -90,7 +90,7 @@ export const useUpdateEntries = () => {
 //-------------------------------------------------delete--------------------------------------------
 const deleteEntry = async (id) => {
     console.log(id+' deleted')
-    const {data} = await axios.delete('http://localhost:8000/calendar/' + id);
+    const {data} = await axios.delete('http://localhost:8000/api/calendar/delete-entry/' + id);
     return data;
 
 }
@@ -104,6 +104,7 @@ export const useDeleteEntries = () => {
 };
 
 //----------------------------------------------post file-----------------------------------
+//TODO: Associate uploaded file with according event - due to new backend
 const postFiles = async ({files, eventID}) => {
     //console.log('event id aus req' , files, eventID)
     const formData = new FormData();
@@ -114,7 +115,7 @@ const postFiles = async ({files, eventID}) => {
     });
 
     try {
-        const response = await axios.post(`http://localhost:8000/calendar/${eventID}/files`, formData, {
+        const response = await axios.post(`/api/files/upload`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -138,7 +139,7 @@ export const useUploadFile = () => {
 //------------------------------ delete File ----------------------------------
 const deleteFile = async ({eventId, fileId}) => {
     console.log(fileId+' deleted, event id: ', eventId)
-    const {data} = await axios.delete(`http://localhost:8000/calendar/${eventId}/files/` + fileId);
+    const {data} = await axios.delete(`/api/files/delete/` + fileId);
     return data;
 
 }
