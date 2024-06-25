@@ -1,10 +1,40 @@
 {
   "messages": [
     {
-      "text": "Hallo, könntest du bitte ein Meeting für Anfang Februar eintragen?",
+      "text": "Hey, could you please create a meeting for next Friday at 10:00?",
       "name": "Me",
       "id": "qwe3",
       "timestamp": 1710253799488
+    },
+    {
+      "text": "Sure, no problem!",
+      "name": null,
+      "id": "26qXrq38TabqOkBLAAAD0.14952167160005203",
+      "socketID": "26qXrq38TabqOkBLAAAD",
+      "timestamp": 1719039447679,
+      "isPoll": false
+    },
+    {
+      "text": "Thank you very much!",
+      "name": "Martin",
+      "id": "26qXrq38TabqOkBLAAAD0.1568084692793703",
+      "socketID": "26qXrq38TabqOkBLAAAD",
+      "timestamp": 1719039447679
+    },
+    {
+      "text": "btw, have you already seen the new course content?",
+      "name": "Martin",
+      "id": "26qXrq38TabqOkBLAAAD0.1568084692793703",
+      "socketID": "26qXrq38TabqOkBLAAAD",
+      "timestamp": 1719039447679
+    },
+    {
+      "text": "Yes, I did. I saw it earlier this morning.",
+      "name": null,
+      "id": "242jOmf3rAoaMN8wAAAD0.977686755422249",
+      "socketID": "242jOmf3rAoaMN8wAAAD",
+      "timestamp": 1719092743753,
+      "isPoll": false
     }
   ]
 }

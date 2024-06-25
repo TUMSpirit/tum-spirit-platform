@@ -1,16 +1,15 @@
-import React, {useState, useEffect} from 'react';
-import {Button, Tabs} from "antd";
+import React, { useState, useEffect } from 'react';
+import { Button, ConfigProvider, Tabs, Dropdown, Menu } from "antd";
+import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
 import Search from "antd/es/input/Search";
-import {EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined} from '@ant-design/icons';
-import {Dropdown, Menu} from 'antd';
-import {MoreOutlined} from '@ant-design/icons';
-import {useSubHeaderContext} from "../layout/SubHeaderContext";
+import { useSubHeaderContext } from "../layout/SubHeaderContext";
+import PollMessage from './PollMessage';
 
 const tabsItems = [
-    {key: '1', label: 'Group Chat', children: ''},
-    {key: '2', label: 'Martin', children: ''},
-    {key: '3', label: 'Peter', children: ''},
-    {key: '4', label: 'Sophie', children: ''},
+    { key: '1', label: 'Group Chat', children: '' },
+    { key: '2', label: 'Martin', children: '' },
+    { key: '3', label: 'Peter', children: '' },
+    { key: '4', label: 'Sophie', children: '' },
 ];
 
 const ChatBody = ({
@@ -24,11 +23,11 @@ const ChatBody = ({
                       onRemoveReaction,
                       setReplyingTo,
                   }) => {
-
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-    const {updateSubHeader} = useSubHeaderContext();
+    const [pollResults, setPollResults] = useState([]);
+    const { updateSubHeader } = useSubHeaderContext();
     const senderIcon = require('../../assets/images/avatar3.png');
     const recipientIcon = require('../../assets/images/avatar2.png');
 
@@ -47,7 +46,7 @@ const ChatBody = ({
 
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
-        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     const handleSearch = (value) => {
@@ -58,7 +57,7 @@ const ChatBody = ({
         } else {
             const lowerCaseTerm = value.toLowerCase();
             const foundIndexes = messages
-                .map((message, index) => ({text: message.text.toLowerCase(), index}))
+                .map((message, index) => ({ text: message.text.toLowerCase(), index }))
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
@@ -85,7 +84,7 @@ const ChatBody = ({
         const messageId = messages[index].id;
         const element = document.getElementById(`message-${messageId}`);
         if (element) {
-            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     };
 
@@ -95,7 +94,7 @@ const ChatBody = ({
             <p className={`text-xl`}>
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
-                        <span key={index} style={{backgroundColor: 'yellow'}}>{part}</span>
+                        <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
                     ) : part
                 )}
             </p>
@@ -115,10 +114,10 @@ const ChatBody = ({
 
     const menu = (messageId) => (
         <Menu onClick={(e) => handleMenuClick(e, messageId)}>
-            <Menu.Item key="edit" icon={<EditOutlined/>}>Edit</Menu.Item>
+            <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
             <Menu.SubMenu
                 key="delete"
-                icon={<DeleteOutlined/>}
+                icon={<DeleteOutlined />}
                 title="Delete"
             >
                 <Menu.Item key="confirmDelete">
@@ -140,11 +139,11 @@ const ChatBody = ({
     };
 
     const onEmojiClick = (messageId, fixedEmoji) => {
-        socket.emit('emojiReaction', {messageId, emoji: fixedEmoji});
+        socket.emit('emojiReaction', { messageId, emoji: fixedEmoji });
 
         const updatedMessages = messages.map(msg => {
             if (msg.id === messageId) {
-                return {...msg, reaction: fixedEmoji};
+                return { ...msg, reaction: fixedEmoji };
             }
             return msg;
         });
@@ -155,7 +154,7 @@ const ChatBody = ({
         <Menu onClick={(e) => handleMenuClickRe(e, messageId)}>
             <Menu.SubMenu
                 key="delete"
-                icon={<SmileOutlined/>}
+                icon={<SmileOutlined />}
                 title="Reaction"
             >
                 <Menu.Item key="firstEmote">
@@ -171,10 +170,9 @@ const ChatBody = ({
                     🔃
                 </Menu.Item>
             </Menu.SubMenu>
-            <Menu.Item key="reply" icon={<MessageOutlined/>}>Reply</Menu.Item>
+            <Menu.Item key="reply" icon={<MessageOutlined />}>Reply</Menu.Item>
         </Menu>
     );
-
 
     const handleMenuClickRe = (e, messageId, messageText) => {
         if (e.key === "firstEmote") {
@@ -188,7 +186,7 @@ const ChatBody = ({
         } else if (e.key === "reply") {
             const messageToReplyTo = messages.find(msg => msg.id === messageId);
             if (messageToReplyTo) {
-                setReplyingTo({messageId: messageToReplyTo.id, text: messageToReplyTo.text});
+                setReplyingTo({ messageId: messageToReplyTo.id, text: messageToReplyTo.text });
             }
         }
     };
@@ -200,13 +198,28 @@ const ChatBody = ({
         return text;
     };
 
-
     useEffect(() => {
         const subHeaderContent = (
-            <div className="flex justify-between items-center w-full py-1 px-3 -mb-6">
-                <Tabs activeKey={currentTab} onChange={(key) => setCurrentTab(key)} items={tabsItems} size="large"/>
+            <div className="flex flex-col md:flex-row justify-between items-center w-full px-3 -mb-5">
+                <ConfigProvider
+                    theme={{
+                        token: {
+                            lineHeight: 1.2,
+                            lineWidth: 2,
+                        },
+                    }}
+                >
+                    <div className="-mb-5 w-full md:w-auto">
+                        <Tabs
+                            activeKey={currentTab}
+                            onChange={(key) => setCurrentTab(key)}
+                            items={tabsItems}
+                            size="large"
+                        />
+                    </div>
+                </ConfigProvider>
                 <div className="hidden md:flex flex-grow justify-center">
-                    <div className="flex items-center gap-4 bg-chat-filter rounded-xl py-2 px-3 ">
+                    <div className="flex items-center gap-4 bg-chat-filter rounded-2xl py-1 px-2 ">
                         <Button className="bg-white shadow-sm">Kanban Cards</Button>
                         <Button className="bg-white shadow-sm">Calendar Entries</Button>
                         <Button className="bg-white shadow-sm">Polls</Button>
@@ -237,11 +250,27 @@ const ChatBody = ({
     }, [currentResultIndex, searchResults, messages, searchTerm]);
 
     useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [messages]);
 
+    useEffect(() => {
+        socket.on('initialPollData', (pollData) => {
+            setPollResults(pollData);
+        });
+
+        return () => {
+            socket.off('initialPollData');
+        };
+    }, [socket]);
+
+
+    const getPollVotes = (pollId) => {
+        const poll = pollResults.find(p => p.id === pollId);
+        return poll ? poll.votes : Array(pollResults.options?.length || 0).fill(0);
+    };
+
     return (
-        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-2 border-chat-grid">
+        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid">
             {messages.map((message, index) => {
 
                 if (message.deleted) {
@@ -253,6 +282,27 @@ const ChatBody = ({
                 const messageMarginTop = index === 0 ? "mt-6" : "";
                 const messageMarginBottom = "mb-6";
                 const isReplyingTo = messages.find(m => m.id === message.replyingTo);
+
+                if (message.isPoll) {
+                    const [title, ...options] = message.text.replace('/Create Poll:', '').split(',').map(item => item.trim());
+                    const poll = { title, options, id: message.id, votes: getPollVotes(message.id) };
+
+                    return (
+                        <div key={message.id} className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                            {isSender && canEditOrDelete(message.timestamp) && (
+                                <div className="flex justify-end items-center">
+                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight" className="p-2">
+                                        <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    </Dropdown>
+                                </div>
+                            )}
+                            <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <PollMessage poll={poll} socket={socket} />
+                                <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                            </div>
+                        </div>
+                    );
+                }
                 return (
                     <div key={message.id} id={`message-${message.id}`}
                          className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
@@ -260,57 +310,61 @@ const ChatBody = ({
                             <div className="flex justify-end items-center">
                                 <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
                                           className="p-2">
-                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                 </Dropdown>
                             </div>
                         )}
 
                         {isSender ? (
                             <>
-                                <div
-                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     {isReplyingTo && (
                                         <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
                                             <span className="font-semibold">{truncateText(isReplyingTo.text)}</span>
                                         </div>
                                     )}
-                                    <p>{highlightText(message.text, searchTerm)}</p>
-                                    <span
-                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                    {message.isGif ? (
+                                        <img src={message.text} alt="GIF" style={{ maxWidth: '100%' }} />
+                                    ) : (
+                                        <p>{highlightText(message.text, searchTerm)}</p>
+                                    )}
+                                    <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
                                 <img src={senderIcon} alt="Sender Icon"
-                                     className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"/>
+                                     className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full" />
                             </>
                         ) : (
                             <>
                                 <img src={recipientIcon} alt="Recipient Icon"
-                                     className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full"/>
-                                <div
-                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
-                                    <div>
+                                     className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full" />
+                                <div className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                    {isReplyingTo && (
+                                        <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
+                                            <span className="font-semibold">{truncateText(isReplyingTo.text)}</span>
+                                        </div>
+                                    )}
+                                    {message.isGif ? (
+                                        <img src={message.text} alt="GIF" style={{ maxWidth: '100%' }} />
+                                    ) : (
                                         <p>{highlightText(message.text, searchTerm)}</p>
-                                        {message.reaction && (
-                                            <span className="ml-2 cursor-pointer text-lg md:text-xl lg:text-2xl"
-                                                  onClick={() => socket.emit('removeEmojiReaction', {messageId: message.id})}>{message.reaction}
-                                            </span>)}
-                                    </div>
-                                    <div className="flex justify-end items-center">
-                                    </div>
-
-                                    <span
-                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                    )}
+                                    {message.reaction && (
+                                        <span className="ml-2 cursor-pointer text-lg md:text-xl lg:text-2xl"
+                                              onClick={() => socket.emit('removeEmojiReaction', { messageId: message.id })}>{message.reaction}
+                                        </span>)}
+                                    <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
                                 <Dropdown overlay={menuRe(message.id)} trigger={['click']}
                                           placement="bottomLeft"
                                           className="p-2">
-                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                 </Dropdown>
                             </>
                         )}
                     </div>
                 );
             })}
-            <div ref={lastMessageRef}/>
+            <div ref={lastMessageRef} />
         </div>
     );
 };
