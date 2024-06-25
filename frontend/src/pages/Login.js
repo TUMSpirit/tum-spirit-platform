@@ -40,7 +40,7 @@ function Login(props) {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/token",
+        "http://localhost:8000/api/login",
         form_data
       );
 

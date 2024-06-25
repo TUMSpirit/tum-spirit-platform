@@ -12,12 +12,17 @@ import Login from "./pages/Login.js";
 import Kanban from "./pages/Kanban";
 import Chat from "./pages/Chat";
 import Team from "./pages/Team";
+import Home from "./pages/Home";
 import Documents from "./pages/Documents";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
 import socketIO from "socket.io-client";
 
 const socket = socketIO.connect("http://localhost:4000");
+
+socket.on("connect_error", (err) => {
+  console.log(`connect_error due to ${err.message}`);
+});
 
 const AppContainer = styled.div`
   width: 100%;
@@ -40,9 +45,10 @@ function App() {
                   <Route path="/team" element={<Team/>} />
                   <Route path="/documents" element={<Documents/>} />
                   <Route path="/dashboard" element={<Dashboard/>} />
+                  <Route path="/home" element={<Home/>} />
                   <Route
                         path="*"
-        element={<Navigate to="/chat" replace />}
+        element={<Navigate to="/home" replace />}
     />
                   </Routes>
                 </Main>

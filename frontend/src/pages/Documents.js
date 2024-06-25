@@ -25,9 +25,35 @@ import ava6 from "../assets/images/logo-invision.svg";
 import doctype from "../assets/images/doc-type.png";
 import filetype from "../assets/images/file-type.png";
 import pencil from "../assets/images/pencil.svg";
+import FileList from '../components/Documents/Documents';
 
 const { Title } = Typography;
 
+function Documents() {
+  const onChange = (e) => console.log(`radio checked:${e.target.value}`);
+
+  return (
+    <>
+             <FileList></FileList>
+    </>
+  );
+}
+
+export default Documents;
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 const formProps = {
   name: "file",
   action: "https://www.mocky.io/v2/5cc8019d300000980a055e76",
@@ -168,34 +194,4 @@ const data = [
       </>
     )
   }
-];
-
-function Documents() {
-  const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-
-  return (
-    <>
-      <div className="tabled">
-        <Row gutter={[24, 0]}>
-          <Col xs="24" xl={24}>
-            <Card
-              bordered={false}
-              className="criclebox tablespace"
-            >
-              <div className="table-responsive">
-                <Table
-                  columns={columns}
-                  dataSource={data}
-                  pagination={false}
-                  className="ant-border-space"
-                />
-              </div>
-            </Card>
-          </Col>
-        </Row>
-      </div>
-    </>
-  );
-}
-
-export default Documents;
+];*/

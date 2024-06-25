@@ -1,15 +1,17 @@
-// import { useState } from "react";
+import { useState } from "react";
 import { Menu, Button } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/images/Spirit.png";
-import { CalendarFilled } from '@ant-design/icons';
+import { AimOutlined, CalendarFilled, LineChartOutlined, RobotFilled, HomeOutlined, HomeFilled } from '@ant-design/icons';
 import { Typography } from 'antd';
+import Chatbot from "../AiChat/chat-bubble";
 
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
   const page = pathname.replace("/", "");
   const { Title, Text } = Typography;
+  const [opened, setOpened] = useState(false);
 
   const calendar = [
     <svg
@@ -19,7 +21,7 @@ function Sidenav({ color }) {
         fill="none"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg">
-      <path d="m132.67 413.37c-6.0547 21.895-28.91 88.461-28.91 88.461-2.2227 6.4961-0.4375 13.688 4.5508 18.395 4.9883 4.707 12.266 6.0742 18.617 3.4805 0 0 66.938-27.332 88.445-35.031 19.023 7.8047 39.832 12.09 61.637 12.09 89.898 0 162.89-72.973 162.89-162.87s-72.992-162.89-162.89-162.89c-89.898 0-162.87 72.992-162.87 162.89 0 27.23 6.6992 52.902 18.531 75.477zm71.66-21.629h96.918c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-96.918c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5zm67.027-251.65c2.0312-0.050782 4.0781-0.085938 6.125-0.085938 109.22 0 197.89 88.672 197.89 197.89 0 4.9336-0.17578 9.8164-0.54297 14.664 3.5508-1.1719 7.0508-2.4688 10.48-3.8828 21.473 7.6797 88.445 35.031 88.445 35.031 6.3555 2.5938 13.633 1.2266 18.637-3.4805 4.9883-4.707 6.7578-11.898 4.5352-18.395 0 0-22.84-66.566-28.91-88.461 11.848-22.574 18.531-48.246 18.531-75.477 0-89.898-72.973-162.89-162.87-162.89-69.547 0-128.98 43.68-152.32 105.09zm-67.027 178.96h145.38c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-145.38c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5z" fill-rule="evenodd"/>
+      <path d="m132.67 413.37c-6.0547 21.895-28.91 88.461-28.91 88.461-2.2227 6.4961-0.4375 13.688 4.5508 18.395 4.9883 4.707 12.266 6.0742 18.617 3.4805 0 0 66.938-27.332 88.445-35.031 19.023 7.8047 39.832 12.09 61.637 12.09 89.898 0 162.89-72.973 162.89-162.87s-72.992-162.89-162.89-162.89c-89.898 0-162.87 72.992-162.87 162.89 0 27.23 6.6992 52.902 18.531 75.477zm71.66-21.629h96.918c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-96.918c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5zm67.027-251.65c2.0312-0.050782 4.0781-0.085938 6.125-0.085938 109.22 0 197.89 88.672 197.89 197.89 0 4.9336-0.17578 9.8164-0.54297 14.664 3.5508-1.1719 7.0508-2.4688 10.48-3.8828 21.473 7.6797 88.445 35.031 88.445 35.031 6.3555 2.5938 13.633 1.2266 18.637-3.4805 4.9883-4.707 6.7578-11.898 4.5352-18.395 0 0-22.84-66.566-28.91-88.461 11.848-22.574 18.531-48.246 18.531-75.477 0-89.898-72.973-162.89-162.87-162.89-69.547 0-128.98 43.68-152.32 105.09zm-67.027 178.96h145.38c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-145.38c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5z" fillRule="evenodd"/>
     </svg>,
   ];
 
@@ -31,7 +33,7 @@ function Sidenav({ color }) {
       fill="none"
       version="1.1"
       xmlns="http://www.w3.org/2000/svg">
-    <path d="m132.67 413.37c-6.0547 21.895-28.91 88.461-28.91 88.461-2.2227 6.4961-0.4375 13.688 4.5508 18.395 4.9883 4.707 12.266 6.0742 18.617 3.4805 0 0 66.938-27.332 88.445-35.031 19.023 7.8047 39.832 12.09 61.637 12.09 89.898 0 162.89-72.973 162.89-162.87s-72.992-162.89-162.89-162.89c-89.898 0-162.87 72.992-162.87 162.89 0 27.23 6.6992 52.902 18.531 75.477zm71.66-21.629h96.918c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-96.918c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5zm67.027-251.65c2.0312-0.050782 4.0781-0.085938 6.125-0.085938 109.22 0 197.89 88.672 197.89 197.89 0 4.9336-0.17578 9.8164-0.54297 14.664 3.5508-1.1719 7.0508-2.4688 10.48-3.8828 21.473 7.6797 88.445 35.031 88.445 35.031 6.3555 2.5938 13.633 1.2266 18.637-3.4805 4.9883-4.707 6.7578-11.898 4.5352-18.395 0 0-22.84-66.566-28.91-88.461 11.848-22.574 18.531-48.246 18.531-75.477 0-89.898-72.973-162.89-162.87-162.89-69.547 0-128.98 43.68-152.32 105.09zm-67.027 178.96h145.38c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-145.38c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5z" fill-rule="evenodd"/>
+    <path d="m132.67 413.37c-6.0547 21.895-28.91 88.461-28.91 88.461-2.2227 6.4961-0.4375 13.688 4.5508 18.395 4.9883 4.707 12.266 6.0742 18.617 3.4805 0 0 66.938-27.332 88.445-35.031 19.023 7.8047 39.832 12.09 61.637 12.09 89.898 0 162.89-72.973 162.89-162.87s-72.992-162.89-162.89-162.89c-89.898 0-162.87 72.992-162.87 162.89 0 27.23 6.6992 52.902 18.531 75.477zm71.66-21.629h96.918c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-96.918c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5zm67.027-251.65c2.0312-0.050782 4.0781-0.085938 6.125-0.085938 109.22 0 197.89 88.672 197.89 197.89 0 4.9336-0.17578 9.8164-0.54297 14.664 3.5508-1.1719 7.0508-2.4688 10.48-3.8828 21.473 7.6797 88.445 35.031 88.445 35.031 6.3555 2.5938 13.633 1.2266 18.637-3.4805 4.9883-4.707 6.7578-11.898 4.5352-18.395 0 0-22.84-66.566-28.91-88.461 11.848-22.574 18.531-48.246 18.531-75.477 0-89.898-72.973-162.89-162.87-162.89-69.547 0-128.98 43.68-152.32 105.09zm-67.027 178.96h145.38c9.6602 0 17.5-7.8398 17.5-17.5 0-9.6602-7.8398-17.5-17.5-17.5h-145.38c-9.6562 0-17.5 7.8398-17.5 17.5 0 9.6602 7.8438 17.5 17.5 17.5z" fillRule="evenodd"/>
   </svg>,
      ];
 
@@ -169,6 +171,10 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
+ const openAiChat = () => {
+   setOpened(true);
+    };
+
   return (
     <>
       <div className="brand">
@@ -176,11 +182,24 @@ function Sidenav({ color }) {
       </div>
       <hr />
       <Title strong style={{marginTop:30,marginBottom:15,
-        paddingLeft:20, fontWeight: 900
-      }} level={5}>TUMuchToManage</Title>
-      <Menu defaultSelectedKeys={"2"} theme="light" mode="inline">
+        paddingLeft:20
+      }} level={4}>TUMuchToManage</Title>
+      <Menu defaultSelectedKeys={"1"} theme="light" mode="inline">
 
-        <Menu.Item key="1">
+      <Menu.Item key="1">
+          <NavLink to="/home">
+            <span
+                className="icon"
+                style={{
+                  background: page === "home" ? color : "",
+                }}
+            >
+           <HomeFilled></HomeFilled>
+            </span>
+            <span className="label">Home</span>
+          </NavLink>
+        </Menu.Item>
+        <Menu.Item key="2">
           <NavLink to="/calendar">
             <span
                 className="icon"
@@ -194,7 +213,7 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
 
-        <Menu.Item key="2">
+        <Menu.Item key="3">
           <NavLink to="/chat">
             <span
                 className="icon"
@@ -208,7 +227,7 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
 
-        <Menu.Item key="3">
+        <Menu.Item key="4">
           <NavLink to="/kanban">
             <span
               className="icon"
@@ -221,7 +240,7 @@ function Sidenav({ color }) {
             <span className="label">Kanban</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="4">
+        <Menu.Item key="5">
           <NavLink to="/team">
             <span
               className="icon"
@@ -234,7 +253,7 @@ function Sidenav({ color }) {
             <span className="label">Team</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="5">
+        <Menu.Item key="6">
           <NavLink to="/documents">
             <span
               className="icon"
@@ -247,7 +266,7 @@ function Sidenav({ color }) {
             <span className="label">Documents</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="6">
+        <Menu.Item key="7">
           <NavLink to="/dashboard">
             <span
                 className="icon"
@@ -255,16 +274,30 @@ function Sidenav({ color }) {
                   background: page === "dashboard" ? color : "",
                 }}
             >
-              {dashboard}
+             <LineChartOutlined></LineChartOutlined>
             </span>
-            <span className="label">Dashboard</span>
+            <span className="label">Statistics</span>
           </NavLink>
         </Menu.Item>
-        <Menu.ItemGroup title="Issues" className="menu-item-header" key="8">
-        </Menu.ItemGroup>
       </Menu>
       <div className="aside-footer">
+        <div
+          className="footer-box"
+          style={{
+            background: color,
+          }}
+        >
+          <span className="icon" style={{ color }}>
+            <RobotFilled></RobotFilled>
+          </span>
+          <h6>Need Help?</h6>
+          <p>Feel free to talk to Spirit</p>
+          <Button onClick={openAiChat} type="primary" className="ant-btn-sm ant-btn-block">
+            Chat
+          </Button>
+        </div>
       </div>
+      <Chatbot opened={opened} setOpened={setOpened}></Chatbot>
     </>
   );
 }
@@ -284,6 +317,13 @@ export default Sidenav;
             <span className="label">Timeline</span>
           </NavLink>
         </Menu.Item>
+
+
+
+
+
+                <Menu.ItemGroup title="Issues" className="menu-item-header" key="8">
+        </Menu.ItemGroup>
  */
 
 /*

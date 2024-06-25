@@ -112,7 +112,7 @@ const Chatbot = ({ opened, setOpened }) => {
             style={{
               display: "flex",
               alignItems: "center",
-              background: "#0065bd",
+              background: "#1677ff",
               padding: 20,
               borderTopLeftRadius: 25,
               borderTopRightRadius: 25,

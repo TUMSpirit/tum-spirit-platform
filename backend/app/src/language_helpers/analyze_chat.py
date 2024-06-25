@@ -14,8 +14,8 @@ def getUsers():
 
 def analyze_chat():
     analyze_chats()
-    for user in getUsers():
-        analyze_user_big5(user.id)
+    #for user in getUsers():
+    #   analyze_user_big5(user.id)
 
 def analyze_chats():
     latest_metadata = "2024-01-01"

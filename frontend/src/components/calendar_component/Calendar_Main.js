@@ -1,11 +1,11 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import "./Calendar_Main.css"
 import "react-big-calendar/lib/css/react-big-calendar.css"
-import {Calendar, momentLocalizer} from "react-big-calendar";
+import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from 'moment';
 import CustomToolbar from "./calendar_additional_components/CustomToolbar";
-import AddEventPopup, {uploadFile} from "./calendar_additional_components/AddEventPopup";
-import {lighten, modularScale, rgba} from 'polished'
+import AddEventPopup, { uploadFile } from "./calendar_additional_components/AddEventPopup";
+import { lighten, modularScale, rgba } from 'polished'
 import {
     getFn,
     useCreateEntries,
@@ -16,15 +16,15 @@ import {
 } from "./requests/requestFunc";
 import UploadImportPopup from "./calendar_additional_components/UploadImportPopup";
 import TimelinePopup from "./calendar_additional_components/TimelinePopup";
-import {Button, Modal} from "antd";
+import { Button, Modal } from "antd";
 import TutorialPopup from "./calendar_additional_components/Tutorial Popup";
 
 
 const localizer = momentLocalizer(moment);
 
 const currentUser = {
-    name: "Josef Suckart",
-    id: "123456",
+    name: "Josef Suckhart",
+    id: "664be96862095d5c01fafb58",
     color: "green",
     initialen: "YOU",
     isFirstLogin: true
@@ -33,7 +33,7 @@ const currentUser = {
 const users = [
     {
         name: "You",
-        id: "123456",
+        id: "664be96862095d5c01fafb58",
         color: "green",
         initialen: "You",
         isFirstLogin: true
@@ -83,13 +83,15 @@ const Calendar_Main = () => {
     const [isTimelineOpen, setIsTimelineOpen] = useState(false)
     const [currentEvent, setCurrentEvent] = useState(null)
     const [isFirstLogin, setIsFirstLogin] = useState(currentUser.isFirstLogin)
+    const [startDate, setStartDate] = useState(null)
+    const [endDate, setEndDate] = useState(null)
 
     //------------------------- Button Events Handler -------------------------------------------
 
 
     const closeEventPopup = () => {
         setIsUploadImportPopupOpen(false)
-            setIsCreateEventPopupOpen(false)
+        setIsCreateEventPopupOpen(false)
     }
 
     const onCancelUploadImport = () => {
@@ -109,7 +111,7 @@ const Calendar_Main = () => {
             borderRadius: '4px',
             backgroundOpacity: 'rgba(0,0,0,0.5)',
             color: event.color,
-            border: event.isMilestone? '2px solid '+event.color:'0px',
+            border: event.isMilestone ? '2px solid ' + event.color : '0px',
             display: 'block'
         };
         return {
@@ -117,41 +119,56 @@ const Calendar_Main = () => {
         };
     }
 
+    const openAddEventFromCalendar = (event) => {
+        // console.log('eventClickHandler: ', event)
+        setStartDate(event.start);
+        setEndDate(event.end);
+        setIsCreateEventPopupOpen(true);
+    }
 
     const components = {
-        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsCreateEventPopupOpen}/>),
+        toolbar: props => (<CustomToolbar {...props} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} />),
         //event: props => (<CustomEvent {...props} color={'#0047ab'}/>)
     }
 
     return (
-        <div style={{padding: "20px"}}>
+        <div style={{ padding: "20px" }}>
             {(isUpdateEventPopupOpen || isCreateEventPopupOpen) && <AddEventPopup isUpdateEventOpen={isUpdateEventPopupOpen} isCreateEventOpen={isCreateEventPopupOpen}
-                           setIsCreateEventOpen={setIsCreateEventPopupOpen} setIsUpdateEventOpen={setIsUpdateEventPopupOpen}
-                           event={currentEvent}
-                           users={users} currentUser={currentUser}/>}
-            {isUploadImportPopupOpen && <UploadImportPopup user={currentUser} isUploadImportPopupOpen={isUploadImportPopupOpen} onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen}/>}
-            <div style={{height: "80vh"}} className="kachel">
+                setIsCreateEventOpen={setIsCreateEventPopupOpen} setIsUpdateEventOpen={setIsUpdateEventPopupOpen}
+                event={currentEvent}
+                users={users} currentUser={currentUser} startDate={startDate}  endDate={endDate} />}
+            {isUploadImportPopupOpen && <UploadImportPopup user={currentUser} isUploadImportPopupOpen={isUploadImportPopupOpen} onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} />}
+            <div style={{ height: "80vh" }} className="kachel">
                 <Calendar
                     components={{
-                        toolbar: props => (<CustomToolbar data-testid='Toolbar' {...props} isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users}/>)
+                        toolbar: props => (<CustomToolbar data-testid='Toolbar' {...props} isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} setIsAddEventPopupOpen={setIsCreateEventPopupOpen} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} users={users} />)
                     }}
+                    min={new Date(0, 0, 0, 6, 0)} // Minimale Uhrzeit (6:00 Uhr)
+                    max={new Date(0, 0, 0, 20, 0)}
                     views={['month', 'week', 'day']}
-                    onSelectEvent ={onClickEvent}
+                    onSelectEvent={onClickEvent}
                     localizer={localizer}
                     events={entries}
                     startAccessor="start"
                     endAccessor="end"
                     toolbar={true}
                     eventPropGetter={(eventStyleGetter)}
+                    onSelectSlot={openAddEventFromCalendar} // Methode zum Behandeln der Auswahl eines Slots
+                    selectable={true}
+                    formats={{
+                        timeGutterFormat: 'H:mm', // Format der Uhrzeiten im linken Bereich
+                      }}
                 />
-                <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries} users={users} currentUser={currentUser}></TimelinePopup>
             </div>
 
         </div>
 
     );
 }
-//    <TutorialPopup isFirstLogin={isFirstLogin} setISFirstLogin={setIsFirstLogin}></TutorialPopup>
+//                   <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries} users={users} currentUser={currentUser} startDate={startDate} endDate={endDate}></TimelinePopup>
+
+
+//<TutorialPopup isFirstLogin={isFirstLogin} setISFirstLogin={setIsFirstLogin}></TutorialPopup>
 // <TimelinePopup isTimelineOpen={isTimelineOpen} setIsTimelineOpen={setIsTimelineOpen} events={entries}></TimelinePopup>
 /*
 {isAddEventPopupOpen && <AddEventPopup onCancel={onCancelAddEvent} onFinish={onFinishAddEvent} isNewOpen={true} users={users} currentUser={currentUser}/>}

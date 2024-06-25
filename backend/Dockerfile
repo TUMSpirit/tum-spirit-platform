@@ -5,6 +5,15 @@ FROM python:3.10-slim
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
 
+# Aktualisieren und Installieren von Java
+RUN apt-get update && \
+    apt-get install -y default-jdk && \
+    apt-get clean;
+
+# Festlegen der Umgebungsvariablen für Java
+ENV JAVA_HOME /usr/lib/jvm/default-java
+ENV PATH $JAVA_HOME/bin:$PATH
+
 # Set the working directory to /app
 WORKDIR /app
 

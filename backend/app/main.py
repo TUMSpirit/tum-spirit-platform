@@ -4,10 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 # import routers
 from .src.routers import auth
 from .src.routers import celery
+from .src.routers import team
 
 from .src.routers import ai
+from .src.routers import calendar
 from .src.routers import kanban
-# from .src.routers import language
+from .src.routers import language
+from .src.routers import timeline
+from .src.routers import notification
 # from .src.routers import chat
 
 
@@ -20,10 +24,14 @@ def application_setup() -> FastAPI:
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
     application.include_router(celery.router, prefix="/api")
+    application.include_router(team.router, prefix="/api")
 
     application.include_router(ai.router, prefix="/api")
+    application.include_router(calendar.router, prefix="/api")
     application.include_router(kanban.router, prefix="/api")
-    # application.include_router(language.router, prefix="/api")
+    application.include_router(language.router, prefix="/api")
+    application.include_router(timeline.router, prefix="/api")
+    application.include_router(notification.router, prefix="/api")
 
     # Allow CORS
     application.add_middleware(
@@ -55,7 +63,7 @@ def custom_openapi():
             "type": "oauth2",
             "flows": {
                 "password": {
-                    "tokenUrl": "/api/token",
+                    "tokenUrl": "/api/login",
                     "scopes": {}
                 }
             }

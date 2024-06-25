@@ -1,8 +1,9 @@
 import axios from "axios";
-import {useMutation, useQuery} from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import moment from "moment";
-import {queryClient} from "../../../index";
-import {message} from "antd";
+import { queryClient } from "../../../index";
+import { message } from "antd";
+import { useAuthHeader } from 'react-auth-kit';
 
 /*
 export const getFn = async () => {
@@ -19,9 +20,14 @@ export const getFn = async () => {
 
 //-------------------------------------------------------get-------------------------------------------------
 export const useEntries = (userId) => {
+    const authHeader = useAuthHeader();
     return useQuery({
         queryFn: async () => {
-            const {data} = await axios.get(`http://localhost:8000/calendar/${userId}`);
+            const { data } = await axios.get(`http://localhost:8000/api/calendar/get-entries`, {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
             console.log('form Get: ', data)
             return data;
         },
@@ -30,92 +36,112 @@ export const useEntries = (userId) => {
 }
 
 //-------------------------------------------------------post-------------------------------------------------
-const postEntry = async (newEntry) => {
-    console.log('new Entry: ', newEntry)
-    const {data} = await axios.post('http://localhost:8000/calendar', {
+const postEntry = async (newEntry, authHeader) => {
 
+    console.log('new Entry: ', newEntry)
+    const { data } = await axios.post('http://localhost:8000/api/calendar/add-entry', {
         title: newEntry.title,
         color: newEntry.color,
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
-        allDay: newEntry.allDay? newEntry.allDay : false,
-        isOnSite: newEntry.isOnSite? newEntry.isOnSite : false,
-        textArea: newEntry.textArea? newEntry.textArea : '',
-        room: newEntry.room? newEntry.room : null,
-        remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
-        isMilestone:  newEntry.isMilestone? newEntry.isMilestone : false,
-        users: newEntry.users,
-
+        allDay: newEntry.allDay ? newEntry.allDay : false,
+        isOnSite: newEntry.isOnSite ? newEntry.isOnSite : false,
+        textArea: newEntry.textArea ? newEntry.textArea : "",
+        room: newEntry.room ? newEntry.room : "",
+        remoteLink: newEntry.remoteLink ? newEntry.remoteLink : "",
+        isMilestone: newEntry.isMilestone ? newEntry.isMilestone : false,
+        users: newEntry.users
+    }, {
+        headers: {
+            "Authorization": authHeader
+        }
     });
     return data;
 }
 
 export const useCreateEntries = () => {
+    const authHeader = useAuthHeader();
     return useMutation({
-        mutationFn: postEntry,
+        mutationFn: (newEntry) => postEntry(newEntry, authHeader()),
         onSuccess: () => {
             queryClient.invalidateQueries(['GET_ENTRIES']);
-    }})
+        }
+    })
 };
 
 //-------------------------------------------------------put-------------------------------------------------
 
-const putEntry = async (newEntry) => {
+const putEntry = async (newEntry, authHeader) => {
+    //const authHeader = useAuthHeader();
     console.log('putEntry: ', newEntry)
-    const {data} = await axios.put('http://localhost:8000/calendar/' + newEntry.id, {
-
+    const { data } = await axios.put('http://localhost:8000/api/calendar/update-entry/' + newEntry.id, {
         title: newEntry.title,
         color: newEntry.color,
         startDate: moment(newEntry.start).format(),
         endDate: moment(newEntry.end).format(),
-        allDay: newEntry.allDay? newEntry.allDay : false,
-        isOnSite: newEntry.isOnSite? newEntry.isOnSite : false,
-        textArea: newEntry.textArea? newEntry.textArea : '',
-        room: newEntry.room? newEntry.room : null,
-        remoteLink: newEntry.remoteLink? newEntry.remoteLink : null,
-        isMilestone:  newEntry.isMilestone? newEntry.isMilestone : false,
+        allDay: newEntry.allDay ? newEntry.allDay : false,
+        isOnSite: newEntry.isOnSite ? newEntry.isOnSite : false,
+        textArea: newEntry.textArea ? newEntry.textArea : "",
+        room: newEntry.room ? newEntry.room : "",
+        remoteLink: newEntry.remoteLink ? newEntry.remoteLink : "",
+        isMilestone: newEntry.isMilestone ? newEntry.isMilestone : false,
         users: newEntry.users,
+    }, {
+        headers: {
+            "Authorization": authHeader
+        }
     });
     return data;
 
 }
 export const useUpdateEntries = () => {
+    const authHeader = useAuthHeader();
     return useMutation({
-        mutationFn: putEntry,
+        mutationFn: (newEntry) => putEntry(newEntry, authHeader()),
         onSuccess: () => {
             queryClient.invalidateQueries(['GET_ENTRIES']);
-        }})
+        }
+    })
 };
 
 //-------------------------------------------------delete--------------------------------------------
-const deleteEntry = async (id) => {
-    console.log(id+' deleted')
-    const {data} = await axios.delete('http://localhost:8000/calendar/' + id);
+const deleteEntry = async (id, authHeader) => {
+    //const authHeader = useAuthHeader();
+    console.log(id + ' deleted')
+    const { data } = await axios.delete('http://localhost:8000/api/calendar/delete-entry/' + id, {
+        headers: {
+            "Authorization": authHeader
+        }
+    });
     return data;
 
 }
 export const useDeleteEntries = () => {
-
+    const authHeader = useAuthHeader();
     return useMutation({
-        mutationFn: deleteEntry,
+        mutationFn: (id) => deleteEntry(id, authHeader()),
         onSuccess: () => {
             queryClient.invalidateQueries(['GET_ENTRIES']);
-        }})
+        }
+    })
 };
 
 //----------------------------------------------post file-----------------------------------
-const postFiles = async ({files, eventID}) => {
+//TODO: Associate uploaded file with according event - due to new backend
+const postFiles = async ({ files, eventID }, authHeader) => {
+    //const authHeader = useAuthHeader();
     //console.log('event id aus req' , files, eventID)
     const formData = new FormData();
-    files.fileList.forEach((file) => {
+    files.fileList.forEach(file => {
         if (file.originFileObj) { // Check if file is available for upload
             formData.append('files', file.originFileObj);
         }
     });
 
     try {
-        const response = await axios.post(`http://localhost:8000/calendar/${eventID}/files`, formData, {
+        const response = await axios.post(`http://localhost:8000/api/files/upload`, formData, {
             headers: {
+                Authorization: authHeader,
                 'Content-Type': 'multipart/form-data'
             }
         });
@@ -128,25 +154,33 @@ const postFiles = async ({files, eventID}) => {
 }
 
 export const useUploadFile = () => {
+    const authHeader = useAuthHeader();
     return useMutation({
         mutationFn: postFiles,
         onSuccess: () => {
             queryClient.invalidateQueries(['GET_ENTRIES']);
-        }})
+        }
+    })
 };
 
 //------------------------------ delete File ----------------------------------
-const deleteFile = async ({eventId, fileId}) => {
-    console.log(fileId+' deleted, event id: ', eventId)
-    const {data} = await axios.delete(`http://localhost:8000/calendar/${eventId}/files/` + fileId);
+const deleteFile = async ({ eventId, fileId }, authHeader) => {
+    //const authHeader = useAuthHeader();
+    console.log(fileId + ' deleted, event id: ', eventId)
+    const { data } = await axios.delete(`http://localhost:8000/api/files/delete/` + fileId, {
+        headers: {
+            "Authorization": authHeader
+        }
+    });
     return data;
 
 }
 export const useDeleteFile = () => {
-
+    const authHeader = useAuthHeader();
     return useMutation({
-        mutationFn: deleteFile,
+        mutationFn: ({files, eventId}) => deleteFile({files, eventId}, authHeader()),
         onSuccess: () => {
             queryClient.invalidateQueries(['GET_ENTRIES']);
-        }})
+        }
+    })
 };

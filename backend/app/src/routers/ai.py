@@ -76,10 +76,10 @@ async def generate(messages: MessageList):
 
 
 # Simple endpoint to return a "Hello World" message
-@router.get("/ai/hello", tags=["ai"])
-async def generate():
-
-    return {"message": "Hello World"}
+#@router.get("/ai/hello", tags=["ai"])
+#async def generate():
+#
+    #return {"message": "Hello World"}
 
 
 @router.post("/ai/analytics", tags=["ai"])

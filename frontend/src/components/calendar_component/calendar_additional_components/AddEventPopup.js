@@ -1,5 +1,5 @@
 // Popup.js
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Button,
     Form,
@@ -35,29 +35,31 @@ import TextArea from "antd/es/input/TextArea";
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
 const fallbackImgRoomfinder = require('../img/Room not found.png')
-const {RangePicker} = DatePicker
+const { RangePicker } = DatePicker
 
 
 const AddEventPopup = ({
-                           isCreateEventOpen,
-                           isUpdateEventOpen,
-                           setIsCreateEventOpen,
-                           setIsUpdateEventOpen,
-                           event,
-                           users,
-                           currentUser
-                       }) => {
+    isCreateEventOpen,
+    isUpdateEventOpen,
+    setIsCreateEventOpen,
+    setIsUpdateEventOpen,
+    event,
+    users,
+    currentUser,
+    startDate,
+    endDate
+}) => {
 
 
     const init_formData = {
         id: isUpdateEventOpen ? event.id : undefined,
         title: isUpdateEventOpen ? event.title : '',
-        start: isUpdateEventOpen ? event.start : moment(),
-        end: isUpdateEventOpen ? event.end : moment().add(1, 'hour'),
+        start: startDate ? moment(startDate) : isUpdateEventOpen ? event.start : moment(),
+        end: endDate ? moment(endDate) : isUpdateEventOpen ? event.end : moment().add(1, 'hour'),
         color: isUpdateEventOpen ? event.color : '#1677FF',
         allDay: isUpdateEventOpen ? event.allDay : false,
         textArea: isUpdateEventOpen ? event.textArea : '',
-        sharedUsers: isUpdateEventOpen ? users.filter(user => event.users.includes(user.id)) : [currentUser],
+        sharedUsers: isUpdateEventOpen ? users.filterƒ(user => event.users.includes(user.id)) : [currentUser],
         isOnSite: isUpdateEventOpen ? event.isOnSite : true,
         room: isUpdateEventOpen ? event.room : null,
         remoteLink: isUpdateEventOpen ? event.remoteLink : null,
@@ -85,11 +87,11 @@ const AddEventPopup = ({
     }
 
 
-    const {mutateAsync: createEntry} = useCreateEntries()
-    const {mutateAsync: updateEntry} = useUpdateEntries()
-    const {mutateAsync: deleteEntry} = useDeleteEntries()
-    const {mutateAsync: deleteFile} = useDeleteFile()
-    const {mutateAsync: uploadFile} = useUploadFile()
+    const { mutateAsync: createEntry } = useCreateEntries()
+    const { mutateAsync: updateEntry } = useUpdateEntries()
+    const { mutateAsync: deleteEntry } = useDeleteEntries()
+    const { mutateAsync: deleteFile } = useDeleteFile()
+    const { mutateAsync: uploadFile } = useUploadFile()
 
     //---------------------------------- form functions ---------------------------------------
     const fillNewEvent = (fieldsValue) => {
@@ -127,34 +129,33 @@ const AddEventPopup = ({
         return newEvent;
     }
     const onSubmit = async (fieldsValue) => {
-            const newEvent = fillNewEvent(fieldsValue); //get rid of id
-            if(newEvent.start > newEvent.end)
-            {
-                message.error('End Date must be greater than Start Date')
-            }
+        const newEvent = fillNewEvent(fieldsValue); //get rid of id
+        if (newEvent.start > newEvent.end) {
+            message.error('End Date must be greater than Start Date')
+        }
 
-            else {
-                if (isCreateEventOpen) {
-                    console.log('new event', newEvent)
-                    const createdEvent = await createEntry(newEvent)
-                    console.log('created event', createdEvent)
-                    if (fieldsValue['files']) {
-                        uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
-                    }
-
-                } else {
-                    const createdEvent = await updateEntry(newEvent)
-                    if (fieldsValue['files']) {
-                        console.log('updated event id', createdEvent._id)
-                        uploadFile({files: fieldsValue['files'], eventID: createdEvent._id})
-                    }
+        else {
+            if (isCreateEventOpen) {
+                console.log('new event', newEvent)
+                const createdEvent = await createEntry(newEvent)
+                console.log('created event', createdEvent)
+                if (fieldsValue['files']) {
+                    uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id })
                 }
 
-                form.resetFields()
-                setIsCreateEventOpen(false);
-                setIsUpdateEventOpen(false);
-                //form.resetFields();
+            } else {
+                const createdEvent = await updateEntry(newEvent)
+                if (fieldsValue['files']) {
+                    console.log('updated event id', createdEvent._id)
+                    uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id })
+                }
             }
+
+            form.resetFields()
+            setIsCreateEventOpen(false);
+            setIsUpdateEventOpen(false);
+            //form.resetFields();
+        }
     }
 
     const onCancel = () => {
@@ -230,19 +231,19 @@ const AddEventPopup = ({
 
     const onRemoveUpload = (file) => {
         console.log('id: ', file);
-        deleteFile({eventId: event.id, fileId: file.uid})
+        deleteFile({ eventId: event.id, fileId: file.uid })
     }
 
     const uploadProps = {
-        onChange({file, fileList}) {
+        onChange({ file, fileList }) {
             if (file.status !== 'uploading') {
                 //console.log(file, fileList);
             }
         }, openFileDialogOnClick: true, showPreviewIcon: true, defaultFileList: defFileList(), showUploadList: {
             showDownloadIcon: true,
             showRemoveIcon: true,
-            downloadIcon: <DownloadOutlined/>,
-            removeIcon: <DeleteOutlined onClick={(e) => console.log(e, 'custom removeIcon event')}/>,
+            downloadIcon: <DownloadOutlined />,
+            removeIcon: <DeleteOutlined onClick={(e) => console.log(e, 'custom removeIcon event')} />,
 
         },
     };
@@ -262,16 +263,16 @@ const AddEventPopup = ({
 
 
         <Modal open={isCreateEventOpen || isUpdateEventOpen} closeIcon={false} title={"Details"}
-               className={'modal-addEvent'}
-               footer={[
-                   isUpdateEventOpen && (<Button data-testid='deleteEventButton' type='primary' onClick={() => onDelete(event.id)} icon={<DeleteOutlined/>}/>),
-                   <Button onClick={onCancel}>Cancel</Button>,
-                   <Button data-testid='saveEventButton' key="submit" type='primary' onClick={form.submit}>Save</Button>
-               ]}
+            className={'modal-addEvent'}
+            footer={[
+                isUpdateEventOpen && (<Button data-testid='deleteEventButton' type='primary' onClick={() => onDelete(event.id)} icon={<DeleteOutlined />} />),
+                <Button onClick={onCancel}>Cancel</Button>,
+                <Button data-testid='saveEventButton' key="submit" type='primary' onClick={form.submit}>Save</Button>
+            ]}
         >
 
             <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef}
-                  initialValues={getInitialFormValues()} requiredMark={false} >
+                initialValues={getInitialFormValues()} requiredMark={false} >
                 <Row gutter={[32, 16]}>
                     <Col span={12}>
                         <Row gutter={[0, 16]}>
@@ -280,47 +281,47 @@ const AddEventPopup = ({
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, title: e.target.value
                                     }))
-                                }}/>
+                                }} />
                             </Form.Item>
 
-                            <Form.Item label={' '} name="color" style={{marginLeft: '2px'}}>
+                            <Form.Item label={' '} name="color" style={{ marginLeft: '2px' }}>
                                 <ColorPicker size={'large'} disabledAlpha onChange={(color) => {
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, color: color.toHexString()
                                     }))
                                 }}
-                                             presets={[{
-                                                 label: 'Recommended',
-                                                 colors: ['#F5222D', '#FA8C16', '#FADB14', '#8BBB11', '#52C41A', '#13A8A8', '#1677FF', '#2F54EB', '#722ED1', '#EB2F96',],
-                                             }]}
+                                    presets={[{
+                                        label: 'Recommended',
+                                        colors: ['#F5222D', '#FA8C16', '#FADB14', '#8BBB11', '#52C41A', '#13A8A8', '#1677FF', '#2F54EB', '#722ED1', '#EB2F96',],
+                                    }]}
                                 />
                             </Form.Item>
                         </Row>
 
                         <Row gutter={[16, 16]}>
                             <Col>
-                            <Form.Item label={"Start"}  name="datepickerStart">
-                                <DatePicker format="DD.MM.YYYY" placeholder={"start date"}></DatePicker>
-                            </Form.Item>
+                                <Form.Item label={"Start"} name="datepickerStart">
+                                    <DatePicker format="DD.MM.YYYY" placeholder={"start date"}></DatePicker>
+                                </Form.Item>
                             </Col>
 
                             <Col>
-                                <Form.Item label={' '}   name="timepickerStart">
-                                    <TimePicker format="HH:mm" placeholder={"start time"}></TimePicker>
+                                <Form.Item label={' '} name="timepickerStart">
+                                    <TimePicker format="HH:mm" placeholder={"start time"} needConfirm={false}></TimePicker>
                                 </Form.Item>
                             </Col>
                         </Row>
 
                         <Row gutter={[16, 16]}>
                             <Col>
-                                <Form.Item label={"End"}  name="datepickerEnd">
+                                <Form.Item label={"End"} name="datepickerEnd">
                                     <DatePicker format="DD.MM.YYYY" placeholder={"end date"}></DatePicker>
                                 </Form.Item>
                             </Col>
 
                             <Col>
-                                <Form.Item label={' '}   name="timepickerEnd">
-                                    <TimePicker format="HH:mm" placeholder={"end time"}></TimePicker>
+                                <Form.Item label={' '} name="timepickerEnd">
+                                    <TimePicker format="HH:mm" placeholder={"end time"} needConfirm={false}></TimePicker>
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -331,24 +332,24 @@ const AddEventPopup = ({
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, textArea: e.target.value
                                     }))
-                                }}/>
+                                }} />
                             </Form.Item>
 
                             <Form.Item name='files'>
                                 <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload}
-                                        maxCount={10}
-                                        multiple={true}>
-                                    <Button icon={<UploadOutlined/>}>Upload</Button>
+                                    maxCount={10}
+                                    multiple={true}>
+                                    <Button icon={<UploadOutlined />}>Upload</Button>
                                 </Upload>
                             </Form.Item>
                         </Row>
 
                         <Row className={'row-participants'} >
-                            <Form.Item name={'sharedUsers'} style={{marginBottom: '8px'}}>
-                                <Select required maxTagCount={0} fieldNames={{label: 'name', value: 'id'}}
-                                        maxTagPlaceholder={'Add Participants'}
-                                        placeholder="Add Participants" mode="tags" allowClear={false} options={users}
-                                        onChange={onChangeParticipants} style={{width: 200}}/>
+                            <Form.Item name={'sharedUsers'} style={{ marginBottom: '8px' }}>
+                                <Select required maxTagCount={0} fieldNames={{ label: 'name', value: 'id' }}
+                                    maxTagPlaceholder={'Add Participants'}
+                                    placeholder="Add Participants" mode="tags" allowClear={false} options={users}
+                                    onChange={onChangeParticipants} style={{ width: 200 }} />
                             </Form.Item>
 
                             <AvatarDisplay selectedUsers={formData.sharedUsers}></AvatarDisplay>
@@ -363,70 +364,70 @@ const AddEventPopup = ({
 
                     <Col span={12}>
                         <div className='inset-shadow'>
-                        <Row gutter={[0, 16]}>
-                            <Col>
-                            <Form.Item label={'Location'} name={'isOnSite'}>
-                                <Radio.Group defaultValue={formData.isOnSite? 'onSite' : 'remote'} onChange={(e) => {
-                                    setFormData((prevFormData) => ({
-                                        ...prevFormData, isOnSite: !(formData.isOnSite)
-                                    }))
-                                }}>
-                                    <Radio.Button value={'onSite'}>On Site</Radio.Button>
-                                    <Radio.Button value={'remote'}>Remote</Radio.Button>
-                                </Radio.Group>
-                            </Form.Item>
-                            </Col>
+                            <Row gutter={[0, 16]}>
+                                <Col>
+                                    <Form.Item label={'Location'} name={'isOnSite'}>
+                                        <Radio.Group defaultValue={formData.isOnSite ? 'onSite' : 'remote'} onChange={(e) => {
+                                            setFormData((prevFormData) => ({
+                                                ...prevFormData, isOnSite: !(formData.isOnSite)
+                                            }))
+                                        }}>
+                                            <Radio.Button value={'onSite'}>On Site</Radio.Button>
+                                            <Radio.Button value={'remote'}>Remote</Radio.Button>
+                                        </Radio.Group>
+                                    </Form.Item>
+                                </Col>
 
-                        <Col style={{marginLeft: '30%'}}>
-                            <Tooltip title={'Can\'t decide remote/online?'}>
-                                <Button style={{width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex'}} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />}/>
-                            </Tooltip>
+                                <Col style={{ marginLeft: '30%' }}>
+                                    <Tooltip title={'Can\'t decide remote/online?'}>
+                                        <Button style={{ width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex' }} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />} />
+                                    </Tooltip>
 
-                            <Modal title={'Location'} open={isLocationHelpOpen} footer={<Button type='primary' onClick={() => {setIsLocationHelpOpen(false)}}>ok</Button>}>
-                                In the initial phase of the project, you should mainly plan on-site meetings to strengthen team building. Later on, you can also schedule more and more remote meetings
-                            </Modal>
+                                    <Modal title={'Location'} open={isLocationHelpOpen} footer={<Button type='primary' onClick={() => { setIsLocationHelpOpen(false) }}>ok</Button>}>
+                                        In the initial phase of the project, you should mainly plan on-site meetings to strengthen team building. Later on, you can also schedule more and more remote meetings
+                                    </Modal>
 
-                         </Col>
-                        </Row>
+                                </Col>
+                            </Row>
 
-                        {formData.isOnSite && <Row className={'row-navigate'} >
-                            <Form.Item label={'Room'} name={'room'}>
-                                <Space.Compact style={{width: '100%'}}>
-                                    <Input data-testid='roomNumberInput' defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
-                                        setFormData((prevFormData) => ({
-                                            ...prevFormData, room: event.target.value
-                                        }))
-                                    }}/>
-                                </Space.Compact>
-                            </Form.Item>
-                            <Image width={400} src={`https://nav.tum.de/api/preview/${formData.room}`}
-                                   fallback={fallbackImgRoomfinder}/>
-                        </Row>}
+                            {formData.isOnSite && <Row className={'row-navigate'} >
+                                <Form.Item label={'Room'} name={'room'}>
+                                    <Space.Compact style={{ width: '100%' }}>
+                                        <Input data-testid='roomNumberInput' defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
+                                            setFormData((prevFormData) => ({
+                                                ...prevFormData, room: event.target.value
+                                            }))
+                                        }} />
+                                    </Space.Compact>
+                                </Form.Item>
+                                <Image width={400} src={`https://nav.tum.de/api/preview/${formData.room}`}
+                                    fallback={fallbackImgRoomfinder} />
+                            </Row>}
 
-                        {!formData.isOnSite && <Row>
+                            {!formData.isOnSite && <Row>
 
-                            <Form.Item name={'remoteLink'} label={'Link'}>
-                                <Space.Compact style={{width: '100%'}}>
-                                    <Input placeholder={'Insert Meeting Link'}
-                                           defaultValue={formData.remoteLink} onChange={(event) => {
-                                        setFormData((prevFormData) => ({
-                                            ...prevFormData, remoteLink: event.target.value
-                                        }))
-                                    }}/>
-                                    <Button onClick={onClickRemoteLink}>Open Meeting</Button>
-                                </Space.Compact>
-                            </Form.Item>
-                        </Row>}
-                    </div>
+                                <Form.Item name={'remoteLink'} label={'Link'}>
+                                    <Space.Compact style={{ width: '100%' }}>
+                                        <Input placeholder={'Insert Meeting Link'}
+                                            defaultValue={formData.remoteLink} onChange={(event) => {
+                                                setFormData((prevFormData) => ({
+                                                    ...prevFormData, remoteLink: event.target.value
+                                                }))
+                                            }} />
+                                        <Button onClick={onClickRemoteLink}>Open Meeting</Button>
+                                    </Space.Compact>
+                                </Form.Item>
+                            </Row>}
+                        </div>
 
                         <Row >
                             <Form.Item name={'isMilestone'} label={'Meeting Type'}>
                                 <Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
-                                        onChange={(e) => {
-                                            setFormData((prevFormData) => ({
-                                                ...prevFormData, isMilestone: e
-                                            }))
-                                        }}/>
+                                    onChange={(e) => {
+                                        setFormData((prevFormData) => ({
+                                            ...prevFormData, isMilestone: e
+                                        }))
+                                    }} />
                             </Form.Item>
                         </Row>
                     </Col>
@@ -482,9 +483,9 @@ export const createEvent = (fieldsValue, currUserId) => {
 }
 */
 
-const AvatarDisplay = ({selectedUsers}) => {
+const AvatarDisplay = ({ selectedUsers }) => {
     return (<Avatar.Group>
-        {selectedUsers.map(user => (<Avatar key={user.id} style={{backgroundColor: user.color, color: 'white'}}>
+        {selectedUsers.map(user => (<Avatar key={user.id} style={{ backgroundColor: user.color, color: 'white' }}>
             {user.initialen}
         </Avatar>))}
     </Avatar.Group>);
