@@ -1,59 +1,81 @@
 import React, { useState } from "react";
-import { Tabs } from "antd";
+import { Tabs, ConfigProvider } from "antd";
 import { ChatDashboard } from "../ChatDashboard";
 import { KanbanDashboard } from "../KanbanDashboard";
 
 import { FilterContext } from "../context/FilterContext";
 import { DatePicker } from "antd";
 import { TraitDashboard } from "../TraitDashboard";
+import { SubHeader } from "../../layout/SubHeader";
 const { RangePicker } = DatePicker;
 
 const items = [
-    {
-        key: "1",
-        label: "Personality",
-        children: <TraitDashboard />,
-    },
-    {
-        key: "2",
-        label: "Chat",
-        children: <ChatDashboard />,
-    },
-    {
-        key: "3",
-        label: "Kanban",
-        children: <KanbanDashboard />,
-    },
+  {
+    key: "1",
+    label: "Personality",
+    children: <TraitDashboard />,
+  },
+  {
+    key: "2",
+    label: "Chat",
+    children: <ChatDashboard />,
+  },
+  {
+    key: "3",
+    label: "Kanban",
+    children: <KanbanDashboard />,
+  },
 ];
 
 const DashboardTabs = () => {
-    const [startDate, setStartDate] = useState();
-    const [endDate, setEndDate] = useState();
+  const [startDate, setStartDate] = useState();
+  const [endDate, setEndDate] = useState();
 
-    const [showFilter, setShowFilter] = useState(false);
+  const [currentTab, setCurrentTab] = useState("1");
 
-    return (
-        <FilterContext.Provider
-            value={{ startDate, endDate, setStartDate, setEndDate }}
-        >
-            {showFilter && (
-                <div className="md:absolute justify-center right-6 top-0 pt-2 flex gap-2 items-baseline">
-                    <span className="font-bold">Filter:</span>
-                    <RangePicker
-                        onChange={(values) => {
-                            setStartDate(values ? values[0] : undefined);
-                            setEndDate(values ? values[1] : undefined);
-                        }}
-                    />
-                </div>
-            )}
+  return (
+    <FilterContext.Provider
+      value={{ startDate, endDate, setStartDate, setEndDate }}
+    >
+      <SubHeader>
+        <div className="relative">
+          {currentTab !== "1" && (
+            <div className="md:absolute justify-center right-0 top-0 pt-2 md:-m-2 flex gap-2 items-baseline">
+              <span className="font-bold">Filter:</span>
+              <RangePicker
+                onChange={(values) => {
+                  setStartDate(values ? values[0] : undefined);
+                  setEndDate(values ? values[1] : undefined);
+                }}
+              />
+            </div>
+          )}
+          <ConfigProvider
+            theme={{
+              components: {
+                Tabs: {
+                  horizontalMargin: "-10px 0 0 0",
+                  horizontalItemGutter: 12,
+                  margin: 0,
+                },
+              },
+            }}
+          >
             <Tabs
-                className="px-6"
-                defaultActiveKey="1"
-                items={items}
-                onChange={(key) => setShowFilter(key !== "1")}
+              defaultActiveKey="1"
+              items={items.map((item) => ({
+                key: item.key,
+                label: item.label,
+              }))}
+              onChange={setCurrentTab}
             />
-        </FilterContext.Provider>
-    );
+          </ConfigProvider>
+        </div>
+      </SubHeader>
+      <div id="dashboard-content" className="md:p-6 p-2">
+        {items.find((item) => item.key === currentTab).children}
+      </div>
+    </FilterContext.Provider>
+  );
 };
 export default DashboardTabs;
