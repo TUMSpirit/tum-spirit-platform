@@ -1,10 +1,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useFilter } from "../../context/useFilter";
+import { useAuthHeader } from "react-auth-kit";
+import axios from "axios";
 
-const demoMode = true;
+const demoMode = false;
 
 export const useDataFetcher = ({ url, demoData, filter }) => {
     const [data, setData] = useState();
+    const authHeader = useAuthHeader();
 
     const { startDate, endDate } = useFilter();
 
@@ -12,25 +15,37 @@ export const useDataFetcher = ({ url, demoData, filter }) => {
         () =>
             filter
                 ? {
-                      method: "POST",
-                      headers: {
-                          "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({ startDate, endDate }),
-                  }
-                : { method: "GET" },
+                    method: "POST",
+                    headers: {
+                        "Authorization": authHeader()
+                    },
+                    body: JSON.stringify({ startDate, endDate }),
+                }
+                : {
+                    method: "GET",
+                    headers: {
+                        "Authorization": authHeader()
+                    }
+                },
         [filter, startDate, endDate]
     );
 
-    useEffect(() => {
-        if (demoMode) return;
+    useEffect(async () => {
+        if (demoMode===false) return;
 
-        //TODO: add error handling!
-        fetch(url, options)
-            .then((response) => response.json())
-            .then((data) => setData(data))
-            .catch((error) => console.error(error));
-    }, [url, options]);
+       /* try {
+            const response = await axios.get(url, options);
+            setData(response.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }, [url, options]);*/
+    //TODO: add error handling!
+     fetch(url, options)
+         .then((response) => response.json())
+         .then((data) => setData(data))
+         .catch((error) => console.error(error));
+ }, [url, options]);
 
     return { data: demoMode ? demoData : data };
 };

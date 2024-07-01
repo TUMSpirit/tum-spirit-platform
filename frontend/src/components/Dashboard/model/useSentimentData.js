@@ -12,8 +12,7 @@ const demoData = dates.map((date) => ({
 }));
 
 export const useSentimentData = () => {
-  const { data } = useDataFetcher({ url: "/language/sentiment", demoData });
-  console.log(data);
+  const { data } = useDataFetcher({ url: "http://localhost:8000/api/language/get-sentiment", demoData });
   return {
     yData: data.map((entry) => entry.sentiment.polarity),
     xData: data.map((entry) => entry.date),
