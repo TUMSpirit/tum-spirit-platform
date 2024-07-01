@@ -31,8 +31,6 @@ export const useDataFetcher = ({ url, demoData, filter }) => {
   );
 
   useEffect(() => {
-    if (demoMode === false) return;
-
     /* try {
             const response = await axios.get(url, options);
             setData(response.data);
@@ -47,5 +45,8 @@ export const useDataFetcher = ({ url, demoData, filter }) => {
       .catch((error) => console.error(error));
   }, [url, options]);
 
-  return { data: demoMode ? demoData : data };
+  return {
+    data: demoMode ? demoData : data,
+    loading: demoMode ? false : typeof data === "undefined",
+  };
 };

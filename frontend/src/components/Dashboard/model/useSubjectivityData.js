@@ -12,7 +12,11 @@ const demoData = dates.map((date) => ({
 }));
 
 export const useSubjectivityData = () => {
-  const { data } = useDataFetcher({ url: "http://localhost:8000/api/language/get-sentiment", demoData });
+  const { loading, data } = useDataFetcher({
+    url: "http://localhost:8000/api/language/get-sentiment",
+    demoData,
+  });
+  if (loading) return { yData: [], xData: [] };
   return {
     yData: data.map((entry) => entry.sentiment.subjectivity),
     xData: data.map((entry) => entry.date),
