@@ -30,7 +30,7 @@ const postFiles = async ({ files }, authHeader) => {
     }
 };
 
-const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMessage, replyingTo, setReplyingTo }) => {
+const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMessage, replyingTo, setReplyingTo, isTyping, setIsTyping }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [showCommands, setShowCommands] = useState(false);
@@ -47,6 +47,7 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
     const [fileList, setFileList] = useState([]);
     const emojiPickerRef = useRef(null);
     const [currentUser, setCurrentUser] = useState(null);
+    const typingTimeoutRef = useRef(null);
 
     const fetchCurrentUser = useCallback(async () => {
         if (!currentUser) {
@@ -131,6 +132,8 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
         }
         setMessage('');
         setReplyingTo(null);
+        socket.emit('stop typing', currentUser.username);
+        setIsTyping(false);
     };
 
     useEffect(() => {
@@ -168,6 +171,17 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
         } else {
             setShowCommands(false);
         }
+
+        if (!isTyping) {
+            setIsTyping(true);
+            socket.emit('typing', currentUser.username);
+        }
+
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            socket.emit('stop typing', currentUser.username);
+            setIsTyping(false);
+        }, 3000);
     };
 
     const getPlaceholderText = () => {

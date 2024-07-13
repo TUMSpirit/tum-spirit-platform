@@ -1,5 +1,5 @@
-import React, {useEffect, useState, useRef, useCallback} from 'react';
-import { Button, ConfigProvider,Tabs, Dropdown, Menu } from "antd";
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Button, ConfigProvider, Tabs, Dropdown, Menu } from "antd";
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
 import { useSubHeaderContext } from "../layout/SubHeaderContext";
 import Search from "antd/es/input/Search";
@@ -24,7 +24,8 @@ const ChatBody = ({
                       onDeleteMessage,
                       onRemoveReaction,
                       setReplyingTo,
-                      setMessage
+                      setMessage,
+                      typingUser
                   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -297,9 +298,6 @@ const ChatBody = ({
         return () => updateSubHeader(null);
     }, [currentTab, searchTerm, updateSubHeader]);
 
-
-
-
     useEffect(() => {
         if (searchTerm && currentResultIndex !== -1 && searchResults.length > 0) {
             scrollToMessage(searchResults[currentResultIndex]);
@@ -326,7 +324,12 @@ const ChatBody = ({
     };
 
     return (
-        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid">
+        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative">
+            {typingUser && (
+                <div className="absolute bottom-8 left-20 text-gray-500 text-lg">
+                    {typingUser} is typing...
+                </div>
+            )}
             {messages.map((message, index) => {
                 if (message.deleted) {
                     return null;

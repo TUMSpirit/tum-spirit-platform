@@ -76,6 +76,18 @@ socketIO.on('connection', (socket) => {
         }
     });
 
+    socket.on('typing', (data) => {
+        socket.broadcast.emit('typing', data);
+    });
+
+    socket.on('stop typing', (data) => {
+        socket.broadcast.emit('stop typing', data);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
+    });
+
     socket.on("removeEmojiReaction", async ({ messageId, token }) => {
         try {
             const response = await axios.put(`http://localhost:8000/api/chat/remove-reaction/${messageId}`, {}, {
