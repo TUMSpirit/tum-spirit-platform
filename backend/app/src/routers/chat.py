@@ -19,6 +19,7 @@ MONGO_DB = "TUMSpirit"
 # connection string
 MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
 
+
 class Message(BaseModel):
     id: Optional[str] = None
     teamId: str
@@ -42,6 +43,7 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chat']
 
+
 @router.post("/chat/new-message", tags=["chat"])
 def send_message(message: Message, current_user: Annotated[User, Depends(get_current_user)]):
     try:
@@ -55,7 +57,7 @@ def send_message(message: Message, current_user: Annotated[User, Depends(get_cur
             'timestamp': datetime.now(timezone.utc),
             'replyingTo': message.replyingTo if message.replyingTo else None,
             'reactions': {},
-            'isGif': message.isGif # Save isGif field
+            'isGif': message.isGif
         }
 
         result = collection.insert_one(record)
@@ -72,7 +74,8 @@ def send_message(message: Message, current_user: Annotated[User, Depends(get_cur
 
 
 @router.put("/chat/add-reaction/{message_id}", tags=["chat"])
-def add_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)], emoji: str = Body(..., embed=True)):
+def add_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)],
+                 emoji: str = Body(..., embed=True)):
     try:
         message = collection.find_one({"_id": ObjectId(message_id)})
         if not message:
@@ -88,12 +91,13 @@ def add_reaction(message_id: str, current_user: Annotated[User, Depends(get_curr
         updated_message['teamId'] = str(updated_message['teamId'])
         updated_message['senderId'] = str(updated_message['senderId'])
         updated_message['timestamp'] = updated_message['timestamp'] + timedelta(hours=2)
-        updated_message['reactions'] = dict(updated_message.get('reactions', {}))  # Ensure reactions are a dictionary
+        updated_message['reactions'] = dict(updated_message.get('reactions', {}))
         del updated_message['_id']
 
         return updated_message
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.put("/chat/remove-reaction/{message_id}", tags=["chat"])
 def remove_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
@@ -112,12 +116,13 @@ def remove_reaction(message_id: str, current_user: Annotated[User, Depends(get_c
         updated_message['teamId'] = str(updated_message['teamId'])
         updated_message['senderId'] = str(updated_message['senderId'])
         updated_message['timestamp'] = updated_message['timestamp'] + timedelta(hours=2)
-        updated_message['reactions'] = dict(updated_message.get('reactions', {}))  # Ensure reactions are a dictionary
+        updated_message['reactions'] = dict(updated_message.get('reactions', {}))
         del updated_message['_id']
 
         return updated_message
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.put("/chat/edit-message/{message_id}", tags=["chat"])
 def update_message(message_id: str, message: Message, current_user: Annotated[User, Depends(get_current_user)]):
@@ -149,12 +154,13 @@ def update_message(message_id: str, message: Message, current_user: Annotated[Us
         updated_entry['teamId'] = str(updated_entry['teamId'])
         updated_entry['senderId'] = str(updated_entry['senderId'])
         updated_entry['timestamp'] = updated_entry['timestamp'] + timedelta(hours=2)
-        updated_entry['reactions'] = dict(updated_entry.get('reactions', {}))  # Ensure reactions are a dictionary
+        updated_entry['reactions'] = dict(updated_entry.get('reactions', {}))
         del updated_entry['_id']
 
         return updated_entry
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.delete("/chat/delete-message/{message_id}", tags=["chat"])
 def delete_message(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
@@ -172,6 +178,7 @@ def delete_message(message_id: str, current_user: Annotated[User, Depends(get_cu
 
     return {"message": "Entry deleted successfully"}
 
+
 @router.get("/chat/get-messages", tags=["chat"], response_model=List[Message])
 def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
     try:
@@ -186,9 +193,9 @@ def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
             item['id'] = str(item['_id'])
             item['teamId'] = str(item['teamId'])
             item['senderId'] = str(item['senderId'])
-            item['timestamp'] = item['timestamp'] + timedelta(hours=2)  # Adjust the timestamp by adding 2 hours
-            item['reactions'] = dict(item.get('reactions', {}))  # Ensure reactions are a dictionary
-            item['isGif'] = item.get('isGif', False)  # Ensure isGif is a boolean
+            item['timestamp'] = item['timestamp'] + timedelta(hours=2)
+            item['reactions'] = dict(item.get('reactions', {}))
+            item['isGif'] = item.get('isGif', False)
             items.append(Message(**item))
 
         print(f"Total messages found: {len(items)}")
@@ -196,6 +203,7 @@ def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
     except Exception as e:
         print(f"Error fetching messages: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/chat/get-message/{message_id}", response_model=Message, tags=["chat"])
 def get_message(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
@@ -210,9 +218,9 @@ def get_message(message_id: str, current_user: Annotated[User, Depends(get_curre
             raise HTTPException(status_code=403, detail="Not authorized to access this message")
         message['id'] = str(message['_id'])
         message['teamId'] = str(message['teamId'])
-        message['timestamp'] = message['timestamp'] + timedelta(hours=2)  # Adjust the timestamp by adding 2 hours
-        message['reactions'] = dict(message.get('reactions', {}))  # Ensure reactions are a dictionary
-        message['isGif'] = message.get('isGif', False)  # Ensure isGif is a boolean
+        message['timestamp'] = message['timestamp'] + timedelta(hours=2)
+        message['reactions'] = dict(message.get('reactions', {}))
+        message['isGif'] = message.get('isGif', False)
         del message['_id']
         print(f"Message found: {message}")
         return Message(**message)

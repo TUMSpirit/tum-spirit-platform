@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
 import socketIO from "socket.io-client";
-import { Typography } from "antd";
-import { useAuthHeader } from 'react-auth-kit';
+import {Typography} from "antd";
+import {useAuthHeader} from 'react-auth-kit';
 
-const { Title } = Typography;
+const {Title} = Typography;
 const socket = socketIO.connect("http://localhost:4000");
 
 const Chat = () => {
@@ -25,7 +25,7 @@ const Chat = () => {
     };
 
     const handleDeleteMessage = (message) => {
-        socket.emit('deleteMessage', { messageId: message.id, token: authHeader().split(" ")[1] });
+        socket.emit('deleteMessage', {messageId: message.id, token: authHeader().split(" ")[1]});
     };
 
     const fetchMessages = async () => {
@@ -112,13 +112,13 @@ const Chat = () => {
     }, [socket]);
 
     useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
     }, [messages]);
 
     return (
         <div
             className="mx-auto flex flex-col"
-            style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
+            style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
         >
             <ChatBody
                 currentTab={currentTab}

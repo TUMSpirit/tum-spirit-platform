@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Button, Tooltip, Input, Modal, Upload, message } from 'antd';
-import { PlusOutlined, SmileOutlined, SendOutlined, UploadOutlined, GifOutlined } from "@ant-design/icons";
+import React, {useState, useEffect, useCallback, useRef} from 'react';
+import {Button, Tooltip, Input, Modal, Upload, message} from 'antd';
+import {PlusOutlined, SmileOutlined, SendOutlined, UploadOutlined, GifOutlined} from "@ant-design/icons";
 import Picker from 'emoji-picker-react';
 import GifPicker from 'gif-picker-react';
 import axios from "axios";
-import { useAuthHeader } from 'react-auth-kit';
+import {useAuthHeader} from 'react-auth-kit';
 
-const postFiles = async ({ files }, authHeader) => {
+const postFiles = async ({files}, authHeader) => {
     const formData = new FormData();
     files.fileList.forEach(file => {
         if (file.originFileObj) {
@@ -30,16 +30,22 @@ const postFiles = async ({ files }, authHeader) => {
     }
 };
 
-const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMessage, replyingTo, setReplyingTo, isTyping, setIsTyping }) => {
+const ChatFooter = ({
+                        socket,
+                        editingMessage,
+                        setEditingMessage,
+                        message,
+                        setMessage,
+                        replyingTo,
+                        setReplyingTo,
+                        isTyping,
+                        setIsTyping
+                    }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [showCommands, setShowCommands] = useState(false);
-    const commands = ['/Create Kanban Card','show Kanban Card', '/Delete Kanban Card', '/Create Poll', '/ask Ghost'];
-    const commandKanban = '/Create Kanban Card: Title:"CardTitle" , description:"Card , Category: "Category" ,  Description" , type:"Task Type" , person:"In Charge Person", milestone:"Milestone"';
-    const commandShift = '/Change Kanban Card Category: CategoryOld: "Category" , Title: "Title" , CategoryNew: "Category" ';
-    const commandDelete = '/Delete Kanban Card: Category: "Category" , Title: "Title"';
-    const showKanbanCard = '/Show Kanban Card: ID : "ID"';
-    const commandDeleteCalendar = '/Delete Calendar Entry: Title: "Title" , StartDate: "StartDate"';
+    const commands = [, 'Display Kanban Card', '/Create Poll', '/ask Ghost'];
+    const displayKanbanCard = '/Display Kanban Card: ID : "ID"';
     const askGhost = '/ask Ghost';
     const commandPoll = '/Create Poll: option1,option2, option3';
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
@@ -194,17 +200,11 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
 
     const handleCommandClick = (command) => {
         switch (command) {
-            case '/Create Kanban Card':
-                setMessage(commandKanban);
-                break;
-            case '/Change Kanban Card Category':
-                setMessage(commandShift);
-                break;
-            case '/Delete Kanban Card':
-                setMessage(commandDelete);
-                break;
             case '/Create Poll':
                 setMessage(commandPoll);
+                break;
+            case '/Display Kanban Card':
+                setMessage(displayKanbanCard);
                 break;
             case '/askGhost':
                 setMessage(askGhost);
@@ -222,8 +222,8 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
 
     const handleUploadModalOk = async () => {
         const authHeaderString = authHeader();
-        const files = { fileList };
-        await postFiles({ files }, authHeaderString);
+        const files = {fileList};
+        await postFiles({files}, authHeaderString);
         setIsUploadModalVisible(false);
         setFileList([]);
     };
@@ -233,7 +233,7 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
         setFileList([]);
     };
 
-    const handleFileChange = ({ fileList }) => {
+    const handleFileChange = ({fileList}) => {
         setFileList(fileList);
     };
 
@@ -261,7 +261,7 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}
-                            icon={<PlusOutlined />}
+                            icon={<PlusOutlined/>}
                             onClick={showUploadModal}
                         />
                     </Tooltip>
@@ -274,17 +274,17 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
                             <div className="relative flex items-center">
                                 <Tooltip title="Emoticons">
                                     <div onClick={toggleEmojiPicker} className="cursor-pointer">
-                                        <SmileOutlined style={{ fontSize: '24px', color: '#3d72b5' }} />
+                                        <SmileOutlined style={{fontSize: '24px', color: '#3d72b5'}}/>
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
                                     <div ref={emojiPickerRef} className="absolute bottom-12 right-0 z-20">
-                                        <Picker onEmojiClick={onEmojiClick} />
+                                        <Picker onEmojiClick={onEmojiClick}/>
                                     </div>
                                 )}
                                 <Tooltip title="GIFs">
                                     <div onClick={toggleGifPicker} className="cursor-pointer ml-2">
-                                        <GifOutlined style={{ fontSize: '24px', color: '#3d72b5' }} />
+                                        <GifOutlined style={{fontSize: '24px', color: '#3d72b5'}}/>
                                     </div>
                                 </Tooltip>
                             </div>
@@ -311,7 +311,7 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
                         <Button
                             type="primary"
                             shape="circle"
-                            icon={<SendOutlined />}
+                            icon={<SendOutlined/>}
                             className="bg-blue-600 text-white"
                             style={{
                                 fontSize: '24px',
@@ -346,7 +346,7 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
                     beforeUpload={() => false}
                     onChange={handleFileChange}
                 >
-                    <Button icon={<UploadOutlined />}>Select File</Button>
+                    <Button icon={<UploadOutlined/>}>Select File</Button>
                 </Upload>
             </Modal>
             {showGifPicker && (
@@ -356,7 +356,7 @@ const ChatFooter = ({ socket, editingMessage, setEditingMessage, message, setMes
                     onCancel={() => setShowGifPicker(false)}
                     footer={null}
                 >
-                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
+                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"}/>
                 </Modal>
             )}
         </div>
