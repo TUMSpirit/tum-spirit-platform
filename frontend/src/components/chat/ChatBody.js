@@ -1,16 +1,17 @@
-import React, {useState, useEffect} from 'react';
-import {Button, Tabs} from "antd";
+import React, {useEffect, useState, useRef, useCallback} from 'react';
+import { Button, ConfigProvider,Tabs, Dropdown, Menu } from "antd";
+import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
+import { useSubHeaderContext } from "../layout/SubHeaderContext";
 import Search from "antd/es/input/Search";
-import {EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined} from '@ant-design/icons';
-import {Dropdown, Menu} from 'antd';
-import {MoreOutlined} from '@ant-design/icons';
-import {useSubHeaderContext} from "../layout/SubHeaderContext";
+import axios from 'axios';
+import { useAuthHeader } from 'react-auth-kit';
+import PollMessage from './PollMessage';
 
 const tabsItems = [
-    {key: '1', label: 'Group Chat', children: ''},
-    {key: '2', label: 'Martin', children: ''},
-    {key: '3', label: 'Peter', children: ''},
-    {key: '4', label: 'Sophie', children: ''},
+    { key: '1', label: 'Group Chat', children: '' },
+    { key: '2', label: 'Martin', children: '' },
+    { key: '3', label: 'Peter', children: '' },
+    { key: '4', label: 'Sophie', children: '' },
 ];
 
 const ChatBody = ({
@@ -23,31 +24,80 @@ const ChatBody = ({
                       onDeleteMessage,
                       onRemoveReaction,
                       setReplyingTo,
+                      setMessage
                   }) => {
-
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-    const {updateSubHeader} = useSubHeaderContext();
+    const { updateSubHeader } = useSubHeaderContext();
     const senderIcon = require('../../assets/images/avatar3.png');
+    const [pollResults, setPollResults] = useState([]);
     const recipientIcon = require('../../assets/images/avatar2.png');
+    const authHeader = useAuthHeader();
+    const [currentUser, setCurrentUser] = useState(null);
 
     const canEditOrDelete = (timestamp) => {
         const now = Date.now();
-        const diff = now - timestamp;
+        const messageTime = new Date(timestamp).getTime();
+        const diff = now - messageTime;
         return diff <= 5 * 60 * 1000;
     };
 
-    const editMessage = (messageId) => {
-        const messageToEdit = messages.find(message => message.id === messageId);
+    const fetchCurrentUser = useCallback(async () => {
+        if (!currentUser) {
+            try {
+                const response = await axios.get('http://localhost:8000/api/me', {
+                    headers: {
+                        'Authorization': authHeader(),
+                    },
+                });
+                console.log("Fetched Current User:", response.data);
+                setCurrentUser(response.data);
+            } catch (error) {
+                console.error('Failed to fetch current user:', error);
+            }
+        }
+    }, [authHeader, currentUser]);
+
+    useEffect(() => {
+        fetchCurrentUser();
+    }, [fetchCurrentUser]);
+
+    const fetchMessage = async (messageId) => {
+        try {
+            console.log(`Fetching message with ID: ${messageId}`);
+            const response = await axios.get(`http://localhost:8000/api/chat/get-message/${messageId}`, {
+                headers: {
+                    "Authorization": authHeader(),
+                },
+            });
+            console.log(`Fetched message: ${response.data}`);
+            const messageToEdit = response.data;
+            messageToEdit.id = messageToEdit.id || messageId;
+            return messageToEdit;
+        } catch (error) {
+            console.error("Failed to fetch message:", error);
+            return null;
+        }
+    };
+
+    const editMessage = async (messageId) => {
+        if (!messageId) {
+            console.error("No messageId provided for editing");
+            return;
+        }
+        const messageToEdit = await fetchMessage(messageId);
         if (messageToEdit) {
             setEditingMessage(messageToEdit);
+            setMessage(messageToEdit.content);
+            setReplyingTo(null);
         }
     };
 
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
-        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        date.setHours(date.getHours());
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     const handleSearch = (value) => {
@@ -58,7 +108,7 @@ const ChatBody = ({
         } else {
             const lowerCaseTerm = value.toLowerCase();
             const foundIndexes = messages
-                .map((message, index) => ({text: message.text.toLowerCase(), index}))
+                .map((message, index) => ({ text: message.content.toLowerCase(), index }))
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
@@ -85,7 +135,7 @@ const ChatBody = ({
         const messageId = messages[index].id;
         const element = document.getElementById(`message-${messageId}`);
         if (element) {
-            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     };
 
@@ -95,7 +145,7 @@ const ChatBody = ({
             <p className={`text-xl`}>
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
-                        <span key={index} style={{backgroundColor: 'yellow'}}>{part}</span>
+                        <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
                     ) : part
                 )}
             </p>
@@ -114,11 +164,11 @@ const ChatBody = ({
     };
 
     const menu = (messageId) => (
-        <Menu onClick={(e) => handleMenuClick(e, messageId)}>
-            <Menu.Item key="edit" icon={<EditOutlined/>}>Edit</Menu.Item>
+        <Menu onClick={({ key }) => handleMenuClick(key, messageId)}>
+            <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
             <Menu.SubMenu
                 key="delete"
-                icon={<DeleteOutlined/>}
+                icon={<DeleteOutlined />}
                 title="Delete"
             >
                 <Menu.Item key="confirmDelete">
@@ -131,31 +181,35 @@ const ChatBody = ({
         </Menu>
     );
 
-    const handleMenuClick = (e, messageId) => {
-        if (e.key === "edit") {
+    const handleMenuClick = async (key, messageId) => {
+        console.log(`Menu clicked with key: ${key} and messageId: ${messageId}`);
+        if (key === "edit") {
             editMessage(messageId);
-        } else if (e.key === "confirmDelete") {
-            onDeleteMessage(messageId);
+        } else if (key === "confirmDelete") {
+            const message = await fetchMessage(messageId);
+            onDeleteMessage(message);
         }
     };
 
-    const onEmojiClick = (messageId, fixedEmoji) => {
-        socket.emit('emojiReaction', {messageId, emoji: fixedEmoji});
-
-        const updatedMessages = messages.map(msg => {
-            if (msg.id === messageId) {
-                return {...msg, reaction: fixedEmoji};
+    const onEmojiClick = async (messageId, emoji) => {
+        try {
+            const message = messages.find(msg => msg.id === messageId);
+            const existingEmoji = message.reactions && Object.values(message.reactions).includes(emoji);
+            if (existingEmoji) {
+                socket.emit('removeEmojiReaction', { messageId, token: authHeader().split(" ")[1] });
+            } else {
+                socket.emit('emojiReaction', { messageId, emoji, token: authHeader().split(" ")[1] });
             }
-            return msg;
-        });
-        onRemoveReaction(updatedMessages);
+        } catch (error) {
+            console.error("Failed to fetch or update message:", error);
+        }
     };
 
     const menuRe = (messageId) => (
         <Menu onClick={(e) => handleMenuClickRe(e, messageId)}>
             <Menu.SubMenu
                 key="delete"
-                icon={<SmileOutlined/>}
+                icon={<SmileOutlined />}
                 title="Reaction"
             >
                 <Menu.Item key="firstEmote">
@@ -171,24 +225,23 @@ const ChatBody = ({
                     🔃
                 </Menu.Item>
             </Menu.SubMenu>
-            <Menu.Item key="reply" icon={<MessageOutlined/>}>Reply</Menu.Item>
+            <Menu.Item key="reply" icon={<MessageOutlined />}>Reply</Menu.Item>
         </Menu>
     );
 
-
-    const handleMenuClickRe = (e, messageId, messageText) => {
+    const handleMenuClickRe = async (e, messageId) => {
         if (e.key === "firstEmote") {
-            onEmojiClick(messageId, "👍");
+            await onEmojiClick(messageId, "👍");
         } else if (e.key === "secondEmote") {
-            onEmojiClick(messageId, "❌");
+            await onEmojiClick(messageId, "❌");
         } else if (e.key === "thirdEmote") {
-            onEmojiClick(messageId, "🤔");
+            await onEmojiClick(messageId, "🤔");
         } else if (e.key === "fourthEmote") {
-            onEmojiClick(messageId, "🔃");
+            await onEmojiClick(messageId, "🔃");
         } else if (e.key === "reply") {
-            const messageToReplyTo = messages.find(msg => msg.id === messageId);
+            const messageToReplyTo = await fetchMessage(messageId);
             if (messageToReplyTo) {
-                setReplyingTo({messageId: messageToReplyTo.id, text: messageToReplyTo.text});
+                setReplyingTo({ messageId: messageToReplyTo.id, content: messageToReplyTo.content });
             }
         }
     };
@@ -200,20 +253,34 @@ const ChatBody = ({
         return text;
     };
 
-
     useEffect(() => {
         const subHeaderContent = (
-            <div className="flex justify-between items-center w-full py-1 px-3 -mb-6">
-                <Tabs activeKey={currentTab} onChange={(key) => setCurrentTab(key)} items={tabsItems} size="large"/>
-                <div className="hidden md:flex flex-grow justify-center">
-                    <div className="flex items-center gap-4 bg-chat-filter rounded-xl py-2 px-3 ">
-                        <Button className="bg-white shadow-sm">Kanban Cards</Button>
-                        <Button className="bg-white shadow-sm">Calendar Entries</Button>
-                        <Button className="bg-white shadow-sm">Polls</Button>
-                        <Button className="bg-white shadow-sm">Documents</Button>
+            <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2">
+                <ConfigProvider
+                    theme={{
+                        token: {
+                            lineHeight: 1.2,
+                            lineWidth: 2,
+                        },
+                    }}
+                >
+                    <div className="h-14 mt-0 w-full md:w-auto">
+                        <Tabs
+                            activeKey={currentTab}
+                            onChange={(key) => setCurrentTab(key)}
+                            items={tabsItems}
+                            size="large"
+                        />
+                    </div>
+                </ConfigProvider>
+                <div className="hidden md:flex flex-grow justify-center -mt-2">
+                    <div className="h-15 flex items-center gap-5 bg-chat-filter rounded-2xl py-2 px-4">
+                        <Button className="bg-white shadow-sm border-gray-300">Kanban Cards</Button>
+                        <Button className="bg-white shadow-sm border-gray-300">Polls</Button>
+                        <Button className="bg-white shadow-sm border-gray-300">Documents</Button>
                     </div>
                 </div>
-                <div className="hidden md:block">
+                <div className="hidden md:block -mt-2">
                     <Search
                         placeholder="input search text"
                         size="large"
@@ -230,6 +297,9 @@ const ChatBody = ({
         return () => updateSubHeader(null);
     }, [currentTab, searchTerm, updateSubHeader]);
 
+
+
+
     useEffect(() => {
         if (searchTerm && currentResultIndex !== -1 && searchResults.length > 0) {
             scrollToMessage(searchResults[currentResultIndex]);
@@ -237,22 +307,58 @@ const ChatBody = ({
     }, [currentResultIndex, searchResults, messages, searchTerm]);
 
     useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [messages]);
 
-    return (
-        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-2 border-chat-grid">
-            {messages.map((message, index) => {
+    useEffect(() => {
+        socket.on('initialPollData', (pollData) => {
+            setPollResults(pollData);
+        });
 
+        return () => {
+            socket.off('initialPollData');
+        };
+    }, [socket]);
+
+    const getPollVotes = (pollId) => {
+        const poll = pollResults.find(p => p.id === pollId);
+        return poll ? poll.votes : Array(pollResults.options?.length || 0).fill(0);
+    };
+
+    return (
+        <div className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid">
+            {messages.map((message, index) => {
                 if (message.deleted) {
                     return null;
                 }
-
-                const isSender = message.name === localStorage.getItem("userName");
-                const messageStyle = getMessageStyle(message.text);
+                const isSender = message.senderId === currentUser?.username;
+                const messageStyle = getMessageStyle(message.content);
                 const messageMarginTop = index === 0 ? "mt-6" : "";
                 const messageMarginBottom = "mb-6";
                 const isReplyingTo = messages.find(m => m.id === message.replyingTo);
+                const reactions = message.reactions ? Object.values(message.reactions) : [];
+
+                if (message.isPoll) {
+                    const [title, ...options] = message.content.replace('/Create Poll:', '').split(',').map(item => item.trim());
+                    const poll = { title, options, id: message.id, votes: getPollVotes(message.id) };
+
+                    return (
+                        <div key={message.id} className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                            {isSender && canEditOrDelete(message.timestamp) && (
+                                <div className="flex justify-end items-center">
+                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight" className="p-2">
+                                        <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    </Dropdown>
+                                </div>
+                            )}
+                            <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <PollMessage poll={poll} socket={socket} />
+                                <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                            </div>
+                        </div>
+                    );
+                }
+
                 return (
                     <div key={message.id} id={`message-${message.id}`}
                          className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
@@ -271,10 +377,22 @@ const ChatBody = ({
                                     className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     {isReplyingTo && (
                                         <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
-                                            <span className="font-semibold">{truncateText(isReplyingTo.text)}</span>
+                                            <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                         </div>
                                     )}
-                                    <p>{highlightText(message.text, searchTerm)}</p>
+                                    {message.isGif ? (
+                                        <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                    ) : (
+                                        <p>{highlightText(message.content, searchTerm)}</p>
+                                    )}
+                                    <div className="flex items-center">
+                                        {reactions.map((reaction, idx) => (
+                                            <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
+                                                  onClick={() => onEmojiClick(message.id, reaction)}>
+                                                {reaction}
+                                            </span>
+                                        ))}
+                                    </div>
                                     <span
                                         className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
@@ -288,15 +406,26 @@ const ChatBody = ({
                                 <div
                                     className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     <div>
-                                        <p>{highlightText(message.text, searchTerm)}</p>
-                                        {message.reaction && (
-                                            <span className="ml-2 cursor-pointer text-lg md:text-xl lg:text-2xl"
-                                                  onClick={() => socket.emit('removeEmojiReaction', {messageId: message.id})}>{message.reaction}
-                                            </span>)}
+                                        {isReplyingTo && (
+                                            <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
+                                                <span
+                                                    className="font-semibold">{truncateText(isReplyingTo.content)}</span>
+                                            </div>
+                                        )}
+                                        {message.isGif ? (
+                                            <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                        ) : (
+                                            <p>{highlightText(message.content, searchTerm)}</p>
+                                        )}
+                                        <div className="flex items-center">
+                                            {reactions.map((reaction, idx) => (
+                                                <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
+                                                      onClick={() => onEmojiClick(message.id, reaction)}>
+                                                    {reaction}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="flex justify-end items-center">
-                                    </div>
-
                                     <span
                                         className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>

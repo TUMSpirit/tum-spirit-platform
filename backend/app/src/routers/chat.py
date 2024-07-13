@@ -1,13 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, Body
+from typing import Annotated, List, Optional, Dict
+from pydantic import BaseModel, Field
 from pymongo import MongoClient
 from bson import ObjectId
-from datetime import datetime
-from fastapi import HTTPException
-
+from datetime import datetime, timezone, timedelta
+from app.src.routers.auth import get_current_user, User
 
 # Create a router
 router = APIRouter()
-
 
 # Retrieve MongoDB credentials and database info
 MONGO_USER = "root"
@@ -17,39 +17,205 @@ MONGO_PORT = "27017"
 MONGO_DB = "TUMSpirit"
 
 # connection string
-MONGO_URI = "mongodb://root:example@129.187.135.9:27017/mydatabase?authSource=admin"
+MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
 
-class Message():
+class Message(BaseModel):
+    id: Optional[str] = None
+    teamId: str
     content: str
-    sender_id: str
+    senderId: str
+    timestamp: datetime
+    replyingTo: Optional[str] = None
+    reactions: Optional[Dict[str, str]] = Field(default_factory=dict)
+    isGif: Optional[bool] = False  # Add isGif field
+
+    class Config:
+        orm_mode = True
+        json_encoders = {
+            ObjectId: str,
+            datetime: lambda dt: dt.isoformat(),
+        }
+
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chat']
 
-
-# Define a route to insert a record into the database
-@router.get("/chat/hello", tags=["chat"])
-async def chatGenerate():
-
-    return {"message": "Hello World"}
-
-
-@router.post("/chat/insert", tags=["chat"])
-def send_message(message: Message):
+@router.post("/chat/new-message", tags=["chat"])
+def send_message(message: Message, current_user: Annotated[User, Depends(get_current_user)]):
     try:
-        # Create a record with a random ID (ObjectId) and a timestamp
+        if not message.content:
+            raise HTTPException(status_code=400, detail="Message content cannot be empty")
+
         record = {
-            '_id': ObjectId(),
+            'teamId': current_user["team_id"],
             'content': message.content,
-            'sender_id': message.sender_id,
-            'timestamp': datetime.utcnow()
+            'senderId': current_user["username"],
+            'timestamp': datetime.now(timezone.utc),
+            'replyingTo': message.replyingTo if message.replyingTo else None,
+            'reactions': {},
+            'isGif': message.isGif # Save isGif field
         }
-        # Inserting the record into the database
+
         result = collection.insert_one(record)
-        # Return the ID of the inserted record
-        return {"id": str(result.inserted_id)}
+
+        record['_id'] = str(result.inserted_id)
+        record['teamId'] = str(record['teamId'])
+        record['senderId'] = str(record['senderId'])
+        record['id'] = record['_id']
+        del record['_id']
+
+        return record
     except Exception as e:
-        # If something goes wrong, raise an HTTP exception
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/chat/add-reaction/{message_id}", tags=["chat"])
+def add_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)], emoji: str = Body(..., embed=True)):
+    try:
+        message = collection.find_one({"_id": ObjectId(message_id)})
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+
+        user_id = current_user["username"]
+        collection.update_one(
+            {"_id": ObjectId(message_id)},
+            {"$set": {f"reactions.{user_id}": emoji}}
+        )
+        updated_message = collection.find_one({"_id": ObjectId(message_id)})
+        updated_message['id'] = str(updated_message['_id'])
+        updated_message['teamId'] = str(updated_message['teamId'])
+        updated_message['senderId'] = str(updated_message['senderId'])
+        updated_message['timestamp'] = updated_message['timestamp'] + timedelta(hours=2)
+        updated_message['reactions'] = dict(updated_message.get('reactions', {}))  # Ensure reactions are a dictionary
+        del updated_message['_id']
+
+        return updated_message
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/chat/remove-reaction/{message_id}", tags=["chat"])
+def remove_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        message = collection.find_one({"_id": ObjectId(message_id)})
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+
+        user_id = current_user["username"]
+        collection.update_one(
+            {"_id": ObjectId(message_id)},
+            {"$unset": {f"reactions.{user_id}": ""}}
+        )
+        updated_message = collection.find_one({"_id": ObjectId(message_id)})
+        updated_message['id'] = str(updated_message['_id'])
+        updated_message['teamId'] = str(updated_message['teamId'])
+        updated_message['senderId'] = str(updated_message['senderId'])
+        updated_message['timestamp'] = updated_message['timestamp'] + timedelta(hours=2)
+        updated_message['reactions'] = dict(updated_message.get('reactions', {}))  # Ensure reactions are a dictionary
+        del updated_message['_id']
+
+        return updated_message
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/chat/edit-message/{message_id}", tags=["chat"])
+def update_message(message_id: str, message: Message, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        existing_entry = collection.find_one({"_id": ObjectId(message_id)})
+        if not existing_entry:
+            raise HTTPException(status_code=404, detail="Entry not found")
+
+        if existing_entry['senderId'] != str(current_user["username"]):
+            raise HTTPException(status_code=403, detail="Not authorized to edit this message")
+
+        update_record = {
+            'content': message.content,
+            'timestamp': datetime.now(timezone.utc),
+            'replyingTo': message.replyingTo if message.replyingTo else None,
+            'reactions': existing_entry.get('reactions', {})
+        }
+
+        result = collection.update_one(
+            {"_id": ObjectId(message_id)},
+            {"$set": update_record}
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Entry not found")
+
+        updated_entry = collection.find_one({"_id": ObjectId(message_id)})
+        updated_entry['id'] = str(updated_entry['_id'])
+        updated_entry['teamId'] = str(updated_entry['teamId'])
+        updated_entry['senderId'] = str(updated_entry['senderId'])
+        updated_entry['timestamp'] = updated_entry['timestamp'] + timedelta(hours=2)
+        updated_entry['reactions'] = dict(updated_entry.get('reactions', {}))  # Ensure reactions are a dictionary
+        del updated_entry['_id']
+
+        return updated_entry
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/chat/delete-message/{message_id}", tags=["chat"])
+def delete_message(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+    existing_entry = collection.find_one({"_id": ObjectId(message_id)})
+    if not existing_entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    if existing_entry['senderId'] != current_user["username"]:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this message")
+
+    result = collection.delete_one({"_id": ObjectId(message_id)})
+
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    return {"message": "Entry deleted successfully"}
+
+@router.get("/chat/get-messages", tags=["chat"], response_model=List[Message])
+def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        team_id = ObjectId(current_user["team_id"])
+        print(f"Fetching messages for team_id: {team_id}")
+
+        query = {'teamId': team_id}
+        items = []
+
+        for item in collection.find(query):
+            print(f"Found message: {item}")
+            item['id'] = str(item['_id'])
+            item['teamId'] = str(item['teamId'])
+            item['senderId'] = str(item['senderId'])
+            item['timestamp'] = item['timestamp'] + timedelta(hours=2)  # Adjust the timestamp by adding 2 hours
+            item['reactions'] = dict(item.get('reactions', {}))  # Ensure reactions are a dictionary
+            item['isGif'] = item.get('isGif', False)  # Ensure isGif is a boolean
+            items.append(Message(**item))
+
+        print(f"Total messages found: {len(items)}")
+        return items
+    except Exception as e:
+        print(f"Error fetching messages: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/chat/get-message/{message_id}", response_model=Message, tags=["chat"])
+def get_message(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        print(f"Fetching message with ID: {message_id}")
+        message = collection.find_one({"_id": ObjectId(message_id)})
+        if not message:
+            print(f"Message with ID {message_id} not found")
+            raise HTTPException(status_code=404, detail="Message not found")
+        if str(message["teamId"]) != str(current_user["team_id"]):
+            print(f"User {current_user['username']} not authorized to access message ID {message_id}")
+            raise HTTPException(status_code=403, detail="Not authorized to access this message")
+        message['id'] = str(message['_id'])
+        message['teamId'] = str(message['teamId'])
+        message['timestamp'] = message['timestamp'] + timedelta(hours=2)  # Adjust the timestamp by adding 2 hours
+        message['reactions'] = dict(message.get('reactions', {}))  # Ensure reactions are a dictionary
+        message['isGif'] = message.get('isGif', False)  # Ensure isGif is a boolean
+        del message['_id']
+        print(f"Message found: {message}")
+        return Message(**message)
+    except Exception as e:
+        print(f"Error fetching message: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")

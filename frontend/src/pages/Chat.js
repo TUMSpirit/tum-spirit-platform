@@ -1,118 +1,138 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
-import socketIO from "socket.io-client"
-import {Typography} from "antd";
+import socketIO from "socket.io-client";
+import { Typography } from "antd";
+import { useAuthHeader } from 'react-auth-kit';
 
-const {Title} = Typography;
-const socket = socketIO.connect("http://localhost:4000")
-
-socket.on("connect_error", (err) => {
-    console.log(`connect_error due to ${err.message}`);
-  });
-
+const { Title } = Typography;
+const socket = socketIO.connect("http://localhost:4000");
 
 const Chat = () => {
-
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
     const [editingMessage, setEditingMessage] = useState(null);
     const lastMessageRef = useRef(null);
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [message, setMessage] = useState("");
+    const HEADER_HEIGHT_PX = 256;
+    const authHeader = useAuthHeader();
+
     const handleRemoveReaction = (updatedMessages) => {
         setMessages(updatedMessages);
     };
-    const HEADER_HEIGHT_PX = 256;
 
-    const [replyingTo, setReplyingTo] = useState(null);
+    const handleDeleteMessage = (message) => {
+        socket.emit('deleteMessage', { messageId: message.id, token: authHeader().split(" ")[1] });
+    };
 
-    const handleDeleteMessage = (messageId) => {
-        socket.emit('deleteMessage', messageId);
-        setMessages(messages => messages.map(msg => {
-            if (msg.id === messageId) {
-                return {...msg, deleted: true};
+    const fetchMessages = async () => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/chat/get-messages`, {
+            method: 'GET',
+                headers: {
+                "Authorization": authHeader(),
+            }
+        });
+        const data = await response.json();
+        console.log("Fetched messages:", data);
+        setMessages(data || []);
+    } catch (error) {
+        console.error("Failed to fetch messages:", error);
+    }
+};
+
+useEffect(() => {
+    fetchMessages();
+}, [currentTab]);
+
+useEffect(() => {
+    socket.on("messageResponse", (data) => {
+        setMessages(prevMessages => [...prevMessages, data]);
+    });
+
+    socket.on('messageUpdated', (updatedMessage) => {
+        setMessages(prevMessages => {
+            const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
+            if (index !== -1) {
+                const newMessages = [...prevMessages];
+                newMessages[index] = updatedMessage;
+                return newMessages;
+            }
+            return prevMessages;
+        });
+    });
+
+    socket.on('emojiReactionRemoved', (updatedMessage) => {
+        setMessages(currentMessages => currentMessages.map(msg => {
+            if (msg.id === updatedMessage.id) {
+                return updatedMessage;
             }
             return msg;
         }));
+    });
+
+    socket.on('emojiReactionUpdated', (updatedMessage) => {
+        setMessages(currentMessages => currentMessages.map(msg => {
+            if (msg.id === updatedMessage.id) {
+                return updatedMessage;
+            }
+            return msg;
+        }));
+    });
+
+    socket.on('messageDeleted', (messageId) => {
+        setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
+    });
+
+    socket.on('messagesUpdated', (updatedMessages) => {
+        setMessages(updatedMessages);
+    });
+
+    return () => {
+        socket.off('messageResponse');
+        socket.off('messageUpdated');
+        socket.off('emojiReactionRemoved');
+        socket.off('emojiReactionUpdated');
+        socket.off('messageDeleted');
+        socket.off('messagesUpdated');
     };
-
-    useEffect(() => {
-        function fetchMessages() {
-            fetch(`http://localhost:4000/api?chatId=${currentTab}`)
-                .then(response => response.json())
-                .then(data => setMessages(data.messages || []));
-        }
-
-        fetchMessages();
-    }, [currentTab]);
-
-    useEffect(() => {
-        socket.on("messageResponse", data => setMessages([...messages, data]))
-    }, [socket, messages])
+}, [socket]);
 
 
-    useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-    }, [messages]);
+useEffect(() => {
+    lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}, [messages]);
 
-    useEffect(() => {
-        socket.on('messageUpdated', (updatedMessage) => {
-            setMessages(prevMessages => {
-                const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
-                if (index !== -1) {
-                    const newMessages = [...prevMessages];
-                    newMessages[index] = updatedMessage;
-                    return newMessages;
-                }
-                return prevMessages;
-            });
-        });
-        return () => socket.off('messageUpdated');
-    }, [socket]);
-
-    useEffect(() => {
-        socket.on('emojiReactionRemoved', (updatedMessage) => {
-            setMessages(currentMessages => currentMessages.map(msg => {
-                if (msg.id === updatedMessage.id) {
-                    const updatedMsg = {...msg};
-                    delete updatedMsg.reaction;
-                    return updatedMsg;
-                }
-                return msg;
-            }));
-        });
-        return () => {
-            socket.off('emojiReactionRemoved');
-        };
-    }, [socket]);
-
-    useEffect(() => {
-        socket.on('emojiReactionUpdated', (updatedMessage) => {
-            setMessages(currentMessages => currentMessages.map(msg => {
-                if (msg.id === updatedMessage.id) {
-                    return updatedMessage;
-                }
-                return msg;
-            }));
-        });
-        return () => socket.off('emojiReactionUpdated');
-    }, [socket]);
-
-
-    return (
-        <div
-            className="mx-auto flex flex-col"
-            style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
-        >
-            <ChatBody currentTab={currentTab} setCurrentTab={setCurrentTab} messages={messages}
-                      onRemoveReaction={handleRemoveReaction} lastMessageRef={lastMessageRef}
-                      setEditingMessage={setEditingMessage} onDeleteMessage={handleDeleteMessage} socket={socket}
-                      replyingTo={replyingTo}
-                      setReplyingTo={setReplyingTo}/>
-            <ChatFooter socket={socket} editingMessage={editingMessage} setEditingMessage={setEditingMessage}
-                        replyingTo={replyingTo}
-                        setReplyingTo={setReplyingTo}/>
-        </div>
-    );
+return (
+    <div
+        className="mx-auto flex flex-col"
+        style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
+    >
+        <ChatBody
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+            messages={messages}
+            onRemoveReaction={handleRemoveReaction}
+            lastMessageRef={lastMessageRef}
+            setEditingMessage={setEditingMessage}
+            onDeleteMessage={handleDeleteMessage}
+            socket={socket}
+            replyingTo={replyingTo}
+            setReplyingTo={setReplyingTo}
+            setMessage={setMessage}
+        />
+        <ChatFooter
+            socket={socket}
+            editingMessage={editingMessage}
+            setEditingMessage={setEditingMessage}
+            message={message}
+            setMessage={setMessage}
+            replyingTo={replyingTo}
+            setReplyingTo={setReplyingTo}
+        />
+    </div>
+);
 };
 
 export default Chat;
