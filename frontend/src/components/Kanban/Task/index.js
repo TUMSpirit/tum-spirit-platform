@@ -2,7 +2,7 @@
 import { UserAddOutlined } from '@ant-design/icons';
 
 const Task = ({ task, provided, editModal }) => {
-	const { title, description, priority, deadline, image, alt, tags } = task;
+	const { title, description, priority, deadline, image, alt, tags, milestone } = task;
 
 	return (
 		<div
@@ -18,6 +18,17 @@ const Task = ({ task, provided, editModal }) => {
 					alt={alt}
 					className="w-full h-[170px] rounded-lg"
 				/>
+			)}
+			{milestone && (
+				<div
+					className="top-3 right-3 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+					style={{
+						width: '24px',
+						height: '24px',
+					}}
+				>
+					{milestone}
+				</div>
 			)}
 			<div className="flex items-center gap-2">
 				{tags.map((tag) => (
@@ -45,13 +56,12 @@ const Task = ({ task, provided, editModal }) => {
 					<span className="text-[13px] text-gray-700">{deadline} mins</span>
 				</div>
 				<div
-					className={`w-[60px] rounded-full h-[5px] ${
-						priority === "high"
-							? "bg-red-500"
-							: priority === "medium"
-								? "bg-orange-500"
-								: "bg-blue-500"
-					}`}
+					className={`w-[60px] rounded-full h-[5px] ${priority === "high"
+						? "bg-red-500"
+						: priority === "medium"
+							? "bg-orange-500"
+							: "bg-blue-500"
+						}`}
 				></div>
 			</div>
 		</div>

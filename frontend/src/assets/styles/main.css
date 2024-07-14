@@ -1132,10 +1132,6 @@ span.blue {
   margin: 0px;
 }
 
-.text-xs {
-  color: #8c8c8c;
-}
-
 .percent-progress span.ant-progress-text {
   display: flex;
   margin-top: -27px;
@@ -2262,7 +2258,7 @@ section.ant-layout.layout-content .ant-layout-content.content-ant {
 }
 
 .layout-dashboard .ant-card {
-  border-radius: 12px;
+  /*border-radius: 12px;*/
   box-shadow: 0 20px 27px rgb(0 0 0 / 5%);
 }
 

@@ -32,12 +32,12 @@ import {
 
 import { NavLink, Link } from "react-router-dom";
 import styled from "styled-components";
-import avtar from "../../assets/images/team-2.jpg";
+import avtar from "../assets/images/team-2.jpg";
 import { useSubHeaderContext } from "./SubHeaderContext";
 import { useSignOut } from 'react-auth-kit';
 import { useNavigate } from 'react-router-dom';
-import TutorialPopup from '../TutorialPopup/TutorialPopup';
-import ImprintModal from '../Imprint/ImprintModal';
+import TutorialPopup from '../components/TutorialPopup/TutorialPopup';
+import ImprintModal from '../components/Imprint/ImprintModal';
 
 const ButtonContainer = styled.div`
     .ant-btn-primary {

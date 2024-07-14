@@ -8,7 +8,7 @@ import {
   Descriptions,
   Avatar,
 } from "antd";
-import Calendar_Main from "../components/calendar_component/Calendar_Main"
+import Calendar_Main from "../components/Calendar/Calendar_Main"
 
 import { PlusOutlined, ExclamationOutlined } from "@ant-design/icons";
 import mastercard from "../assets/images/mastercard-logo.png";

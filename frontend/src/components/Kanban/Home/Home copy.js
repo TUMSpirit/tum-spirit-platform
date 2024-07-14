@@ -9,7 +9,7 @@ import Task from "../Task";
 import { Row, Col, Button, Input, Flex, Tag } from "antd";
 import { SubHeader } from '../../layout/SubHeader'
 import { v4 as uuidv4 } from "uuid";
-import AddEventPopup from "../../calendar_component/calendar_additional_components/AddEventPopup";
+import AddEventPopup from "../../Calendar/calendar_additional_components/AddEventPopup";
 import axios from "axios";
 import { useAuthHeader } from 'react-auth-kit';
 

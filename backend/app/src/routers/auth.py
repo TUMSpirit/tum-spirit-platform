@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Any, Union
+from typing import Annotated, Any, List, Optional, Union
 from fastapi import Depends, APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -21,7 +21,7 @@ load_dotenv()
 # openssl rand -hex 32
 SECRET_KEY = "b84be05f4f7e6307639b11d5be65d3c4e53bb2142a83e07b643953709e29b3a5"  # ADD SECRETS
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 1200
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -61,24 +61,6 @@ PyObjectId = Annotated[
 ]
 # Register the custom encoder for PyObjectI
 
-
-def validate_object_id(v: Any) -> ObjectId:
-    if isinstance(v, ObjectId):
-        return v
-    if ObjectId.is_valid(v):
-        return ObjectId(v)
-    raise ValueError("Invalid ObjectId")
-
-
-PyObjectId = Annotated[
-    Union[str, ObjectId],
-    AfterValidator(validate_object_id),
-    PlainSerializer(lambda x: str(x), return_type=str),
-    WithJsonSchema({"type": "string"}, mode="serialization"),
-]
-# Register the custom encoder for PyObjectI
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -106,6 +88,17 @@ class User(BaseModel):
 
 class UserInDB(User):
     password: str
+    
+class TeamUser(BaseModel):
+    username: str
+    role: str
+    team_id: PyObjectId
+    avatar_color: Optional[str] = None
+    
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True  # required for the _id
+        json_encoders = {ObjectId: str}
 
 
 def verify_password(plain_password, hashed_password):
@@ -250,7 +243,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     return Token(access_token=access_token, token_type="bearer")
 
 
-# email: Union[str, None] = None
-  # full_name: Union[str, None] = None
-  # disabled: Union[bool, None] = None
- # role: str
+@ router.get("/get-team-members", response_model=List[TeamUser])
+async def get_team_members(current_user: User = Depends(get_current_user)):
+    entries = user_collection.find({"team_id": current_user["team_id"]}, {"password": 0}) 
+    return entries

@@ -46,34 +46,35 @@ PyObjectId = Annotated[
 
 class TaskModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    teamId: PyObjectId
+    team_id: PyObjectId
     column: Optional[str] = ""
     title: Optional[str] = ""
     description: Optional[str] = ""
     priority: Optional[str] = ""
     deadline: Optional[int] = 0
     tags: Optional[List] = []
+    milestone: str
 
 
     class Config:
             populate_by_name = True
             arbitrary_types_allowed = True #required for the _id 
             json_encoders = {ObjectId: str}
+            
+            
+class TaskColumnUpdate(BaseModel):
+    column: str
+
 
 
 class TaskCreate(BaseModel):
-    teamId: PyObjectId
     title: str
     column: str
     description: Optional[str] = ""
     priority: str
     deadline: int
     tags: List
-    
-    class Config:
-            allow_population_by_field_name = True
-            arbitrary_types_allowed = True #required for the _id 
-            json_encoders = {ObjectId: str}
+    milestone: str
 
 class Task(TaskCreate):
     id: PyObjectId
@@ -85,18 +86,19 @@ class Task(TaskCreate):
 
 
 # Define a route to insert a record into the database
-@router.post("/kanban/create-task", response_model=TaskCreate, tags=["kanban"])
+@router.post("/kanban/create-task", response_model=TaskModel, tags=["kanban"])
 def insert_task(task_entry: TaskCreate, current_user: Annotated[User, Depends(get_current_user)]):
     try:
         # Create a record with a random ID (ObjectId) and a timestamp
         record = {
-            'teamId': task_entry.teamId,
+            'team_id': current_user["team_id"],
             'title': task_entry.title,
             'column': task_entry.column,
             'description': task_entry.description,
             'priority': task_entry.priority,
             'deadline': task_entry.deadline,
             'tags':task_entry.tags,
+            'milestone':task_entry.milestone,
             'timestamp': datetime.now()
         }
         # Inserting the record into the database
@@ -109,7 +111,7 @@ def insert_task(task_entry: TaskCreate, current_user: Annotated[User, Depends(ge
     
     # Define a route to insert a record into the database
 
-@router.put("/kanban/update-task/{task_id}", response_model=TaskCreate, tags=["kanban"])
+@router.put("/kanban/update-task/{task_id}", response_model=TaskModel, tags=["kanban"])
 def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[User, Depends(get_current_user)]):
     try:
         existing_entry = collection.find_one({"_id": ObjectId(task_id)})
@@ -119,13 +121,13 @@ def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[Us
         
         # Create a record with a random ID (ObjectId) and a timestamp
         update_record = {
-            'teamId': task_entry.teamId,
             'title': task_entry.title,
             'column': task_entry.column,
             'description': task_entry.description,
             'priority': task_entry.priority,
             'deadline': task_entry.deadline,
             'tags':task_entry.tags,
+            'milestone':task_entry.milestone,
             'timestamp': datetime.now()
         }
         # Inserting the record into the database
@@ -141,6 +143,30 @@ def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[Us
 
         updated_entry = collection.find_one({"_id": ObjectId(task_id)})
         return TaskModel(**updated_entry)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/kanban/update-task/{task_id}/column", response_model=TaskModel, tags=["kanban"])
+def update_task_column(task_id: str, column: TaskColumnUpdate, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        existing_entry = collection.find_one({"_id": ObjectId(task_id)})
+        if not existing_entry:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        # Update the 'column' field only
+        result = collection.update_one(
+            {"_id": ObjectId(task_id)},
+            {"$set": {"column": column.column, "timestamp": datetime.now()}}
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        # Retrieve and return the updated task
+        updated_entry = collection.find_one({"_id": ObjectId(task_id)})
+        return TaskModel(**updated_entry)
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -165,19 +191,16 @@ def delete_task(task_id: str, current_user: Annotated[User, Depends(get_current_
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.get("/kanban/get-tasks", response_model=List[Task], tags=["kanban"])
+@router.get("/kanban/get-tasks", response_model=List[TaskModel], tags=["kanban"])
 def get_tasks(current_user: Annotated[User, Depends(get_current_user)],
 ):
     try:
         # Create a record with a random ID (ObjectId) and a timestamp
         # Inserting the record into the database
         query = {"team_id":current_user["team_id"]}
-        items = []
-        for item in collection.find():
-            items.append(TaskModel(**item))
-
+        entries = collection.find()
+        return entries
         #print(items)
-        return items
           # Print the results
         #output = list(result)
        # total_entries = collection.count_documents(query)

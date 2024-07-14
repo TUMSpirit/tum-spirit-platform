@@ -6,7 +6,7 @@ import { KanbanDashboard } from "../KanbanDashboard";
 import { FilterContext } from "../context/FilterContext";
 import { DatePicker } from "antd";
 import { TraitDashboard } from "../TraitDashboard";
-import { SubHeader } from "../../layout/SubHeader";
+import { SubHeader } from "../../../layout/SubHeader";
 const { RangePicker } = DatePicker;
 
 const items = [

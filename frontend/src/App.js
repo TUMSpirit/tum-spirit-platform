@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { RequireAuth } from "react-auth-kit";
 
-import Main from "./components/layout/Main";
+import Main from "./layout/Main";
 import "antd/dist/reset.css";
 import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";

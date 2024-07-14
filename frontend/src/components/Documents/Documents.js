@@ -13,7 +13,7 @@ import {
     SearchOutlined,
 } from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
-import { SubHeader } from '../layout/SubHeader';
+import { SubHeader } from '../../layout/SubHeader';
 
 const { Search } = Input;
 

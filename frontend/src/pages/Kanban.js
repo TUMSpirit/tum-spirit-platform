@@ -14,7 +14,7 @@ import { PlusOutlined, ExclamationOutlined } from "@ant-design/icons";
 import mastercard from "../assets/images/mastercard-logo.png";
 import paypal from "../assets/images/paypal-logo-2.png";
 import visa from "../assets/images/visa-logo.png";
-import Home from "../components/Board_new/Home";
+import Home from "../components/Kanban/Home";
 import RunningText from '../components/Intro/Intro copy 2';
 
 function Kanban() {

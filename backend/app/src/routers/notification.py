@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJsonSchema
 from pymongo import MongoClient
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException
 
 from app.src.routers.auth import get_current_user, User
@@ -47,10 +47,11 @@ PyObjectId = Annotated[
 
 class NotificationModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    teamId: PyObjectId
+    team_id: PyObjectId
     title: Optional[str] = ""
     description: Optional[str] = ""
     type: Optional[str] = ""
+    timestamp: datetime
 
     class Config:
             allow_population_by_field_name = True
@@ -59,7 +60,7 @@ class NotificationModel(BaseModel):
 
 
 class NotificationCreate(BaseModel):
-    teamId: PyObjectId
+    team_id: PyObjectId
     title: Optional[str] = ""
     description: Optional[str] = ""
     type: Optional[str] = ""
@@ -82,7 +83,7 @@ def add_notification(notification: NotificationCreate, current_user: User = Depe
     try:
 
         record = {
-            'teamId': notification.teamId,
+            'team_id': notification.team_id,
             'title': notification.title,
             'description': notification.description,
             'type': notification.type,

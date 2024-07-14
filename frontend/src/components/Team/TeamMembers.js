@@ -1,4 +1,4 @@
-// TeamMembers.js
+// Team.js
 import React, { useEffect, useState } from 'react';
 import { Table, Avatar, Tag } from 'antd';
 import axios from 'axios';

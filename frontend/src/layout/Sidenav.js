@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Menu, Button } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
-import logo from "../../assets/images/Spirit.png";
+import logo from "../assets/images/Spirit.png";
 import { AimOutlined, CalendarFilled, LineChartOutlined, RobotFilled, HomeOutlined, HomeFilled } from '@ant-design/icons';
 import { Typography } from 'antd';
-import Chatbot from "../AiChat/chat-bubble";
+import Chatbot from "../components/AiChat/chat-bubble";
 
 
 function Sidenav({ color }) {

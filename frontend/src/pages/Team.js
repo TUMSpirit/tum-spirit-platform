@@ -12,7 +12,7 @@ import {
     Avatar,
     Typography,
 } from "antd";
-import TeamMembers from '../components/TeamMembers/TeamMembers';
+import TeamMembers from '../components/Team/TeamMembers';
 function Team() {
 
     return (

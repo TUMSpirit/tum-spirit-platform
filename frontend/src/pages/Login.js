@@ -46,7 +46,7 @@ function Login(props) {
 
       signIn({
         token: response.data.access_token,
-        expiresIn: 3600,
+        expiresIn: 4320000,
         tokenType: "bearer",
         authState: { username: values.username},
       });
