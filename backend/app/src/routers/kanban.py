@@ -56,9 +56,9 @@ class TaskModel(BaseModel):
 
 
     class Config:
-            populate_by_name = True
-            arbitrary_types_allowed = True #required for the _id 
-            json_encoders = {ObjectId: str}
+        populate_by_name = True
+        arbitrary_types_allowed = True #required for the _id
+        json_encoders = {ObjectId: str}
 
 
 class TaskCreate(BaseModel):
@@ -69,19 +69,19 @@ class TaskCreate(BaseModel):
     priority: str
     deadline: int
     tags: List
-    
+
     class Config:
-            allow_population_by_field_name = True
-            arbitrary_types_allowed = True #required for the _id 
-            json_encoders = {ObjectId: str}
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True #required for the _id
+        json_encoders = {ObjectId: str}
 
 class Task(TaskCreate):
     id: PyObjectId
 
     class Config:
-            allow_population_by_field_name = True
-            arbitrary_types_allowed = True #required for the _id 
-            json_encoders = {ObjectId: str}
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True #required for the _id
+        json_encoders = {ObjectId: str}
 
 
 # Define a route to insert a record into the database
@@ -106,7 +106,7 @@ def insert_task(task_entry: TaskCreate, current_user: Annotated[User, Depends(ge
     except Exception as e:
         # If something goes wrong, raise an HTTP exception
         raise HTTPException(status_code=500, detail=str(e))
-    
+
     # Define a route to insert a record into the database
 
 @router.put("/kanban/update-task/{task_id}", response_model=TaskCreate, tags=["kanban"])
@@ -116,7 +116,7 @@ def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[Us
         if not existing_entry:
             raise HTTPException(status_code=404, detail="Entry not found or not authorized")
 
-        
+
         # Create a record with a random ID (ObjectId) and a timestamp
         update_record = {
             'teamId': task_entry.teamId,
@@ -129,8 +129,8 @@ def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[Us
             'timestamp': datetime.now()
         }
         # Inserting the record into the database
-        
-          # Update-Anfrage an die MongoDB
+
+        # Update-Anfrage an die MongoDB
         result = collection.update_one(
             {"_id": ObjectId(task_id)},
             {"$set": update_record}
@@ -145,7 +145,7 @@ def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[Us
         raise HTTPException(status_code=500, detail=str(e))
 
 
-    
+
     # Define a route to insert a record into the database
 @router.delete("/kanban/delete-task/{task_id}", response_model=dict, tags=["kanban"])
 def delete_task(task_id: str, current_user: Annotated[User, Depends(get_current_user)]):
@@ -164,10 +164,10 @@ def delete_task(task_id: str, current_user: Annotated[User, Depends(get_current_
         return {"message": "Entry deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @router.get("/kanban/get-tasks", response_model=List[Task], tags=["kanban"])
 def get_tasks(current_user: Annotated[User, Depends(get_current_user)],
-):
+              ):
     try:
         # Create a record with a random ID (ObjectId) and a timestamp
         # Inserting the record into the database
@@ -178,11 +178,11 @@ def get_tasks(current_user: Annotated[User, Depends(get_current_user)],
 
         #print(items)
         return items
-          # Print the results
+        # Print the results
         #output = list(result)
-       # total_entries = collection.count_documents(query)
-        # Return the ID of the inserted record
-      
+    # total_entries = collection.count_documents(query)
+    # Return the ID of the inserted record
+
 
     except Exception as e:
         # If something goes wrong, raise an HTTP exception

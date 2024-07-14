@@ -1,20 +1,21 @@
-import React, {useEffect, useState, useRef, useCallback} from 'react';
-import {Button, ConfigProvider, Tabs, Dropdown, Menu} from "antd";
-import {EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined} from '@ant-design/icons';
-import {useSubHeaderContext} from "../layout/SubHeaderContext";
+import React, { useEffect, useState } from 'react';
+import { Button, ConfigProvider, Tabs, Dropdown, Menu } from "antd";
+import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
+import { useSubHeaderContext } from "../layout/SubHeaderContext";
 import Search from "antd/es/input/Search";
 import axios from 'axios';
-import {useAuthHeader} from 'react-auth-kit';
+import { useAuthHeader } from 'react-auth-kit';
 import PollMessage from './PollMessage';
 
 const tabsItems = [
-    {key: '1', label: 'Group Chat', children: ''},
-    {key: '2', label: 'Martin', children: ''},
-    {key: '3', label: 'Peter', children: ''},
-    {key: '4', label: 'Sophie', children: ''},
+    { key: '1', label: 'Group Chat', children: '' },
+    { key: '2', label: 'Martin', children: '' },
+    { key: '3', label: 'Peter', children: '' },
+    { key: '4', label: 'Sophie', children: '' },
 ];
 
 const ChatBody = ({
+                      id,
                       currentTab,
                       setCurrentTab,
                       socket,
@@ -25,17 +26,18 @@ const ChatBody = ({
                       onRemoveReaction,
                       setReplyingTo,
                       setMessage,
-                      typingUser
+                      typingUser,
+                      currentUser,
+                      onScroll
                   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-    const {updateSubHeader} = useSubHeaderContext();
+    const { updateSubHeader } = useSubHeaderContext();
     const senderIcon = require('../../assets/images/avatar3.png');
     const [pollResults, setPollResults] = useState([]);
     const recipientIcon = require('../../assets/images/avatar2.png');
     const authHeader = useAuthHeader();
-    const [currentUser, setCurrentUser] = useState(null);
 
     const canEditOrDelete = (timestamp) => {
         const now = Date.now();
@@ -43,26 +45,6 @@ const ChatBody = ({
         const diff = now - messageTime;
         return diff <= 5 * 60 * 1000;
     };
-
-    const fetchCurrentUser = useCallback(async () => {
-        if (!currentUser) {
-            try {
-                const response = await axios.get('http://localhost:8000/api/me', {
-                    headers: {
-                        'Authorization': authHeader(),
-                    },
-                });
-                console.log("Fetched Current User:", response.data);
-                setCurrentUser(response.data);
-            } catch (error) {
-                console.error('Failed to fetch current user:', error);
-            }
-        }
-    }, [authHeader, currentUser]);
-
-    useEffect(() => {
-        fetchCurrentUser();
-    }, [fetchCurrentUser]);
 
     const fetchMessage = async (messageId) => {
         try {
@@ -98,7 +80,7 @@ const ChatBody = ({
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         date.setHours(date.getHours());
-        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     const handleSearch = (value) => {
@@ -109,7 +91,7 @@ const ChatBody = ({
         } else {
             const lowerCaseTerm = value.toLowerCase();
             const foundIndexes = messages
-                .map((message, index) => ({text: message.content.toLowerCase(), index}))
+                .map((message, index) => ({ text: message.content.toLowerCase(), index }))
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
@@ -136,7 +118,7 @@ const ChatBody = ({
         const messageId = messages[index].id;
         const element = document.getElementById(`message-${messageId}`);
         if (element) {
-            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     };
 
@@ -146,7 +128,7 @@ const ChatBody = ({
             <p className={`text-xl`}>
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
-                        <span key={index} style={{backgroundColor: 'yellow'}}>{part}</span>
+                        <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
                     ) : part
                 )}
             </p>
@@ -165,11 +147,11 @@ const ChatBody = ({
     };
 
     const menu = (messageId) => (
-        <Menu onClick={({key}) => handleMenuClick(key, messageId)}>
-            <Menu.Item key="edit" icon={<EditOutlined/>}>Edit</Menu.Item>
+        <Menu onClick={({ key }) => handleMenuClick(key, messageId)}>
+            <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
             <Menu.SubMenu
                 key="delete"
-                icon={<DeleteOutlined/>}
+                icon={<DeleteOutlined />}
                 title="Delete"
             >
                 <Menu.Item key="confirmDelete">
@@ -197,9 +179,9 @@ const ChatBody = ({
             const message = messages.find(msg => msg.id === messageId);
             const existingEmoji = message.reactions && Object.values(message.reactions).includes(emoji);
             if (existingEmoji) {
-                socket.emit('removeEmojiReaction', {messageId, token: authHeader().split(" ")[1]});
+                socket.emit('removeEmojiReaction', { messageId, token: authHeader().split(" ")[1] });
             } else {
-                socket.emit('emojiReaction', {messageId, emoji, token: authHeader().split(" ")[1]});
+                socket.emit('emojiReaction', { messageId, emoji, token: authHeader().split(" ")[1] });
             }
         } catch (error) {
             console.error("Failed to fetch or update message:", error);
@@ -210,7 +192,7 @@ const ChatBody = ({
         <Menu onClick={(e) => handleMenuClickRe(e, messageId)}>
             <Menu.SubMenu
                 key="delete"
-                icon={<SmileOutlined/>}
+                icon={<SmileOutlined />}
                 title="Reaction"
             >
                 <Menu.Item key="firstEmote">
@@ -226,7 +208,7 @@ const ChatBody = ({
                     🔃
                 </Menu.Item>
             </Menu.SubMenu>
-            <Menu.Item key="reply" icon={<MessageOutlined/>}>Reply</Menu.Item>
+            <Menu.Item key="reply" icon={<MessageOutlined />}>Reply</Menu.Item>
         </Menu>
     );
 
@@ -242,7 +224,7 @@ const ChatBody = ({
         } else if (e.key === "reply") {
             const messageToReplyTo = await fetchMessage(messageId);
             if (messageToReplyTo) {
-                setReplyingTo({messageId: messageToReplyTo.id, content: messageToReplyTo.content});
+                setReplyingTo({ messageId: messageToReplyTo.id, content: messageToReplyTo.content });
             }
         }
     };
@@ -256,12 +238,12 @@ const ChatBody = ({
 
     useEffect(() => {
         const subHeaderContent = (
-            <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2">
+            <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2 relative">
                 <ConfigProvider
                     theme={{
                         token: {
-                            lineHeight: 1.2,
-                            lineWidth: 2,
+                            lineHeight: 1.3,
+                            lineWidth: 10,
                         },
                     }}
                 >
@@ -271,6 +253,10 @@ const ChatBody = ({
                             onChange={(key) => setCurrentTab(key)}
                             items={tabsItems}
                             size="large"
+                            tabBarStyle={{
+                                marginTop: '4px',
+                                borderBottom: 'none'
+                            }}
                         />
                     </div>
                 </ConfigProvider>
@@ -292,6 +278,7 @@ const ChatBody = ({
                         className="max-w-[300px]"
                     />
                 </div>
+                <div className="border-t-2 border-gray-200 absolute bottom-0 w-full"></div>
             </div>
         );
         updateSubHeader(subHeaderContent);
@@ -304,33 +291,8 @@ const ChatBody = ({
         }
     }, [currentResultIndex, searchResults, messages, searchTerm]);
 
-    useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-    }, [messages]);
-
-    useEffect(() => {
-        socket.on('initialPollData', (pollData) => {
-            setPollResults(pollData);
-        });
-
-        return () => {
-            socket.off('initialPollData');
-        };
-    }, [socket]);
-
-    const getPollVotes = (pollId) => {
-        const poll = pollResults.find(p => p.id === pollId);
-        return poll ? poll.votes : Array(pollResults.options?.length || 0).fill(0);
-    };
-
     return (
-        <div
-            className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative">
-            {typingUser && (
-                <div className="absolute bottom-8 left-20 text-gray-500 text-lg">
-                    {typingUser} is typing...
-                </div>
-            )}
+        <div id={id} className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative" onScroll={onScroll}>
             {messages.map((message, index) => {
                 if (message.deleted) {
                     return null;
@@ -344,112 +306,102 @@ const ChatBody = ({
 
                 if (message.isPoll) {
                     const [title, ...options] = message.content.replace('/Create Poll:', '').split(',').map(item => item.trim());
-                    const poll = {title, options, id: message.id, votes: getPollVotes(message.id)};
+
 
                     return (
-                        <div key={message.id}
-                             className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                        <div key={message.id} className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
                             {isSender && canEditOrDelete(message.timestamp) && (
                                 <div className="flex justify-end items-center">
-                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
-                                              className="p-2">
-                                        <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight" className="p-2">
+                                        <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                     </Dropdown>
                                 </div>
                             )}
-                            <div
-                                className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
-                                <PollMessage poll={poll} socket={socket}/>
-                                <span
-                                    className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                            <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                             </div>
                         </div>
                     );
                 }
 
                 return (
-                    <div key={message.id} id={`message-${message.id}`}
-                         className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                    <div key={message.id} id={`message-${message.id}`} className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
                         {isSender && canEditOrDelete(message.timestamp) && (
                             <div className="flex justify-end items-center">
-                                <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
-                                          className="p-2">
-                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight" className="p-2">
+                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                 </Dropdown>
                             </div>
                         )}
 
                         {isSender ? (
                             <>
-                                <div
-                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     {isReplyingTo && (
                                         <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
                                             <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                         </div>
                                     )}
                                     {message.isGif ? (
-                                        <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
+                                        <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
                                     ) : (
                                         <p>{highlightText(message.content, searchTerm)}</p>
                                     )}
                                     <div className="flex items-center">
                                         {reactions.map((reaction, idx) => (
-                                            <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
-                                                  onClick={() => onEmojiClick(message.id, reaction)}>
+                                            <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl" onClick={() => onEmojiClick(message.id, reaction)}>
                                                 {reaction}
                                             </span>
                                         ))}
                                     </div>
-                                    <span
-                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                    <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <img src={senderIcon} alt="Sender Icon"
-                                     className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"/>
+                                <img src={senderIcon} alt="Sender Icon" className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full" />
                             </>
                         ) : (
                             <>
-                                <img src={recipientIcon} alt="Recipient Icon"
-                                     className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full"/>
-                                <div
-                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <img src={recipientIcon} alt="Recipient Icon" className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full" />
+                                <div className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     <div>
                                         {isReplyingTo && (
                                             <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
-                                                <span
-                                                    className="font-semibold">{truncateText(isReplyingTo.content)}</span>
+                                                <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                             </div>
                                         )}
                                         {message.isGif ? (
-                                            <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
+                                            <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
                                         ) : (
                                             <p>{highlightText(message.content, searchTerm)}</p>
                                         )}
                                         <div className="flex items-center">
                                             {reactions.map((reaction, idx) => (
-                                                <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
-                                                      onClick={() => onEmojiClick(message.id, reaction)}>
+                                                <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl" onClick={() => onEmojiClick(message.id, reaction)}>
                                                     {reaction}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
-                                    <span
-                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                    <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <Dropdown overlay={menuRe(message.id)} trigger={['click']}
-                                          placement="bottomLeft"
-                                          className="p-2">
-                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft" className="p-2">
+                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                 </Dropdown>
                             </>
                         )}
                     </div>
                 );
             })}
-            <div ref={lastMessageRef}/>
+            <div ref={lastMessageRef} />
+            <div className="absolute left-0 right-0 px-4 pb-4 flex justify-center">
+                {typingUser && typingUser.teamId === currentUser.team_id && (
+                    <div className="text-gray-500 text-lg">
+                        {typingUser} is typing...
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 export default ChatBody;
+

@@ -1,12 +1,12 @@
-import React, {useState, useEffect, useCallback, useRef} from 'react';
-import {Button, Tooltip, Input, Modal, Upload, message} from 'antd';
-import {PlusOutlined, SmileOutlined, SendOutlined, UploadOutlined, GifOutlined} from "@ant-design/icons";
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Tooltip, Input, Modal, Upload, message } from 'antd';
+import { PlusOutlined, SmileOutlined, SendOutlined, UploadOutlined, GifOutlined } from "@ant-design/icons";
 import Picker from 'emoji-picker-react';
 import GifPicker from 'gif-picker-react';
 import axios from "axios";
-import {useAuthHeader} from 'react-auth-kit';
+import { useAuthHeader } from 'react-auth-kit';
 
-const postFiles = async ({files}, authHeader) => {
+const postFiles = async ({ files }, authHeader) => {
     const formData = new FormData();
     files.fileList.forEach(file => {
         if (file.originFileObj) {
@@ -39,7 +39,8 @@ const ChatFooter = ({
                         replyingTo,
                         setReplyingTo,
                         isTyping,
-                        setIsTyping
+                        setIsTyping,
+                        currentUser
                     }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
@@ -52,28 +53,7 @@ const ChatFooter = ({
     const authHeader = useAuthHeader();
     const [fileList, setFileList] = useState([]);
     const emojiPickerRef = useRef(null);
-    const [currentUser, setCurrentUser] = useState(null);
     const typingTimeoutRef = useRef(null);
-
-    const fetchCurrentUser = useCallback(async () => {
-        if (!currentUser) {
-            try {
-                const response = await axios.get('http://localhost:8000/api/me', {
-                    headers: {
-                        'Authorization': authHeader(),
-                    },
-                });
-                console.log("Fetched Current User:", response.data);
-                setCurrentUser(response.data);
-            } catch (error) {
-                console.error('Failed to fetch current user:', error);
-            }
-        }
-    }, [authHeader, currentUser]);
-
-    useEffect(() => {
-        fetchCurrentUser();
-    }, [fetchCurrentUser]);
 
     const toggleGifPicker = () => {
         setShowGifPicker(!showGifPicker);
@@ -138,7 +118,7 @@ const ChatFooter = ({
         }
         setMessage('');
         setReplyingTo(null);
-        socket.emit('stop typing', currentUser.username);
+        socket.emit('stop typing', { user: currentUser.username, teamId: currentUser.team_id });
         setIsTyping(false);
     };
 
@@ -180,12 +160,12 @@ const ChatFooter = ({
 
         if (!isTyping) {
             setIsTyping(true);
-            socket.emit('typing', currentUser.username);
+            socket.emit('typing', { user: currentUser.username, teamId: currentUser.team_id });
         }
 
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
-            socket.emit('stop typing', currentUser.username);
+            socket.emit('stop typing', { user: currentUser.username, teamId: currentUser.team_id });
             setIsTyping(false);
         }, 3000);
     };
@@ -222,8 +202,8 @@ const ChatFooter = ({
 
     const handleUploadModalOk = async () => {
         const authHeaderString = authHeader();
-        const files = {fileList};
-        await postFiles({files}, authHeaderString);
+        const files = { fileList };
+        await postFiles({ files }, authHeaderString);
         setIsUploadModalVisible(false);
         setFileList([]);
     };
@@ -233,7 +213,7 @@ const ChatFooter = ({
         setFileList([]);
     };
 
-    const handleFileChange = ({fileList}) => {
+    const handleFileChange = ({ fileList }) => {
         setFileList(fileList);
     };
 
@@ -261,7 +241,7 @@ const ChatFooter = ({
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}
-                            icon={<PlusOutlined/>}
+                            icon={<PlusOutlined />}
                             onClick={showUploadModal}
                         />
                     </Tooltip>
@@ -274,17 +254,17 @@ const ChatFooter = ({
                             <div className="relative flex items-center">
                                 <Tooltip title="Emoticons">
                                     <div onClick={toggleEmojiPicker} className="cursor-pointer">
-                                        <SmileOutlined style={{fontSize: '24px', color: '#3d72b5'}}/>
+                                        <SmileOutlined style={{ fontSize: '24px', color: '#3d72b5' }} />
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
                                     <div ref={emojiPickerRef} className="absolute bottom-12 right-0 z-20">
-                                        <Picker onEmojiClick={onEmojiClick}/>
+                                        <Picker onEmojiClick={onEmojiClick} />
                                     </div>
                                 )}
                                 <Tooltip title="GIFs">
                                     <div onClick={toggleGifPicker} className="cursor-pointer ml-2">
-                                        <GifOutlined style={{fontSize: '24px', color: '#3d72b5'}}/>
+                                        <GifOutlined style={{ fontSize: '24px', color: '#3d72b5' }} />
                                     </div>
                                 </Tooltip>
                             </div>
@@ -311,7 +291,7 @@ const ChatFooter = ({
                         <Button
                             type="primary"
                             shape="circle"
-                            icon={<SendOutlined/>}
+                            icon={<SendOutlined />}
                             className="bg-blue-600 text-white"
                             style={{
                                 fontSize: '24px',
@@ -346,7 +326,7 @@ const ChatFooter = ({
                     beforeUpload={() => false}
                     onChange={handleFileChange}
                 >
-                    <Button icon={<UploadOutlined/>}>Select File</Button>
+                    <Button icon={<UploadOutlined />}>Select File</Button>
                 </Upload>
             </Modal>
             {showGifPicker && (
@@ -356,7 +336,7 @@ const ChatFooter = ({
                     onCancel={() => setShowGifPicker(false)}
                     footer={null}
                 >
-                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"}/>
+                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
                 </Modal>
             )}
         </div>

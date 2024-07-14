@@ -1,11 +1,11 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
 import socketIO from "socket.io-client";
-import {Typography} from "antd";
-import {useAuthHeader} from 'react-auth-kit';
+import { Typography } from "antd";
+import { useAuthHeader } from 'react-auth-kit';
 
-const {Title} = Typography;
+const { Title } = Typography;
 const socket = socketIO.connect("http://localhost:4000");
 
 const Chat = () => {
@@ -19,16 +19,35 @@ const Chat = () => {
     const [typingUser, setTypingUser] = useState(null);
     const HEADER_HEIGHT_PX = 256;
     const authHeader = useAuthHeader();
+    const [currentUser, setCurrentUser] = useState(null);
+    const [autoScroll, setAutoScroll] = useState(true);
+
+    const fetchCurrentUser = useCallback(async () => {
+        if (!currentUser) {
+            try {
+                const response = await fetch('http://localhost:8000/api/me', {
+                    headers: {
+                        'Authorization': authHeader(),
+                    },
+                });
+                const data = await response.json();
+                setCurrentUser(data);
+                socket.emit('joinTeam', data.team_id); // Ensure user joins the correct team room
+            } catch (error) {
+                console.error('Failed to fetch current user:', error);
+            }
+        }
+    }, [authHeader, currentUser]);
 
     const handleRemoveReaction = (updatedMessages) => {
         setMessages(updatedMessages);
     };
 
     const handleDeleteMessage = (message) => {
-        socket.emit('deleteMessage', {messageId: message.id, token: authHeader().split(" ")[1]});
+        socket.emit('deleteMessage', { messageId: message.id, token: authHeader().split(" ")[1], teamId: currentUser.team_id });
     };
 
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         try {
             const response = await fetch(`http://localhost:8000/api/chat/get-messages`, {
                 method: 'GET',
@@ -37,50 +56,69 @@ const Chat = () => {
                 }
             });
             const data = await response.json();
-            console.log("Fetched messages:", data);
             setMessages(data || []);
         } catch (error) {
             console.error("Failed to fetch messages:", error);
         }
-    };
+    }, [authHeader]);
 
     useEffect(() => {
-        fetchMessages();
-    }, [currentTab]);
+        fetchCurrentUser();
+    }, [fetchCurrentUser]);
 
     useEffect(() => {
+        if (currentUser) {
+            fetchMessages();
+        }
+    }, [currentTab, fetchMessages, currentUser]);
+
+    useEffect(() => {
+        if (!currentUser) return;
+
         socket.on("messageResponse", (data) => {
-            setMessages(prevMessages => [...prevMessages, data]);
+            if (data.teamId === currentUser.team_id) {
+                setMessages(prevMessages => {
+                    const newMessages = [...prevMessages, data];
+                    setAutoScroll(true); // Enable auto scroll on new message
+                    return newMessages;
+                });
+            }
         });
 
         socket.on('messageUpdated', (updatedMessage) => {
-            setMessages(prevMessages => {
-                const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
-                if (index !== -1) {
-                    const newMessages = [...prevMessages];
-                    newMessages[index] = updatedMessage;
-                    return newMessages;
-                }
-                return prevMessages;
-            });
+            if (updatedMessage.teamId === currentUser.team_id) {
+                setMessages(prevMessages => {
+                    const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
+                    if (index !== -1) {
+                        const newMessages = [...prevMessages];
+                        newMessages[index] = updatedMessage;
+                        return newMessages;
+                    }
+                    return prevMessages;
+                });
+            }
         });
 
         socket.on('emojiReactionRemoved', (updatedMessage) => {
-            setMessages(currentMessages => currentMessages.map(msg => {
-                if (msg.id === updatedMessage.id) {
-                    return updatedMessage;
-                }
-                return msg;
-            }));
+            if (updatedMessage.teamId === currentUser.team_id) {
+                setMessages(currentMessages => currentMessages.map(msg => {
+                    if (msg.id === updatedMessage.id) {
+                        return updatedMessage;
+                    }
+                    return msg;
+                }));
+            }
         });
 
         socket.on('emojiReactionUpdated', (updatedMessage) => {
-            setMessages(currentMessages => currentMessages.map(msg => {
-                if (msg.id === updatedMessage.id) {
-                    return updatedMessage;
-                }
-                return msg;
-            }));
+            if (updatedMessage.teamId === currentUser.team_id) {
+                setMessages(currentMessages => currentMessages.map(msg => {
+                    if (msg.id === updatedMessage.id) {
+                        return updatedMessage;
+                    }
+                    return msg;
+                }));
+            }
         });
 
         socket.on('messageDeleted', (messageId) => {
@@ -88,15 +126,20 @@ const Chat = () => {
         });
 
         socket.on('messagesUpdated', (updatedMessages) => {
-            setMessages(updatedMessages);
+            const filteredMessages = updatedMessages.filter(msg => msg.teamId === currentUser.team_id);
+            setMessages(filteredMessages);
         });
 
-        socket.on('typing', (user) => {
-            setTypingUser(user);
+        socket.on('typing', (data) => {
+            if (data.teamId === currentUser.team_id) {
+                setTypingUser(data.user);
+            }
         });
 
-        socket.on('stop typing', () => {
-            setTypingUser(null);
+        socket.on('stop typing', (data) => {
+            if (data.teamId === currentUser.team_id) {
+                setTypingUser(null);
+            }
         });
 
         return () => {
@@ -109,18 +152,34 @@ const Chat = () => {
             socket.off('typing');
             socket.off('stop typing');
         };
-    }, [socket]);
+    }, [socket, currentUser]);
 
     useEffect(() => {
-        lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
-    }, [messages]);
+        if (autoScroll) {
+            lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setAutoScroll(false);
+        }
+    }, [messages, autoScroll]);
+
+    const handleScroll = () => {
+        const element = document.getElementById('chat-body');
+        if (element) {
+            const { scrollTop, scrollHeight, clientHeight } = element;
+            if (scrollTop + clientHeight >= scrollHeight - 50) {
+                setAutoScroll(true);
+            } else {
+                setAutoScroll(false);
+            }
+        }
+    };
 
     return (
         <div
             className="mx-auto flex flex-col"
-            style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
+            style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
         >
             <ChatBody
+                id="chat-body"
                 currentTab={currentTab}
                 setCurrentTab={setCurrentTab}
                 messages={messages}
@@ -133,6 +192,8 @@ const Chat = () => {
                 setReplyingTo={setReplyingTo}
                 setMessage={setMessage}
                 typingUser={typingUser}
+                currentUser={currentUser} // Make sure currentUser is passed to ChatBody
+                onScroll={handleScroll}
             />
             <ChatFooter
                 socket={socket}
@@ -144,6 +205,7 @@ const Chat = () => {
                 setReplyingTo={setReplyingTo}
                 isTyping={isTyping}
                 setIsTyping={setIsTyping}
+                currentUser={currentUser} // Make sure currentUser is passed to ChatFooter
             />
         </div>
     );

@@ -39,7 +39,7 @@ services:
     tty: true
     command: "serve && run llama2"
     restart: unless-stopped
-    
+
 volumes:
   mongodb_data:
   ollama:
