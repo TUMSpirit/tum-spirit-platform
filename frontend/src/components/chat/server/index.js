@@ -21,6 +21,12 @@ app.use(express.json());
 socketIO.on('connection', (socket) => {
     console.log(`${socket.id} user just connected!`);
 
+    // Join team room
+    socket.on('joinTeam', (teamId) => {
+        socket.join(teamId);
+        console.log(`User ${socket.id} joined team ${teamId}`);
+    });
+
     socket.on("message", async (data) => {
         if (data.isPoll) {
             const pollOptions = data.content.replace('/Create Poll:', '').split(',').map(item => item.trim());
@@ -46,7 +52,7 @@ socketIO.on('connection', (socket) => {
                     "Authorization": `Bearer ${data.token}`
                 }
             });
-            socketIO.emit("messageResponse", response.data);
+            socketIO.to(data.teamId).emit("messageResponse", response.data);
         } catch (err) {
             console.error(err);
         }
@@ -63,45 +69,47 @@ socketIO.on('connection', (socket) => {
 
     socket.emit('initialPollData', pollData);
 
-    socket.on("emojiReaction", async ({messageId, emoji, token}) => {
+    socket.on("emojiReaction", async ({ messageId, emoji, token }) => {
         try {
-            const response = await axios.put(`http://localhost:8000/api/chat/add-reaction/${messageId}`, {emoji}, {
+            const response = await axios.put(`http://localhost:8000/api/chat/add-reaction/${messageId}`, { emoji }, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             });
-            socketIO.emit('emojiReactionUpdated', response.data);
+            socketIO.to(response.data.teamId).emit('emojiReactionUpdated', response.data);
         } catch (err) {
             console.error(err);
         }
     });
 
     socket.on('typing', (data) => {
-        socket.broadcast.emit('typing', data);
+        console.log('User typing:', data);
+        socket.to(data.teamId).emit('typing', data);
     });
 
     socket.on('stop typing', (data) => {
-        socket.broadcast.emit('stop typing', data);
+        console.log('User stopped typing:', data);
+        socket.to(data.teamId).emit('stop typing', data);
     });
 
     socket.on('disconnect', () => {
         console.log('A user disconnected');
     });
 
-    socket.on("removeEmojiReaction", async ({messageId, token}) => {
+    socket.on("removeEmojiReaction", async ({ messageId, token }) => {
         try {
             const response = await axios.put(`http://localhost:8000/api/chat/remove-reaction/${messageId}`, {}, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             });
-            socketIO.emit('emojiReactionRemoved', response.data);
+            socketIO.to(response.data.teamId).emit('emojiReactionRemoved', response.data);
         } catch (err) {
             console.error(err);
         }
     });
 
-    socket.on("deleteMessage", async ({messageId, token}) => {
+    socket.on("deleteMessage", async ({ messageId, token }) => {
         try {
             const response = await axios.delete(`http://localhost:8000/api/chat/delete-message/${messageId}`, {
                 headers: {
@@ -109,7 +117,7 @@ socketIO.on('connection', (socket) => {
                 }
             });
             if (response.status === 200) {
-                socketIO.emit('messageDeleted', messageId);
+                socketIO.to(response.data.teamId).emit('messageDeleted', messageId);
             }
         } catch (err) {
             console.error(err);
@@ -132,7 +140,7 @@ socketIO.on('connection', (socket) => {
                     "Authorization": `Bearer ${updatedMessage.token}`
                 }
             });
-            socketIO.emit('messageUpdated', response.data);
+            socketIO.to(response.data.teamId).emit('messageUpdated', response.data);
         } catch (err) {
             console.error(err);
         }
