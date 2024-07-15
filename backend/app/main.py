@@ -12,6 +12,8 @@ from .src.routers import kanban
 from .src.routers import language
 from .src.routers import timeline
 from .src.routers import notification
+from .src.routers import chat
+
 # from .src.routers import chat
 
 
@@ -26,6 +28,7 @@ def application_setup() -> FastAPI:
     application.include_router(celery.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
 
+    application.include_router(chat.router, prefix="/api")
     application.include_router(ai.router, prefix="/api")
     application.include_router(calendar.router, prefix="/api")
     application.include_router(kanban.router, prefix="/api")
