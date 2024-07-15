@@ -292,7 +292,9 @@ const ChatBody = ({
     }, [currentResultIndex, searchResults, messages, searchTerm]);
 
     return (
-        <div id={id} className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative" onScroll={onScroll}>
+        <div id={id}
+             className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative"
+             onScroll={onScroll}>
             {messages.map((message, index) => {
                 if (message.deleted) {
                     return null;
@@ -307,95 +309,110 @@ const ChatBody = ({
                 if (message.isPoll) {
                     const [title, ...options] = message.content.replace('/Create Poll:', '').split(',').map(item => item.trim());
 
-
                     return (
-                        <div key={message.id} className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                        <div key={message.id}
+                             className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
                             {isSender && canEditOrDelete(message.timestamp) && (
                                 <div className="flex justify-end items-center">
-                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight" className="p-2">
-                                        <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
+                                              className="p-2">
+                                        <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
                                     </Dropdown>
                                 </div>
                             )}
-                            <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
-                                <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                            <div
+                                className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <span
+                                    className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                             </div>
                         </div>
                     );
                 }
 
                 return (
-                    <div key={message.id} id={`message-${message.id}`} className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
+                    <div key={message.id} id={`message-${message.id}`}
+                         className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
                         {isSender && canEditOrDelete(message.timestamp) && (
                             <div className="flex justify-end items-center">
-                                <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight" className="p-2">
-                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
+                                          className="p-2">
+                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
                                 </Dropdown>
                             </div>
                         )}
 
                         {isSender ? (
                             <>
-                                <div className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <div
+                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     {isReplyingTo && (
                                         <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
                                             <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                         </div>
                                     )}
                                     {message.isGif ? (
-                                        <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                        <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
                                     ) : (
                                         <p>{highlightText(message.content, searchTerm)}</p>
                                     )}
                                     <div className="flex items-center">
                                         {reactions.map((reaction, idx) => (
-                                            <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl" onClick={() => onEmojiClick(message.id, reaction)}>
+                                            <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
+                                                  onClick={() => onEmojiClick(message.id, reaction)}>
                                                 {reaction}
                                             </span>
                                         ))}
                                     </div>
-                                    <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                    <span
+                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <img src={senderIcon} alt="Sender Icon" className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full" />
+                                <img src={senderIcon} alt="Sender Icon"
+                                     className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"/>
                             </>
                         ) : (
                             <>
-                                <img src={recipientIcon} alt="Recipient Icon" className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full" />
-                                <div className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                <img src={recipientIcon} alt="Recipient Icon"
+                                     className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full"/>
+                                <div
+                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     <div>
                                         {isReplyingTo && (
                                             <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
-                                                <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
+                                                <span
+                                                    className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                             </div>
                                         )}
                                         {message.isGif ? (
-                                            <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                            <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
                                         ) : (
                                             <p>{highlightText(message.content, searchTerm)}</p>
                                         )}
                                         <div className="flex items-center">
                                             {reactions.map((reaction, idx) => (
-                                                <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl" onClick={() => onEmojiClick(message.id, reaction)}>
+                                                <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
+                                                      onClick={() => onEmojiClick(message.id, reaction)}>
                                                     {reaction}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
-                                    <span className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                    <span
+                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft" className="p-2">
-                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft"
+                                          className="p-2">
+                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
                                 </Dropdown>
                             </>
                         )}
                     </div>
                 );
             })}
-            <div ref={lastMessageRef} />
+            <div ref={lastMessageRef}/>
             <div className="absolute left-0 right-0 px-4 pb-4 flex justify-center">
                 {typingUser && typingUser.teamId === currentUser.team_id && (
                     <div className="text-gray-500 text-lg">
-                        {typingUser} is typing...
+                        {typingUser.user} is typing...
                     </div>
                 )}
             </div>
@@ -404,4 +421,3 @@ const ChatBody = ({
 };
 
 export default ChatBody;
-

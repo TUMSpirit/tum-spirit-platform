@@ -79,7 +79,7 @@ const Chat = () => {
             if (data.teamId === currentUser.team_id) {
                 setMessages(prevMessages => {
                     const newMessages = [...prevMessages, data];
-                    setAutoScroll(true); // Enable auto scroll on new message
+                    setAutoScroll(true);
                     return newMessages;
                 });
             }
@@ -131,13 +131,13 @@ const Chat = () => {
         });
 
         socket.on('typing', (data) => {
-            if (data.teamId === currentUser.team_id) {
-                setTypingUser(data.user);
+            if (data.teamId === currentUser.team_id && data.user !== currentUser.username) {
+                setTypingUser(data);
             }
         });
 
         socket.on('stop typing', (data) => {
-            if (data.teamId === currentUser.team_id) {
+            if (data.teamId === currentUser.team_id && data.user !== currentUser.username) {
                 setTypingUser(null);
             }
         });
@@ -192,7 +192,7 @@ const Chat = () => {
                 setReplyingTo={setReplyingTo}
                 setMessage={setMessage}
                 typingUser={typingUser}
-                currentUser={currentUser} // Make sure currentUser is passed to ChatBody
+                currentUser={currentUser}
                 onScroll={handleScroll}
             />
             <ChatFooter
@@ -205,7 +205,7 @@ const Chat = () => {
                 setReplyingTo={setReplyingTo}
                 isTyping={isTyping}
                 setIsTyping={setIsTyping}
-                currentUser={currentUser} // Make sure currentUser is passed to ChatFooter
+                currentUser={currentUser}
             />
         </div>
     );
