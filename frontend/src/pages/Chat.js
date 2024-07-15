@@ -5,6 +5,7 @@ import socketIO from "socket.io-client";
 import { Typography } from "antd";
 import { useAuthHeader } from 'react-auth-kit';
 
+
 const { Title } = Typography;
 const socket = socketIO.connect("http://localhost:4000");
 
