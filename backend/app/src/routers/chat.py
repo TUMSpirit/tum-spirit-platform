@@ -1,22 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
-from typing import Annotated, List, Optional, Dict
+from fastapi import APIRouter, Depends, HTTPException, Header, Body
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 from app.src.routers.auth import get_current_user, User
 
-# Create a router
 router = APIRouter()
 
-# Retrieve MongoDB credentials and database info
 MONGO_USER = "root"
 MONGO_PASSWORD = "example"
 MONGO_HOST = "mongo"
 MONGO_PORT = "27017"
 MONGO_DB = "TUMSpirit"
-
-# connection string
 MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
 
 
@@ -28,7 +24,8 @@ class Message(BaseModel):
     timestamp: datetime
     replyingTo: Optional[str] = None
     reactions: Optional[Dict[str, str]] = Field(default_factory=dict)
-    isGif: Optional[bool] = False  # Add isGif field
+    isGif: Optional[bool] = False
+    privateChatId: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -38,14 +35,13 @@ class Message(BaseModel):
         }
 
 
-# Connect to MongoDB
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chat']
 
 
 @router.post("/chat/new-message", tags=["chat"])
-def send_message(message: Message, current_user: Annotated[User, Depends(get_current_user)]):
+def send_message(message: Message, current_user: User = Depends(get_current_user)):
     try:
         if not message.content:
             raise HTTPException(status_code=400, detail="Message content cannot be empty")
@@ -57,7 +53,8 @@ def send_message(message: Message, current_user: Annotated[User, Depends(get_cur
             'timestamp': datetime.now(timezone.utc),
             'replyingTo': message.replyingTo if message.replyingTo else None,
             'reactions': {},
-            'isGif': message.isGif
+            'isGif': message.isGif,
+            'privateChatId': message.privateChatId
         }
 
         result = collection.insert_one(record)
@@ -74,8 +71,7 @@ def send_message(message: Message, current_user: Annotated[User, Depends(get_cur
 
 
 @router.put("/chat/add-reaction/{message_id}", tags=["chat"])
-def add_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)],
-                 emoji: str = Body(..., embed=True)):
+def add_reaction(message_id: str, emoji: str = Body(..., embed=True), current_user: User = Depends(get_current_user)):
     try:
         message = collection.find_one({"_id": ObjectId(message_id)})
         if not message:
@@ -100,7 +96,7 @@ def add_reaction(message_id: str, current_user: Annotated[User, Depends(get_curr
 
 
 @router.put("/chat/remove-reaction/{message_id}", tags=["chat"])
-def remove_reaction(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+def remove_reaction(message_id: str, current_user: User = Depends(get_current_user)):
     try:
         message = collection.find_one({"_id": ObjectId(message_id)})
         if not message:
@@ -125,7 +121,7 @@ def remove_reaction(message_id: str, current_user: Annotated[User, Depends(get_c
 
 
 @router.put("/chat/edit-message/{message_id}", tags=["chat"])
-def update_message(message_id: str, message: Message, current_user: Annotated[User, Depends(get_current_user)]):
+def update_message(message_id: str, message: Message, current_user: User = Depends(get_current_user)):
     try:
         existing_entry = collection.find_one({"_id": ObjectId(message_id)})
         if not existing_entry:
@@ -138,7 +134,9 @@ def update_message(message_id: str, message: Message, current_user: Annotated[Us
             'content': message.content,
             'timestamp': datetime.now(timezone.utc),
             'replyingTo': message.replyingTo if message.replyingTo else None,
-            'reactions': existing_entry.get('reactions', {})
+            'reactions': existing_entry.get('reactions', {}),
+            'isGif': message.isGif,
+            'privateChatId': message.privateChatId
         }
 
         result = collection.update_one(
@@ -163,7 +161,7 @@ def update_message(message_id: str, message: Message, current_user: Annotated[Us
 
 
 @router.delete("/chat/delete-message/{message_id}", tags=["chat"])
-def delete_message(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+def delete_message(message_id: str, current_user: User = Depends(get_current_user)):
     existing_entry = collection.find_one({"_id": ObjectId(message_id)})
     if not existing_entry:
         raise HTTPException(status_code=404, detail="Entry not found")
@@ -180,12 +178,16 @@ def delete_message(message_id: str, current_user: Annotated[User, Depends(get_cu
 
 
 @router.get("/chat/get-messages", tags=["chat"], response_model=List[Message])
-def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
+def get_messages(current_user: User = Depends(get_current_user), private_chat_id: Optional[str] = Header(None)):
     try:
         team_id = ObjectId(current_user["team_id"])
-        print(f"Fetching messages for team_id: {team_id}")
+        print(f"Fetching messages for team_id: {team_id} and private_chat_id: {private_chat_id}")
 
-        query = {'teamId': team_id}
+        if private_chat_id:
+            query = {'privateChatId': private_chat_id}
+        else:
+            query = {'teamId': team_id, 'privateChatId': None}
+
         items = []
 
         for item in collection.find(query):
@@ -196,6 +198,7 @@ def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
             item['timestamp'] = item['timestamp'] + timedelta(hours=2)
             item['reactions'] = dict(item.get('reactions', {}))
             item['isGif'] = item.get('isGif', False)
+            item['privateChatId'] = item.get('privateChatId', None)
             items.append(Message(**item))
 
         print(f"Total messages found: {len(items)}")
@@ -206,14 +209,15 @@ def get_messages(current_user: Annotated[User, Depends(get_current_user)]):
 
 
 @router.get("/chat/get-message/{message_id}", response_model=Message, tags=["chat"])
-def get_message(message_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+def get_message(message_id: str, current_user: User = Depends(get_current_user)):
     try:
         print(f"Fetching message with ID: {message_id}")
         message = collection.find_one({"_id": ObjectId(message_id)})
         if not message:
             print(f"Message with ID {message_id} not found")
             raise HTTPException(status_code=404, detail="Message not found")
-        if str(message["teamId"]) != str(current_user["team_id"]):
+        if str(message["teamId"]) != str(current_user["team_id"]) and not (
+                message.get("privateChatId") and current_user["username"] in message["privateChatId"]):
             print(f"User {current_user['username']} not authorized to access message ID {message_id}")
             raise HTTPException(status_code=403, detail="Not authorized to access this message")
         message['id'] = str(message['_id'])
@@ -221,6 +225,7 @@ def get_message(message_id: str, current_user: Annotated[User, Depends(get_curre
         message['timestamp'] = message['timestamp'] + timedelta(hours=2)
         message['reactions'] = dict(message.get('reactions', {}))
         message['isGif'] = message.get('isGif', False)
+        message['privateChatId'] = message.get('privateChatId', None)
         del message['_id']
         print(f"Message found: {message}")
         return Message(**message)
