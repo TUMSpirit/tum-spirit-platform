@@ -40,15 +40,18 @@ const ChatFooter = ({
                         setReplyingTo,
                         isTyping,
                         setIsTyping,
-                        currentUser
+                        currentUser,
+                        currentTab,
+                        teamMembers,
+                        privateChatId
                     }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [showCommands, setShowCommands] = useState(false);
-    const commands = [, 'Display Kanban Card', '/Create Poll', '/ask Ghost'];
+    const commands = ['Display Kanban Card', '/Create Poll', '/ask Ghost'];
     const displayKanbanCard = '/Display Kanban Card: ID : "ID"';
     const askGhost = '/ask Ghost';
-    const commandPoll = '/Create Poll: option1,option2, option3';
+    const commandPoll = '/Create Poll: option1,option2,option3';
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
     const authHeader = useAuthHeader();
     const [fileList, setFileList] = useState([]);
@@ -70,7 +73,8 @@ const ChatFooter = ({
             socketID: socket.id,
             timestamp: new Date().toISOString(),
             replyingTo: replyingTo ? replyingTo.messageId : null,
-            token: authHeader().split(" ")[1]
+            token: authHeader().split(" ")[1],
+            privateChatId: privateChatId,
         };
         socket.emit('message', userMessage);
         setShowGifPicker(false);
@@ -99,7 +103,8 @@ const ChatFooter = ({
                 senderId: editingMessage.senderId,
                 timestamp: editingMessage.timestamp,
                 replyingTo: editingMessage.replyingTo,
-                token: token
+                token: token,
+                privateChatId: privateChatId,
             };
             socket.emit('editMessage', updatedMessage);
             setEditingMessage(null);
@@ -112,6 +117,7 @@ const ChatFooter = ({
                 token: token,
                 replyingTo: replyingTo ? replyingTo.messageId : null,
                 isPoll: trimmedMessage.startsWith('/Create Poll'),
+                privateChatId: privateChatId,
             };
             console.log(`Sending message with replyingTo: ${userMessage.replyingTo}`);
             socket.emit('message', userMessage);

@@ -1,18 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Button, ConfigProvider, Tabs, Dropdown, Menu } from "antd";
+import React, { useState, useEffect, useRef } from 'react';
+import {Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar} from "antd";
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
-import { useSubHeaderContext } from "../layout/SubHeaderContext";
+import { useSubHeaderContext } from "../../layout/SubHeaderContext";
 import Search from "antd/es/input/Search";
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
-import PollMessage from './PollMessage';
-
-const tabsItems = [
-    { key: '1', label: 'Group Chat', children: '' },
-    { key: '2', label: 'Martin', children: '' },
-    { key: '3', label: 'Peter', children: '' },
-    { key: '4', label: 'Sophie', children: '' },
-];
 
 const ChatBody = ({
                       id,
@@ -28,16 +20,33 @@ const ChatBody = ({
                       setMessage,
                       typingUser,
                       currentUser,
-                      onScroll
+                      onScroll,
+                      teamMembers,
+                      privateChatId,
+                      currentUserAvatarColor
                   }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
     const { updateSubHeader } = useSubHeaderContext();
-    const senderIcon = require('../../assets/images/avatar3.png');
-    const [pollResults, setPollResults] = useState([]);
-    const recipientIcon = require('../../assets/images/avatar2.png');
     const authHeader = useAuthHeader();
+
+    const tabsItems = [
+        { key: '1', label: 'Group Chat', children: '' },
+        ...teamMembers.map((member, index) => ({
+            key: (index + 2).toString(),
+            label: member.username,
+            children: ''
+        })),
+    ];
+
+    const getAvatarColor = (username) => {
+        if (username === currentUser?.username) {
+            return currentUserAvatarColor;
+        }
+        const member = teamMembers.find(member => member.username === username);
+        return member ? member.avatar_color : '#FFFFFF';
+    };
 
     const canEditOrDelete = (timestamp) => {
         const now = Date.now();
@@ -167,10 +176,11 @@ const ChatBody = ({
     const handleMenuClick = async (key, messageId) => {
         console.log(`Menu clicked with key: ${key} and messageId: ${messageId}`);
         if (key === "edit") {
-            editMessage(messageId);
+            await editMessage(messageId);
         } else if (key === "confirmDelete") {
             const message = await fetchMessage(messageId);
-            onDeleteMessage(message);
+            onDeleteMessage(messageId);
+            socket.emit("deleteMessage", { messageId, token: authHeader().split(" ")[1] });
         }
     };
 
@@ -283,7 +293,7 @@ const ChatBody = ({
         );
         updateSubHeader(subHeaderContent);
         return () => updateSubHeader(null);
-    }, [currentTab, searchTerm, updateSubHeader]);
+    }, [currentTab, searchTerm, updateSubHeader, teamMembers]);
 
     useEffect(() => {
         if (searchTerm && currentResultIndex !== -1 && searchResults.length > 0) {
@@ -291,11 +301,19 @@ const ChatBody = ({
         }
     }, [currentResultIndex, searchResults, messages, searchTerm]);
 
+    const filteredMessages = messages.filter(message => {
+        if (privateChatId) {
+            return message.privateChatId === privateChatId;
+        } else {
+            return !message.privateChatId;
+        }
+    });
+
     return (
         <div id={id}
              className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative"
              onScroll={onScroll}>
-            {messages.map((message, index) => {
+            {filteredMessages.map((message, index) => {
                 if (message.deleted) {
                     return null;
                 }
@@ -303,31 +321,9 @@ const ChatBody = ({
                 const messageStyle = getMessageStyle(message.content);
                 const messageMarginTop = index === 0 ? "mt-6" : "";
                 const messageMarginBottom = "mb-6";
-                const isReplyingTo = messages.find(m => m.id === message.replyingTo);
+                const isReplyingTo = filteredMessages.find(m => m.id === message.replyingTo);
                 const reactions = message.reactions ? Object.values(message.reactions) : [];
-
-                if (message.isPoll) {
-                    const [title, ...options] = message.content.replace('/Create Poll:', '').split(',').map(item => item.trim());
-
-                    return (
-                        <div key={message.id}
-                             className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
-                            {isSender && canEditOrDelete(message.timestamp) && (
-                                <div className="flex justify-end items-center">
-                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
-                                              className="p-2">
-                                        <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
-                                    </Dropdown>
-                                </div>
-                            )}
-                            <div
-                                className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
-                                <span
-                                    className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
-                            </div>
-                        </div>
-                    );
-                }
+                const avatarColor = getAvatarColor(message.senderId);
 
                 return (
                     <div key={message.id} id={`message-${message.id}`}
@@ -336,7 +332,7 @@ const ChatBody = ({
                             <div className="flex justify-end items-center">
                                 <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
                                           className="p-2">
-                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                 </Dropdown>
                             </div>
                         )}
@@ -351,7 +347,7 @@ const ChatBody = ({
                                         </div>
                                     )}
                                     {message.isGif ? (
-                                        <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
+                                        <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
                                     ) : (
                                         <p>{highlightText(message.content, searchTerm)}</p>
                                     )}
@@ -366,13 +362,16 @@ const ChatBody = ({
                                     <span
                                         className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <img src={senderIcon} alt="Sender Icon"
-                                     className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"/>
+                                <Avatar className="w-12 h-12 ml-6 md:ml-10 mr-8" style={{ backgroundColor: avatarColor }}>
+                                    {message.senderId[0]}
+                                </Avatar>
                             </>
                         ) : (
                             <>
-                                <img src={recipientIcon} alt="Recipient Icon"
-                                     className="w-12 h-12 md:mr-10 ml-8 mr-6 rounded-full"/>
+                                <div
+                                    className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"
+                                    style={{ backgroundColor: avatarColor }}>
+                                </div>
                                 <div
                                     className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
                                     <div>
@@ -383,7 +382,7 @@ const ChatBody = ({
                                             </div>
                                         )}
                                         {message.isGif ? (
-                                            <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
+                                            <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
                                         ) : (
                                             <p>{highlightText(message.content, searchTerm)}</p>
                                         )}
@@ -401,16 +400,16 @@ const ChatBody = ({
                                 </div>
                                 <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft"
                                           className="p-2">
-                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
+                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
                                 </Dropdown>
                             </>
                         )}
                     </div>
                 );
             })}
-            <div ref={lastMessageRef}/>
+            <div ref={lastMessageRef} />
             <div className="absolute left-0 right-0 px-4 pb-4 flex justify-center">
-                {typingUser && typingUser.teamId === currentUser.team_id && (
+                {typingUser && (typingUser.teamId === currentUser.team_id || typingUser.privateChatId === privateChatId) && (
                     <div className="text-gray-500 text-lg">
                         {typingUser.user} is typing...
                     </div>
