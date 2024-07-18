@@ -15,8 +15,16 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-
-  
+  express:
+    build:
+      context: .
+      dockerfile: Dockerfile.express  # This points to the Express Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+     - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - mongo
   mongo:
     image: mongo:latest
     restart: always

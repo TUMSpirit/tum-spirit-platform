@@ -3,7 +3,7 @@ import { useFilter } from "../../context/useFilter";
 import { useAuthHeader } from "react-auth-kit";
 import axios from "axios";
 
-const demoMode = false;
+const demoMode = true;
 
 export const useDataFetcher = ({ url, demoData, filter }) => {
   const [data, setData] = useState();

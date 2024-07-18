@@ -48,14 +48,6 @@ const ShopPopup = ({ coins, setCoins, activities, setActivities }) => {
 
   return (
     <div>
-      <Tooltip title="Shop for Items">
-        <Button
-          type="primary"
-          icon={<ShoppingCartOutlined />}
-          onClick={showModal}
-          style={{ position: 'fixed', top: '20px', right: '70px' }}
-        />
-      </Tooltip>
       <Modal
         title="Tutorial Shop"
         visible={visible}

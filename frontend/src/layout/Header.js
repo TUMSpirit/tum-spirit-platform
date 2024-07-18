@@ -26,10 +26,10 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
-  ScheduleOutlined
-
+  ScheduleOutlined,
+  ShoppingCartOutlined, 
+  TrophyTwoTone
 } from "@ant-design/icons";
-
 import { NavLink, Link } from "react-router-dom";
 import styled from "styled-components";
 import avtar from "../assets/images/team-2.jpg";
@@ -263,6 +263,7 @@ function Header({
   const [visible, setVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
   const [imprintVisible, setImprintVisible] = useState(false);
+  const [coins, setCoins] = useState(0);
   const logout = useSignOut();
   const navigate = useNavigate();
 
@@ -331,8 +332,8 @@ function Header({
 
   return (
     <>
-    <ImprintModal visible={imprintVisible} setVisible={setImprintVisible}></ImprintModal>
-      <TutorialPopup visible={popupVisible} setVisible={setPopupVisible}></TutorialPopup>
+      <ImprintModal visible={imprintVisible} setVisible={setImprintVisible}></ImprintModal>
+      <TutorialPopup visible={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
       <div className="flex items-end justify-end">
         <div className="mr-auto header-control">
           <Button
@@ -343,6 +344,14 @@ function Header({
             }}
           />
         </div>
+        <Button
+          type="primary"
+          icon={<ShoppingCartOutlined />}
+          style={{ marginRight:"10px" }}
+        />
+        <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight:"20px" }}>
+          <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight:"20px" }} />
+        </Badge>
         <Dropdown
           menu={{
             items,

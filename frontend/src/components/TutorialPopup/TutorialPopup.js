@@ -112,13 +112,12 @@ const tutorials = [
   }
 ];
 
-const TutorialPopup = ({ visible, setVisible } ) => {
+const TutorialPopup = ({ visible, setVisible, coins, setCoins } ) => {
   const [selectedTutorial, setSelectedTutorial] = useState(null);
   const [completed, setCompleted] = useState([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isTutorialStarted, setIsTutorialStarted] = useState(false);
-  const [coins, setCoins] = useState(0);
   const [activities, setActivities] = useState([]);
 
   const showModal = () => {
@@ -255,15 +254,17 @@ const TutorialPopup = ({ visible, setVisible } ) => {
         </Row>
       </Modal>
       <ShopPopup coins={coins} setCoins={setCoins} activities={activities} setActivities={setActivities} />
-      <div style={{ position: 'fixed', top: '20px', right: '20px' }}>
+    </div>
+  );
+};
+
+export default TutorialPopup;
+
+/*    <div style={{ position: 'fixed', top: '20px', right: '20px' }}>
         <Tooltip title="Your Tutorial Coins">
           <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a' }}>
             <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px' }} />
           </Badge>
         </Tooltip>
       </div>
-    </div>
-  );
-};
-
-export default TutorialPopup;
+      */

@@ -59,7 +59,7 @@ const AddEventPopup = ({
         color: isUpdateEventOpen ? event.color : '#1677FF',
         allDay: isUpdateEventOpen ? event.allDay : false,
         textArea: isUpdateEventOpen ? event.textArea : '',
-        sharedUsers: isUpdateEventOpen ? users.filterƒ(user => event.users.includes(user.id)) : [currentUser],
+        sharedUsers: isUpdateEventOpen ? users.filter(user => event.users.includes(user.id)) : [currentUser],
         isOnSite: isUpdateEventOpen ? event.isOnSite : true,
         room: isUpdateEventOpen ? event.room : null,
         remoteLink: isUpdateEventOpen ? event.remoteLink : null,

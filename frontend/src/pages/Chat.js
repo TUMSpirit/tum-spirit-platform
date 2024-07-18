@@ -6,6 +6,7 @@ import { Typography } from "antd";
 import { useAuthHeader } from 'react-auth-kit';
 
 const { Title } = Typography;
+
 const socket = socketIO.connect("http://localhost:4000");
 
 const Chat = () => {
@@ -30,22 +31,18 @@ const Chat = () => {
                         'Authorization': authHeader(),
                     },
                 });
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch current user: ${response.status}`);
+                }
                 const data = await response.json();
                 setCurrentUser(data);
                 socket.emit('joinTeam', data.team_id); // Ensure user joins the correct team room
             } catch (error) {
                 console.error('Failed to fetch current user:', error);
+                // Handle error gracefully (e.g., show user-friendly message)
             }
         }
     }, [authHeader, currentUser]);
-
-    const handleRemoveReaction = (updatedMessages) => {
-        setMessages(updatedMessages);
-    };
-
-    const handleDeleteMessage = (message) => {
-        socket.emit('deleteMessage', { messageId: message.id, token: authHeader().split(" ")[1], teamId: currentUser.team_id });
-    };
 
     const fetchMessages = useCallback(async () => {
         try {
@@ -55,10 +52,14 @@ const Chat = () => {
                     "Authorization": authHeader(),
                 }
             });
+            if (!response.ok) {
+                throw new Error(`Failed to fetch messages: ${response.status}`);
+            }
             const data = await response.json();
             setMessages(data || []);
         } catch (error) {
             console.error("Failed to fetch messages:", error);
+            // Handle error gracefully (e.g., show user-friendly message)
         }
     }, [authHeader]);
 
@@ -75,17 +76,14 @@ const Chat = () => {
     useEffect(() => {
         if (!currentUser) return;
 
-        socket.on("messageResponse", (data) => {
+        const handleMessageResponse = (data) => {
             if (data.teamId === currentUser.team_id) {
-                setMessages(prevMessages => {
-                    const newMessages = [...prevMessages, data];
-                    setAutoScroll(true);
-                    return newMessages;
-                });
+                setMessages(prevMessages => [...prevMessages, data]);
+                setAutoScroll(true);
             }
-        });
+        };
 
-        socket.on('messageUpdated', (updatedMessage) => {
+        const handleMessageUpdated = (updatedMessage) => {
             if (updatedMessage.teamId === currentUser.team_id) {
                 setMessages(prevMessages => {
                     const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
@@ -97,9 +95,9 @@ const Chat = () => {
                     return prevMessages;
                 });
             }
-        });
+        };
 
-        socket.on('emojiReactionRemoved', (updatedMessage) => {
+        const handleEmojiReactionRemoved = (updatedMessage) => {
             if (updatedMessage.teamId === currentUser.team_id) {
                 setMessages(currentMessages => currentMessages.map(msg => {
                     if (msg.id === updatedMessage.id) {
@@ -108,9 +106,9 @@ const Chat = () => {
                     return msg;
                 }));
             }
-        });
+        };
 
-        socket.on('emojiReactionUpdated', (updatedMessage) => {
+        const handleEmojiReactionUpdated = (updatedMessage) => {
             if (updatedMessage.teamId === currentUser.team_id) {
                 setMessages(currentMessages => currentMessages.map(msg => {
                     if (msg.id === updatedMessage.id) {
@@ -119,38 +117,47 @@ const Chat = () => {
                     return msg;
                 }));
             }
-        });
+        };
 
-        socket.on('messageDeleted', (messageId) => {
+        const handleMessageDeleted = (messageId) => {
             setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
-        });
+        };
 
-        socket.on('messagesUpdated', (updatedMessages) => {
+        const handleMessagesUpdated = (updatedMessages) => {
             const filteredMessages = updatedMessages.filter(msg => msg.teamId === currentUser.team_id);
             setMessages(filteredMessages);
-        });
+        };
 
-        socket.on('typing', (data) => {
+        const handleTyping = (data) => {
             if (data.teamId === currentUser.team_id && data.user !== currentUser.username) {
                 setTypingUser(data);
             }
-        });
+        };
 
-        socket.on('stop typing', (data) => {
+        const handleStopTyping = (data) => {
             if (data.teamId === currentUser.team_id && data.user !== currentUser.username) {
                 setTypingUser(null);
             }
-        });
+        };
+
+        socket.on("messageResponse", handleMessageResponse);
+        socket.on('messageUpdated', handleMessageUpdated);
+        socket.on('emojiReactionRemoved', handleEmojiReactionRemoved);
+        socket.on('emojiReactionUpdated', handleEmojiReactionUpdated);
+        socket.on('messageDeleted', handleMessageDeleted);
+        socket.on('messagesUpdated', handleMessagesUpdated);
+        socket.on('typing', handleTyping);
+        socket.on('stop typing', handleStopTyping);
 
         return () => {
-            socket.off('messageResponse');
-            socket.off('messageUpdated');
-            socket.off('emojiReactionRemoved');
-            socket.off('emojiReactionUpdated');
-            socket.off('messageDeleted');
-            socket.off('messagesUpdated');
-            socket.off('typing');
-            socket.off('stop typing');
+            socket.off('messageResponse', handleMessageResponse);
+            socket.off('messageUpdated', handleMessageUpdated);
+            socket.off('emojiReactionRemoved', handleEmojiReactionRemoved);
+            socket.off('emojiReactionUpdated', handleEmojiReactionUpdated);
+            socket.off('messageDeleted', handleMessageDeleted);
+            socket.off('messagesUpdated', handleMessagesUpdated);
+            socket.off('typing', handleTyping);
+            socket.off('stop typing', handleStopTyping);
         };
     }, [socket, currentUser]);
 
@@ -173,6 +180,10 @@ const Chat = () => {
         }
     };
 
+    const handleDeleteMessage = (message) => {
+        socket.emit('deleteMessage', { messageId: message.id, token: authHeader().split(" ")[1], teamId: currentUser.team_id });
+    };
+
     return (
         <div
             className="mx-auto flex flex-col"
@@ -183,7 +194,6 @@ const Chat = () => {
                 currentTab={currentTab}
                 setCurrentTab={setCurrentTab}
                 messages={messages}
-                onRemoveReaction={handleRemoveReaction}
                 lastMessageRef={lastMessageRef}
                 setEditingMessage={setEditingMessage}
                 onDeleteMessage={handleDeleteMessage}

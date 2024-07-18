@@ -9,13 +9,6 @@ import {
   Checkbox
 } from "antd";
 import Logo from "../assets/images/Spirit.png";
-import {
-  Container,
-  ErrorText,
-  InnerContainer,
-  InputWrapper,
-  StyledInput,
-} from "./commons";
 
 import { useSignIn } from "react-auth-kit";
 import { useFormik } from "formik";
