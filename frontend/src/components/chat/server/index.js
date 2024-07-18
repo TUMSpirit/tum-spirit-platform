@@ -59,9 +59,9 @@ socketIO.on('connection', (socket) => {
         socketIO.to(teamId).emit("teamMembersUpdated");
     });
 
-    socket.on("emojiReaction", async ({ messageId, emoji, token }) => {
+    socket.on("emojiReaction", async ({messageId, emoji, token}) => {
         try {
-            const response = await axios.put(`http://localhost:8000/api/chat/add-reaction/${messageId}`, { emoji }, {
+            const response = await axios.put(`http://localhost:8000/api/chat/add-reaction/${messageId}`, {emoji}, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -94,7 +94,7 @@ socketIO.on('connection', (socket) => {
         console.log('A user disconnected');
     });
 
-    socket.on("removeEmojiReaction", async ({ messageId, token }) => {
+    socket.on("removeEmojiReaction", async ({messageId, token}) => {
         try {
             const response = await axios.put(`http://localhost:8000/api/chat/remove-reaction/${messageId}`, {}, {
                 headers: {
@@ -107,7 +107,7 @@ socketIO.on('connection', (socket) => {
         }
     });
 
-    socket.on("deleteMessage", async ({ messageId, token }) => {
+    socket.on("deleteMessage", async ({messageId, token}) => {
         try {
             const response = await axios.delete(`http://localhost:8000/api/chat/delete-message/${messageId}`, {
                 headers: {
@@ -116,7 +116,7 @@ socketIO.on('connection', (socket) => {
             });
             if (response.status === 200) {
                 console.log(`Message with ID: ${messageId} deleted successfully.`);
-                socketIO.to(response.data.teamId).emit('messageDeleted', { messageId, teamId: response.data.teamId });
+                socketIO.to(response.data.teamId).emit('messageDeleted', {messageId, teamId: response.data.teamId});
             }
         } catch (err) {
             console.error(`Failed to delete message with ID: ${messageId}. Error: ${err}`);

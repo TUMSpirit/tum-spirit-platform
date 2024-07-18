@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar} from "antd";
-import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
-import { useSubHeaderContext } from "../../layout/SubHeaderContext";
+import {EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined} from '@ant-design/icons';
+import {useSubHeaderContext} from "../../layout/SubHeaderContext";
 import Search from "antd/es/input/Search";
 import axios from 'axios';
-import { useAuthHeader } from 'react-auth-kit';
+import {useAuthHeader} from 'react-auth-kit';
 
 const ChatBody = ({
                       id,
@@ -28,11 +28,11 @@ const ChatBody = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-    const { updateSubHeader } = useSubHeaderContext();
+    const {updateSubHeader} = useSubHeaderContext();
     const authHeader = useAuthHeader();
 
     const tabsItems = [
-        { key: '1', label: 'Group Chat', children: '' },
+        {key: '1', label: 'Group Chat', children: ''},
         ...teamMembers.map((member, index) => ({
             key: (index + 2).toString(),
             label: member.username,
@@ -89,7 +89,7 @@ const ChatBody = ({
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         date.setHours(date.getHours());
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     };
 
     const handleSearch = (value) => {
@@ -100,7 +100,7 @@ const ChatBody = ({
         } else {
             const lowerCaseTerm = value.toLowerCase();
             const foundIndexes = messages
-                .map((message, index) => ({ text: message.content.toLowerCase(), index }))
+                .map((message, index) => ({text: message.content.toLowerCase(), index}))
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
@@ -127,17 +127,17 @@ const ChatBody = ({
         const messageId = messages[index].id;
         const element = document.getElementById(`message-${messageId}`);
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            element.scrollIntoView({behavior: 'smooth', block: 'nearest'});
         }
     };
 
     const highlightText = (text) => {
         const parts = !searchTerm ? [text] : text.split(new RegExp(`(${searchTerm})`, 'gi'));
         return (
-            <p className={`text-xl`}>
+            <p className="text-xl word-break break-word hyphens-auto">
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
-                        <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
+                        <span key={index} style={{backgroundColor: 'yellow'}}>{part}</span>
                     ) : part
                 )}
             </p>
@@ -147,20 +147,20 @@ const ChatBody = ({
     const getMessageStyle = (messageText) => {
         const length = messageText.length;
         if (length <= 15) {
-            return "text-xl px-7 py-2 pt-7 min-w-[10%] flex";
+            return "text-xl px-3 py-1.5 pt-5 min-w-[10%] flex word-break break-word hyphens-auto";
         } else if (length <= 50) {
-            return "text-md px-7 py-2 pt-7 min-w-[30%] flex";
+            return "text-md px-3 py-1.5 pt-5 min-w-[30%] flex word-break break-word hyphens-auto";
         } else {
-            return "px-7 py-2 pt-7 flex";
+            return "px-3 py-1.5 pt-5 flex word-break break-word hyphens-auto";
         }
     };
 
     const menu = (messageId) => (
-        <Menu onClick={({ key }) => handleMenuClick(key, messageId)}>
-            <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
+        <Menu onClick={({key}) => handleMenuClick(key, messageId)}>
+            <Menu.Item key="edit" icon={<EditOutlined/>}>Edit</Menu.Item>
             <Menu.SubMenu
                 key="delete"
-                icon={<DeleteOutlined />}
+                icon={<DeleteOutlined/>}
                 title="Delete"
             >
                 <Menu.Item key="confirmDelete">
@@ -180,7 +180,7 @@ const ChatBody = ({
         } else if (key === "confirmDelete") {
             const message = await fetchMessage(messageId);
             onDeleteMessage(messageId);
-            socket.emit("deleteMessage", { messageId, token: authHeader().split(" ")[1] });
+            socket.emit("deleteMessage", {messageId, token: authHeader().split(" ")[1]});
         }
     };
 
@@ -189,9 +189,9 @@ const ChatBody = ({
             const message = messages.find(msg => msg.id === messageId);
             const existingEmoji = message.reactions && Object.values(message.reactions).includes(emoji);
             if (existingEmoji) {
-                socket.emit('removeEmojiReaction', { messageId, token: authHeader().split(" ")[1] });
+                socket.emit('removeEmojiReaction', {messageId, token: authHeader().split(" ")[1]});
             } else {
-                socket.emit('emojiReaction', { messageId, emoji, token: authHeader().split(" ")[1] });
+                socket.emit('emojiReaction', {messageId, emoji, token: authHeader().split(" ")[1]});
             }
         } catch (error) {
             console.error("Failed to fetch or update message:", error);
@@ -202,7 +202,7 @@ const ChatBody = ({
         <Menu onClick={(e) => handleMenuClickRe(e, messageId)}>
             <Menu.SubMenu
                 key="delete"
-                icon={<SmileOutlined />}
+                icon={<SmileOutlined/>}
                 title="Reaction"
             >
                 <Menu.Item key="firstEmote">
@@ -218,7 +218,7 @@ const ChatBody = ({
                     🔃
                 </Menu.Item>
             </Menu.SubMenu>
-            <Menu.Item key="reply" icon={<MessageOutlined />}>Reply</Menu.Item>
+            <Menu.Item key="reply" icon={<MessageOutlined/>}>Reply</Menu.Item>
         </Menu>
     );
 
@@ -234,7 +234,7 @@ const ChatBody = ({
         } else if (e.key === "reply") {
             const messageToReplyTo = await fetchMessage(messageId);
             if (messageToReplyTo) {
-                setReplyingTo({ messageId: messageToReplyTo.id, content: messageToReplyTo.content });
+                setReplyingTo({messageId: messageToReplyTo.id, content: messageToReplyTo.content});
             }
         }
     };
@@ -332,7 +332,7 @@ const ChatBody = ({
                             <div className="flex justify-end items-center">
                                 <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
                                           className="p-2">
-                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
                                 </Dropdown>
                             </div>
                         )}
@@ -340,14 +340,15 @@ const ChatBody = ({
                         {isSender ? (
                             <>
                                 <div
-                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
+                                    style={{wordBreak: 'break-word', hyphens: 'auto'}}>
                                     {isReplyingTo && (
                                         <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
                                             <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                         </div>
                                     )}
                                     {message.isGif ? (
-                                        <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                        <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
                                     ) : (
                                         <p>{highlightText(message.content, searchTerm)}</p>
                                     )}
@@ -355,25 +356,27 @@ const ChatBody = ({
                                         {reactions.map((reaction, idx) => (
                                             <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
                                                   onClick={() => onEmojiClick(message.id, reaction)}>
-                                                {reaction}
+                                                    {reaction}
                                             </span>
                                         ))}
                                     </div>
                                     <span
                                         className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <Avatar className="w-12 h-12 ml-6 md:ml-10 mr-8" style={{ backgroundColor: avatarColor }}>
+                                <Avatar className="w-8 h-8 md:w-12 md:h-12 ml-4 md:ml-10 mr-4 md:mr-8"
+                                        style={{backgroundColor: avatarColor}}>
                                     {message.senderId[0]}
                                 </Avatar>
                             </>
                         ) : (
                             <>
+                                <Avatar className="w-8 h-8 md:w-12 md:h-12 ml-4 md:ml-10 mr-4 md:mr-8"
+                                        style={{backgroundColor: avatarColor}}>
+                                    {message.senderId[0]}
+                                </Avatar>
                                 <div
-                                    className="w-12 h-12 ml-6 md:ml-10 mr-8 rounded-full"
-                                    style={{ backgroundColor: avatarColor }}>
-                                </div>
-                                <div
-                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[50%] flex flex-col justify-between ${messageStyle}`}>
+                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
+                                    style={{wordBreak: 'break-word', hyphens: 'auto'}}>
                                     <div>
                                         {isReplyingTo && (
                                             <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
@@ -382,7 +385,7 @@ const ChatBody = ({
                                             </div>
                                         )}
                                         {message.isGif ? (
-                                            <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                            <img src={message.content} alt="GIF" style={{maxWidth: '100%'}}/>
                                         ) : (
                                             <p>{highlightText(message.content, searchTerm)}</p>
                                         )}
@@ -400,14 +403,14 @@ const ChatBody = ({
                                 </div>
                                 <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft"
                                           className="p-2">
-                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    <MoreOutlined style={{fontSize: '20px', color: '#1890ff'}}/>
                                 </Dropdown>
                             </>
                         )}
                     </div>
                 );
             })}
-            <div ref={lastMessageRef} />
+            <div ref={lastMessageRef}/>
             <div className="absolute left-0 right-0 px-4 pb-4 flex justify-center">
                 {typingUser && (typingUser.teamId === currentUser.team_id || typingUser.privateChatId === privateChatId) && (
                     <div className="text-gray-500 text-lg">

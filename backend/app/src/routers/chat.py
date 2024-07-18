@@ -15,6 +15,7 @@ MONGO_PORT = "27017"
 MONGO_DB = "TUMSpirit"
 MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
 
+
 class Message(BaseModel):
     id: Optional[str] = None
     teamId: str
@@ -215,7 +216,8 @@ def get_message(message_id: str, current_user: User = Depends(get_current_user))
         if not message:
             print(f"Message with ID {message_id} not found")
             raise HTTPException(status_code=404, detail="Message not found")
-        if str(message["teamId"]) != str(current_user["team_id"]) and not (message.get("privateChatId") and current_user["username"] in message["privateChatId"]):
+        if str(message["teamId"]) != str(current_user["team_id"]) and not (
+                message.get("privateChatId") and current_user["username"] in message["privateChatId"]):
             print(f"User {current_user['username']} not authorized to access message ID {message_id}")
             raise HTTPException(status_code=403, detail="Not authorized to access this message")
         message['id'] = str(message['_id'])

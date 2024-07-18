@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
 import socketIO from "socket.io-client";
-import { Typography } from "antd";
-import { useAuthHeader } from 'react-auth-kit';
+import {Typography} from "antd";
+import {useAuthHeader} from 'react-auth-kit';
 import axios from "axios";
 
-const { Title } = Typography;
-const socket = socketIO.connect("http://localhost:4000", { autoConnect: false });
+const {Title} = Typography;
+const socket = socketIO.connect("http://localhost:4000", {autoConnect: false});
 
 const Chat = () => {
     const [messages, setMessages] = useState([]);
@@ -36,7 +36,7 @@ const Chat = () => {
                 });
                 const data = await response.json();
                 setCurrentUser(data);
-                socket.auth = { teamId: data.team_id };
+                socket.auth = {teamId: data.team_id};
                 socket.connect();
                 socket.emit('joinTeam', data.team_id);
             } catch (error) {
@@ -139,7 +139,7 @@ const Chat = () => {
             }
         });
 
-        socket.on('messageDeleted', ({ messageId }) => {
+        socket.on('messageDeleted', ({messageId}) => {
             setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
         });
 
@@ -174,7 +174,7 @@ const Chat = () => {
 
     useEffect(() => {
         if (autoScroll) {
-            lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
             setAutoScroll(false);
         }
     }, [messages, autoScroll]);
@@ -182,7 +182,7 @@ const Chat = () => {
     const handleScroll = () => {
         const element = document.getElementById('chat-body');
         if (element) {
-            const { scrollTop, scrollHeight, clientHeight } = element;
+            const {scrollTop, scrollHeight, clientHeight} = element;
             setAutoScroll(scrollTop + clientHeight >= scrollHeight - 50);
         }
     };
@@ -207,7 +207,7 @@ const Chat = () => {
     return (
         <div
             className="mx-auto flex flex-col"
-            style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
+            style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
         >
             <ChatBody
                 id="chat-body"
