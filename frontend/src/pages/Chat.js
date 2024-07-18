@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
 import socketIO from "socket.io-client";
-import { Typography } from "antd";
-import { useAuthHeader } from 'react-auth-kit';
+import {Typography} from "antd";
+import {useAuthHeader} from 'react-auth-kit';
+import axios from "axios";
 
-const { Title } = Typography;
-
-const socket = socketIO.connect("http://localhost:4000");
+const {Title} = Typography;
+const socket = socketIO.connect("http://localhost:4000", {autoConnect: false});
 
 const Chat = () => {
     const [messages, setMessages] = useState([]);
@@ -22,6 +22,9 @@ const Chat = () => {
     const authHeader = useAuthHeader();
     const [currentUser, setCurrentUser] = useState(null);
     const [autoScroll, setAutoScroll] = useState(true);
+    const [teamMembers, setTeamMembers] = useState([]);
+    const [privateChatId, setPrivateChatId] = useState(null);
+    const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
 
     const fetchCurrentUser = useCallback(async () => {
         if (!currentUser) {
@@ -31,37 +34,60 @@ const Chat = () => {
                         'Authorization': authHeader(),
                     },
                 });
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch current user: ${response.status}`);
-                }
                 const data = await response.json();
                 setCurrentUser(data);
-                socket.emit('joinTeam', data.team_id); // Ensure user joins the correct team room
+                socket.auth = {teamId: data.team_id};
+                socket.connect();
+                socket.emit('joinTeam', data.team_id);
             } catch (error) {
                 console.error('Failed to fetch current user:', error);
-                // Handle error gracefully (e.g., show user-friendly message)
+            }
+        }
+    }, [authHeader, currentUser]);
+
+    const fetchTeamMembers = useCallback(async () => {
+        if (currentUser) {
+            try {
+                const response = await axios.get(`http://localhost:8000/api/get-team-members`, {
+                    headers: {
+                        "Authorization": authHeader(),
+                    },
+                });
+                const members = response.data;
+                const currentUserWithColor = members.find(member => member.username === currentUser.username);
+                if (currentUserWithColor) {
+                    setCurrentUserAvatarColor(currentUserWithColor.avatar_color);
+                }
+                const filteredMembers = members.filter(member => member.username !== currentUser.username);
+                setTeamMembers(filteredMembers);
+            } catch (error) {
+                console.error("Failed to fetch team members:", error);
             }
         }
     }, [authHeader, currentUser]);
 
     const fetchMessages = useCallback(async () => {
-        try {
-            const response = await fetch(`http://localhost:8000/api/chat/get-messages`, {
-                method: 'GET',
-                headers: {
+        if (currentUser) {
+            try {
+                const headers = {
                     "Authorization": authHeader(),
+                };
+                if (privateChatId) {
+                    headers["Private-Chat-Id"] = privateChatId;
+                } else {
+                    delete headers["Private-Chat-Id"];
                 }
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to fetch messages: ${response.status}`);
+                const response = await fetch(`http://localhost:8000/api/chat/get-messages`, {
+                    method: 'GET',
+                    headers: headers,
+                });
+                const data = await response.json();
+                setMessages(data || []);
+            } catch (error) {
+                console.error("Failed to fetch messages:", error);
             }
-            const data = await response.json();
-            setMessages(data || []);
-        } catch (error) {
-            console.error("Failed to fetch messages:", error);
-            // Handle error gracefully (e.g., show user-friendly message)
         }
-    }, [authHeader]);
+    }, [authHeader, currentUser, privateChatId]);
 
     useEffect(() => {
         fetchCurrentUser();
@@ -69,101 +95,86 @@ const Chat = () => {
 
     useEffect(() => {
         if (currentUser) {
+            fetchTeamMembers();
+        }
+    }, [currentUser, fetchTeamMembers]);
+
+    useEffect(() => {
+        if (currentUser) {
             fetchMessages();
         }
-    }, [currentTab, fetchMessages, currentUser]);
+    }, [currentUser, fetchMessages, privateChatId]);
 
     useEffect(() => {
         if (!currentUser) return;
 
-        const handleMessageResponse = (data) => {
-            if (data.teamId === currentUser.team_id) {
+        socket.on("messageResponse", (data) => {
+            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setMessages(prevMessages => [...prevMessages, data]);
                 setAutoScroll(true);
             }
-        };
+        });
 
-        const handleMessageUpdated = (updatedMessage) => {
-            if (updatedMessage.teamId === currentUser.team_id) {
-                setMessages(prevMessages => {
-                    const index = prevMessages.findIndex(msg => msg.id === updatedMessage.id);
-                    if (index !== -1) {
-                        const newMessages = [...prevMessages];
-                        newMessages[index] = updatedMessage;
-                        return newMessages;
-                    }
-                    return prevMessages;
-                });
+        socket.on('messageUpdated', (updatedMessage) => {
+            if (updatedMessage.teamId === currentUser.team_id || (updatedMessage.privateChatId && updatedMessage.privateChatId.includes(currentUser.username))) {
+                setMessages(prevMessages =>
+                    prevMessages.map(msg => msg.id === updatedMessage.id ? updatedMessage : msg)
+                );
             }
-        };
+        });
 
-        const handleEmojiReactionRemoved = (updatedMessage) => {
-            if (updatedMessage.teamId === currentUser.team_id) {
-                setMessages(currentMessages => currentMessages.map(msg => {
-                    if (msg.id === updatedMessage.id) {
-                        return updatedMessage;
-                    }
-                    return msg;
-                }));
+        socket.on('emojiReactionRemoved', (updatedMessage) => {
+            if (updatedMessage.teamId === currentUser.team_id || (updatedMessage.privateChatId && updatedMessage.privateChatId.includes(currentUser.username))) {
+                setMessages(prevMessages =>
+                    prevMessages.map(msg => msg.id === updatedMessage.id ? updatedMessage : msg)
+                );
             }
-        };
+        });
 
-        const handleEmojiReactionUpdated = (updatedMessage) => {
-            if (updatedMessage.teamId === currentUser.team_id) {
-                setMessages(currentMessages => currentMessages.map(msg => {
-                    if (msg.id === updatedMessage.id) {
-                        return updatedMessage;
-                    }
-                    return msg;
-                }));
+        socket.on('emojiReactionUpdated', (updatedMessage) => {
+            if (updatedMessage.teamId === currentUser.team_id || (updatedMessage.privateChatId && updatedMessage.privateChatId.includes(currentUser.username))) {
+                setMessages(prevMessages =>
+                    prevMessages.map(msg => msg.id === updatedMessage.id ? updatedMessage : msg)
+                );
             }
-        };
+        });
 
-        const handleMessageDeleted = (messageId) => {
+        socket.on('messageDeleted', ({messageId}) => {
             setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
-        };
+        });
 
-        const handleMessagesUpdated = (updatedMessages) => {
-            const filteredMessages = updatedMessages.filter(msg => msg.teamId === currentUser.team_id);
+        socket.on('messagesUpdated', (updatedMessages) => {
+            const filteredMessages = updatedMessages.filter(msg => msg.teamId === currentUser.team_id || (msg.privateChatId && msg.privateChatId.includes(currentUser.username)));
             setMessages(filteredMessages);
-        };
+        });
 
-        const handleTyping = (data) => {
-            if (data.teamId === currentUser.team_id && data.user !== currentUser.username) {
+        socket.on('typing', (data) => {
+            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setTypingUser(data);
             }
-        };
+        });
 
-        const handleStopTyping = (data) => {
-            if (data.teamId === currentUser.team_id && data.user !== currentUser.username) {
+        socket.on('stop typing', (data) => {
+            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setTypingUser(null);
             }
-        };
-
-        socket.on("messageResponse", handleMessageResponse);
-        socket.on('messageUpdated', handleMessageUpdated);
-        socket.on('emojiReactionRemoved', handleEmojiReactionRemoved);
-        socket.on('emojiReactionUpdated', handleEmojiReactionUpdated);
-        socket.on('messageDeleted', handleMessageDeleted);
-        socket.on('messagesUpdated', handleMessagesUpdated);
-        socket.on('typing', handleTyping);
-        socket.on('stop typing', handleStopTyping);
+        });
 
         return () => {
-            socket.off('messageResponse', handleMessageResponse);
-            socket.off('messageUpdated', handleMessageUpdated);
-            socket.off('emojiReactionRemoved', handleEmojiReactionRemoved);
-            socket.off('emojiReactionUpdated', handleEmojiReactionUpdated);
-            socket.off('messageDeleted', handleMessageDeleted);
-            socket.off('messagesUpdated', handleMessagesUpdated);
-            socket.off('typing', handleTyping);
-            socket.off('stop typing', handleStopTyping);
+            socket.off('messageResponse');
+            socket.off('messageUpdated');
+            socket.off('emojiReactionRemoved');
+            socket.off('emojiReactionUpdated');
+            socket.off('messageDeleted');
+            socket.off('messagesUpdated');
+            socket.off('typing');
+            socket.off('stop typing');
         };
-    }, [socket, currentUser]);
+    }, [currentUser]);
 
     useEffect(() => {
         if (autoScroll) {
-            lastMessageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            lastMessageRef.current?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
             setAutoScroll(false);
         }
     }, [messages, autoScroll]);
@@ -171,32 +182,42 @@ const Chat = () => {
     const handleScroll = () => {
         const element = document.getElementById('chat-body');
         if (element) {
-            const { scrollTop, scrollHeight, clientHeight } = element;
-            if (scrollTop + clientHeight >= scrollHeight - 50) {
-                setAutoScroll(true);
-            } else {
-                setAutoScroll(false);
-            }
+            const {scrollTop, scrollHeight, clientHeight} = element;
+            setAutoScroll(scrollTop + clientHeight >= scrollHeight - 50);
         }
     };
 
-    const handleDeleteMessage = (message) => {
-        socket.emit('deleteMessage', { messageId: message.id, token: authHeader().split(" ")[1], teamId: currentUser.team_id });
+    const getPrivateChatId = (user1, user2) => {
+        return [user1, user2].sort().join('-');
+    };
+
+    const handleTabChange = async (key) => {
+        setCurrentTab(key);
+        if (key !== '1') {
+            const memberUsername = teamMembers[parseInt(key) - 2].username;
+            const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
+            setPrivateChatId(newPrivateChatId);
+            socket.emit('joinPrivateChat', newPrivateChatId);
+        } else {
+            setPrivateChatId(null);
+            socket.emit('joinTeam', currentUser.team_id);
+        }
     };
 
     return (
         <div
             className="mx-auto flex flex-col"
-            style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}
+            style={{height: `calc(100vh - ${HEADER_HEIGHT_PX}px)`}}
         >
             <ChatBody
                 id="chat-body"
                 currentTab={currentTab}
-                setCurrentTab={setCurrentTab}
+                setCurrentTab={handleTabChange}
                 messages={messages}
+                onRemoveReaction={setMessages}
                 lastMessageRef={lastMessageRef}
                 setEditingMessage={setEditingMessage}
-                onDeleteMessage={handleDeleteMessage}
+                onDeleteMessage={(messageId) => setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId))}
                 socket={socket}
                 replyingTo={replyingTo}
                 setReplyingTo={setReplyingTo}
@@ -204,6 +225,9 @@ const Chat = () => {
                 typingUser={typingUser}
                 currentUser={currentUser}
                 onScroll={handleScroll}
+                teamMembers={teamMembers}
+                privateChatId={privateChatId}
+                currentUserAvatarColor={currentUserAvatarColor} // pass the avatar color
             />
             <ChatFooter
                 socket={socket}
@@ -216,6 +240,9 @@ const Chat = () => {
                 isTyping={isTyping}
                 setIsTyping={setIsTyping}
                 currentUser={currentUser}
+                currentTab={currentTab}
+                teamMembers={teamMembers}
+                privateChatId={privateChatId}
             />
         </div>
     );

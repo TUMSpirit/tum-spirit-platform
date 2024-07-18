@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Button, Tooltip, Input, Modal, Upload, message } from 'antd';
-import { PlusOutlined, SmileOutlined, SendOutlined, UploadOutlined, GifOutlined } from "@ant-design/icons";
+import React, {useState, useEffect, useRef} from 'react';
+import {Button, Tooltip, Input, Modal, Upload, message} from 'antd';
+import {PlusOutlined, SmileOutlined, SendOutlined, UploadOutlined, GifOutlined} from "@ant-design/icons";
 import Picker from 'emoji-picker-react';
 import GifPicker from 'gif-picker-react';
 import axios from "axios";
-import { useAuthHeader } from 'react-auth-kit';
+import {useAuthHeader} from 'react-auth-kit';
 
-const postFiles = async ({ files }, authHeader) => {
+const postFiles = async ({files}, authHeader) => {
     const formData = new FormData();
     files.fileList.forEach(file => {
         if (file.originFileObj) {
@@ -40,15 +40,18 @@ const ChatFooter = ({
                         setReplyingTo,
                         isTyping,
                         setIsTyping,
-                        currentUser
+                        currentUser,
+                        currentTab,
+                        teamMembers,
+                        privateChatId
                     }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [showCommands, setShowCommands] = useState(false);
-    const commands = [, 'Display Kanban Card', '/Create Poll', '/ask Ghost'];
+    const commands = ['Display Kanban Card', '/Create Poll', '/ask Ghost'];
     const displayKanbanCard = '/Display Kanban Card: ID : "ID"';
     const askGhost = '/ask Ghost';
-    const commandPoll = '/Create Poll: option1,option2, option3';
+    const commandPoll = '/Create Poll: option1,option2,option3';
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
     const authHeader = useAuthHeader();
     const [fileList, setFileList] = useState([]);
@@ -70,7 +73,8 @@ const ChatFooter = ({
             socketID: socket.id,
             timestamp: new Date().toISOString(),
             replyingTo: replyingTo ? replyingTo.messageId : null,
-            token: authHeader().split(" ")[1]
+            token: authHeader().split(" ")[1],
+            privateChatId: privateChatId,
         };
         socket.emit('message', userMessage);
         setShowGifPicker(false);
@@ -99,7 +103,8 @@ const ChatFooter = ({
                 senderId: editingMessage.senderId,
                 timestamp: editingMessage.timestamp,
                 replyingTo: editingMessage.replyingTo,
-                token: token
+                token: token,
+                privateChatId: privateChatId,
             };
             socket.emit('editMessage', updatedMessage);
             setEditingMessage(null);
@@ -112,13 +117,14 @@ const ChatFooter = ({
                 token: token,
                 replyingTo: replyingTo ? replyingTo.messageId : null,
                 isPoll: trimmedMessage.startsWith('/Create Poll'),
+                privateChatId: privateChatId,
             };
             console.log(`Sending message with replyingTo: ${userMessage.replyingTo}`);
             socket.emit('message', userMessage);
         }
         setMessage('');
         setReplyingTo(null);
-        socket.emit('stop typing', { user: currentUser.username, teamId: currentUser.team_id });
+        socket.emit('stop typing', {user: currentUser.username, teamId: currentUser.team_id});
         setIsTyping(false);
     };
 
@@ -160,12 +166,12 @@ const ChatFooter = ({
 
         if (!isTyping) {
             setIsTyping(true);
-            socket.emit('typing', { user: currentUser.username, teamId: currentUser.team_id });
+            socket.emit('typing', {user: currentUser.username, teamId: currentUser.team_id});
         }
 
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
-            socket.emit('stop typing', { user: currentUser.username, teamId: currentUser.team_id });
+            socket.emit('stop typing', {user: currentUser.username, teamId: currentUser.team_id});
             setIsTyping(false);
         }, 3000);
     };
@@ -202,8 +208,8 @@ const ChatFooter = ({
 
     const handleUploadModalOk = async () => {
         const authHeaderString = authHeader();
-        const files = { fileList };
-        await postFiles({ files }, authHeaderString);
+        const files = {fileList};
+        await postFiles({files}, authHeaderString);
         setIsUploadModalVisible(false);
         setFileList([]);
     };
@@ -213,7 +219,7 @@ const ChatFooter = ({
         setFileList([]);
     };
 
-    const handleFileChange = ({ fileList }) => {
+    const handleFileChange = ({fileList}) => {
         setFileList(fileList);
     };
 
@@ -226,7 +232,8 @@ const ChatFooter = ({
     return (
         <div className={`fixed bottom-0 left-0 md:left-60 right-0 p-4 bg-white border-t-2 border-gray-200`}>
             <div className="container mx-auto max-w-full">
-                <form className="flex items-center justify-between gap-4 w-full px-4" onSubmit={handleSendMessage}>
+                <form className="flex items-center justify-between gap-2 md:gap-4 w-full px-2 md:px-4"
+                      onSubmit={handleSendMessage}>
                     <Tooltip title="Upload File">
                         <Button
                             type="primary"
@@ -241,12 +248,12 @@ const ChatFooter = ({
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}
-                            icon={<PlusOutlined />}
+                            icon={<PlusOutlined/>}
                             onClick={showUploadModal}
                         />
                     </Tooltip>
                     <Input
-                        className="flex-grow mx-5 bg-chat-input-bar border-1 focus:outline-none rounded-lg p-2"
+                        className="flex-grow mx-2 md:mx-5 bg-chat-input-bar border-1 focus:outline-none rounded-lg p-2"
                         placeholder={getPlaceholderText()}
                         value={message}
                         onChange={handleChange}
@@ -254,17 +261,17 @@ const ChatFooter = ({
                             <div className="relative flex items-center">
                                 <Tooltip title="Emoticons">
                                     <div onClick={toggleEmojiPicker} className="cursor-pointer">
-                                        <SmileOutlined style={{ fontSize: '24px', color: '#3d72b5' }} />
+                                        <SmileOutlined style={{fontSize: '24px', color: '#3d72b5'}}/>
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
                                     <div ref={emojiPickerRef} className="absolute bottom-12 right-0 z-20">
-                                        <Picker onEmojiClick={onEmojiClick} />
+                                        <Picker onEmojiClick={onEmojiClick}/>
                                     </div>
                                 )}
                                 <Tooltip title="GIFs">
                                     <div onClick={toggleGifPicker} className="cursor-pointer ml-2">
-                                        <GifOutlined style={{ fontSize: '24px', color: '#3d72b5' }} />
+                                        <GifOutlined style={{fontSize: '24px', color: '#3d72b5'}}/>
                                     </div>
                                 </Tooltip>
                             </div>
@@ -291,7 +298,7 @@ const ChatFooter = ({
                         <Button
                             type="primary"
                             shape="circle"
-                            icon={<SendOutlined />}
+                            icon={<SendOutlined/>}
                             className="bg-blue-600 text-white"
                             style={{
                                 fontSize: '24px',
@@ -326,7 +333,7 @@ const ChatFooter = ({
                     beforeUpload={() => false}
                     onChange={handleFileChange}
                 >
-                    <Button icon={<UploadOutlined />}>Select File</Button>
+                    <Button icon={<UploadOutlined/>}>Select File</Button>
                 </Upload>
             </Modal>
             {showGifPicker && (
@@ -336,7 +343,7 @@ const ChatFooter = ({
                     onCancel={() => setShowGifPicker(false)}
                     footer={null}
                 >
-                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
+                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"}/>
                 </Modal>
             )}
         </div>
