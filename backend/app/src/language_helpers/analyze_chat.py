@@ -34,3 +34,7 @@ def analyze_user_big5(user_id):
 
     store_OCEAN(user_id, big5_result)
 
+def analyze_chat2(input):
+    metadata = generate_metadata(input)
+    return metadata
+
