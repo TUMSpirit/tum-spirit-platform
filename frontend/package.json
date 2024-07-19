@@ -55,7 +55,7 @@
     "web-vitals": "^3.1.0"
   },
   "scripts": {
-    "start": "react-scripts --openssl-legacy-provider start",
+    "start": "PORT=3001 react-scripts --max_old_space_size=8128 start",
     "build": "react-scripts build",
     "test": "jest",
     "eject": "react-scripts eject",

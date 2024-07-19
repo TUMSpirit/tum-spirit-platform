@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar } from 'antd';
+import { Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar } from "antd";
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
-import { SubHeader } from '../../layout/SubHeader';
-import Search from 'antd/es/input/Search';
+import { SubHeader } from "../../layout/SubHeader";
+import Search from "antd/es/input/Search";
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
 
@@ -133,24 +133,24 @@ const ChatBody = ({
     const highlightText = (text) => {
         const parts = !searchTerm ? [text] : text.split(new RegExp(`(${searchTerm})`, 'gi'));
         return (
-            <span className="text-l mb-0 word-break break-word hyphens-auto">
+            <p className="text-xl word-break break-word hyphens-auto">
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
                         <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
                     ) : part
                 )}
-            </span>
+            </p>
         );
     };
 
     const getMessageStyle = (messageText) => {
         const length = messageText.length;
         if (length <= 15) {
-            return "text-l mb-0 px-3 py-1.5 pt-5 min-w-[10%] flex word-break break-word hyphens-auto";
+            return "text-xl px-3 py-1.5 pt-5 min-w-[10%] flex word-break break-word hyphens-auto";
         } else if (length <= 50) {
-            return "text-md mb-0 px-3 py-1.5 pt-5 min-w-[30%] flex word-break break-word hyphens-auto";
+            return "text-md px-3 py-1.5 pt-5 min-w-[30%] flex word-break break-word hyphens-auto";
         } else {
-            return "px-3 mb-0 py-1.5 pt-5 flex word-break break-word hyphens-auto";
+            return "px-3 py-1.5 pt-5 flex word-break break-word hyphens-auto";
         }
     };
 
@@ -245,11 +245,60 @@ const ChatBody = ({
         return text;
     };
 
+    /*useEffect(() => {
+        const subHeaderContent = (
+            <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2 relative">
+                <ConfigProvider
+                    theme={{
+                        token: {
+                            lineHeight: 1.3,
+                            lineWidth: 10,
+                        },
+                    }}
+                >
+                    <div className="h-14 mt-0 w-full md:w-auto">
+                        <Tabs
+                            activeKey={currentTab}
+                            onChange={(key) => setCurrentTab(key)}
+                            items={tabsItems}
+                            size="large"
+                            tabBarStyle={{
+                                marginTop: '4px',
+                                borderBottom: 'none'
+                            }}
+                        />
+                    </div>
+                </ConfigProvider>
+                <div className="hidden md:flex flex-grow justify-center -mt-2">
+                    <div className="h-15 flex items-center gap-5 bg-chat-filter rounded-2xl py-2 px-4">
+                        <Button className="bg-white shadow-sm border-gray-300">Kanban Cards</Button>
+                        <Button className="bg-white shadow-sm border-gray-300">Polls</Button>
+                        <Button className="bg-white shadow-sm border-gray-300">Documents</Button>
+                    </div>
+                </div>
+                <div className="hidden md:block -mt-2">
+                    <Search
+                        placeholder="input search text"
+                        size="large"
+                        value={searchTerm}
+                        onChange={e => handleSearch(e.target.value)}
+                        onSearch={handleSearch}
+                        onPressEnter={navigateSearchResults}
+                        className="max-w-[300px]"
+                    />
+                </div>
+                <div className="border-t-2 border-gray-200 absolute bottom-0 w-full"></div>
+            </div>
+        );
+        updateSubHeader(subHeaderContent);
+        return () => updateSubHeader(null);
+    }, [currentTab, searchTerm, updateSubHeader, teamMembers]);
+
     useEffect(() => {
         if (searchTerm && currentResultIndex !== -1 && searchResults.length > 0) {
             scrollToMessage(searchResults[currentResultIndex]);
         }
-    }, [currentResultIndex, searchResults, messages, searchTerm]);
+    }, [currentResultIndex, searchResults, messages, searchTerm]);*/
 
     const filteredMessages = messages.filter(message => {
         if (privateChatId) {
@@ -260,10 +309,9 @@ const ChatBody = ({
     });
 
     return (
-        <div
-            id={id}
+        <div id={id}
             className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative"
-        >
+            onScroll={onScroll}>
             <SubHeader>
                 <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2 relative">
                     <ConfigProvider
@@ -287,10 +335,17 @@ const ChatBody = ({
                             />
                         </div>
                     </ConfigProvider>
-                    <div className="hidden md:block">
+                    <div className="hidden md:flex flex-grow justify-center -mt-2">
+                        <div className="h-15 flex items-center gap-5 bg-chat-filter rounded-2xl py-2 px-4">
+                            <Button className="bg-white shadow-sm border-gray-300">Kanban Cards</Button>
+                            <Button className="bg-white shadow-sm border-gray-300">Polls</Button>
+                            <Button className="bg-white shadow-sm border-gray-300">Documents</Button>
+                        </div>
+                    </div>
+                    <div className="hidden md:block -mt-2">
                         <Search
-                            placeholder="Search Message"
-                            size="medium"
+                            placeholder="input search text"
+                            size="large"
                             value={searchTerm}
                             onChange={e => handleSearch(e.target.value)}
                             onSearch={handleSearch}
@@ -314,11 +369,8 @@ const ChatBody = ({
                 const avatarColor = getAvatarColor(message.senderId);
 
                 return (
-                    <div
-                        key={message.id}
-                        id={`message-${message.id}`}
-                        className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}
-                    >
+                    <div key={message.id} id={`message-${message.id}`}
+                        className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}>
                         {isSender && canEditOrDelete(message.timestamp) && (
                             <div className="flex justify-end items-center">
                                 <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
@@ -332,8 +384,7 @@ const ChatBody = ({
                             <>
                                 <div
                                     className={`bg-chat-messages-send shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
-                                    style={{ wordBreak: 'break-word', hyphens: 'auto' }}
-                                >
+                                    style={{ wordBreak: 'break-word', hyphens: 'auto' }}>
                                     {isReplyingTo && (
                                         <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
                                             <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
@@ -342,7 +393,7 @@ const ChatBody = ({
                                     {message.isGif ? (
                                         <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
                                     ) : (
-                                        <span>{highlightText(message.content)}</span>
+                                        <p>{highlightText(message.content, searchTerm)}</p>
                                     )}
                                     <div className="flex items-center">
                                         {reactions.map((reaction, idx) => (
@@ -368,18 +419,18 @@ const ChatBody = ({
                                 </Avatar>
                                 <div
                                     className={`bg-chat-messages-received shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
-                                    style={{ wordBreak: 'break-word', hyphens: 'auto' }}
-                                >
+                                    style={{ wordBreak: 'break-word', hyphens: 'auto' }}>
                                     <div>
                                         {isReplyingTo && (
                                             <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
-                                                <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
+                                                <span
+                                                    className="font-semibold">{truncateText(isReplyingTo.content)}</span>
                                             </div>
                                         )}
                                         {message.isGif ? (
                                             <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
                                         ) : (
-                                            <span>{highlightText(message.content)}</span>
+                                            <p>{highlightText(message.content, searchTerm)}</p>
                                         )}
                                         <div className="flex items-center">
                                             {reactions.map((reaction, idx) => (
@@ -415,11 +466,3 @@ const ChatBody = ({
 };
 
 export default ChatBody;
-
-/*          <div className="hidden md:flex flex-grow justify-center -mt-2">
-                        <div className="h-15 flex items-center gap-5 bg-chat-filter rounded-2xl py-2 px-4">
-                            <Button className="bg-white shadow-sm border-gray-300">Kanban Cards</Button>
-                            <Button className="bg-white shadow-sm border-gray-300">Polls</Button>
-                            <Button className="bg-white shadow-sm border-gray-300">Documents</Button>
-                        </div>
-                    </div>*/
