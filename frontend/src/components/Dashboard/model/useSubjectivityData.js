@@ -13,7 +13,7 @@ const demoData = dates.map((date) => ({
 
 export const useSubjectivityData = () => {
   const { loading, data } = useDataFetcher({
-    url: "http://localhost:8000/api/language/get-sentiment",
+    url: "/api/language/get-sentiment",
     demoData,
   });
   if (loading) return { yData: [], xData: [] };

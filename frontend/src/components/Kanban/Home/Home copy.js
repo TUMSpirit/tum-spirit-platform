@@ -121,7 +121,7 @@ const Home = () => {
 	const getTasks = async () => {
 		try {
 			const teamId = 'desired_team_id'; // Ersetze durch den tatsächlichen team_id-Wert
-			const response = await axios.get('http://localhost:8000/api/kanban/get-tasks',
+			const response = await axios.get('/api/kanban/get-tasks',
 				{
 					headers: {
 						"Authorization": authHeader()

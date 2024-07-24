@@ -27,7 +27,7 @@ import {
   SettingOutlined,
   LogoutOutlined,
   ScheduleOutlined,
-  ShoppingCartOutlined, 
+  ShoppingCartOutlined,
   TrophyTwoTone
 } from "@ant-design/icons";
 import { NavLink, Link } from "react-router-dom";
@@ -38,6 +38,8 @@ import { useSignOut } from 'react-auth-kit';
 import { useNavigate } from 'react-router-dom';
 import TutorialPopup from '../components/TutorialPopup/TutorialPopup';
 import ImprintModal from '../components/Imprint/ImprintModal';
+import axios from 'axios';
+import { useAuthHeader } from 'react-auth-kit';
 
 const ButtonContainer = styled.div`
     .ant-btn-primary {
@@ -259,15 +261,33 @@ function Header({
   handleFixedNavbar,
 }) {
 
+  const authHeader = useAuthHeader();
   const [sidenavType, setSidenavType] = useState("transparent");
   const [visible, setVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
   const [imprintVisible, setImprintVisible] = useState(false);
   const [coins, setCoins] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [me, setMe] = useState();
   const logout = useSignOut();
   const navigate = useNavigate();
 
   useEffect(() => window.scrollTo(0, 0));
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/me', {
+          headers: { 'Authorization': authHeader() },
+        });
+        const data = await response.json();
+        setMe(data);
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   const showDrawer = () => setVisible(true);
   const hideDrawer = () => setVisible(false);
@@ -289,16 +309,24 @@ function Header({
   const showImprint = () => {
     setImprintVisible(true);
   };
+  const handleOpenChange = (nextOpen, info) => {
+    if (info.source === 'trigger' || nextOpen) {
+      setOpen(nextOpen);
+    }
+  };
 
+  const handleMenuClick = (e) => {
+    if (e.key !== '0') {
+      setOpen(false);
+    }
+  };
 
   const items = [
     {
-      label: <div className='pt-2 pb-2 pr-2'><Space><Avatar
-        className="cursor-pointer"
-        style={{ backgroundColor: '#87d068' }}
-        size="large"
-        icon={<UserOutlined />}
-      />Jonas</Space></div>,
+      label: <div className='pt-2 pb-2 pr-2'><Space>
+        <Avatar style={{ backgroundColor: me ? me.avatar_color : "grey" }}>
+          {me ? me.username[0] : ""}
+        </Avatar>{me ? me.username : ""}</Space></div>,
       key: '0'
     },
     {
@@ -347,24 +375,27 @@ function Header({
         <Button
           type="primary"
           icon={<ShoppingCartOutlined />}
-          style={{ marginRight:"10px" }}
+          style={{ marginRight: "10px" }}
         />
-        <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight:"20px" }}>
-          <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight:"20px" }} />
+        <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight: "20px" }}>
+          <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight: "20px" }} />
         </Badge>
-        <Dropdown
-          menu={{
-            items,
-          }}
-          trigger={['click']}
-        >
-          <Avatar
-            className="cursor-pointer"
-            style={{ backgroundColor: '#87d068' }}
-            size="large"
-            icon={<UserOutlined />}
-          />
-        </Dropdown>
+        {me && (
+          <Dropdown
+            menu={{
+              items,
+              onClick: handleMenuClick,
+            }}
+            trigger={['click']}
+            onOpenChange={handleOpenChange}
+            open={open}
+          >
+            <Avatar
+              className="cursor-pointer"
+              style={{ backgroundColor: me.avatar_color }}
+            >{me.username[0]}</Avatar>
+          </Dropdown>
+        )}
       </div>
       <Row style={{ paddingBottom: "20px" }} gutter={[24, 0]}>
         <Col span={24}>

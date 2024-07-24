@@ -33,7 +33,7 @@ const Chatbot = ({ opened, setOpened }) => {
       setInputValue("");
 
       // post request to the backend to get the bot response
-      const botResponse = await fetch("http://localhost:8000/api/ai/generate", {
+      const botResponse = await fetch("/api/ai/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,7 +75,7 @@ const Chatbot = ({ opened, setOpened }) => {
     setSessionId(newSessionId);
 
     // Then, send a "loaded chatbox" event to the backend with the sessionId
-    fetch("http://localhost:8000/api/ai/analytics", {
+    fetch("/api/ai/analytics", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -20,7 +20,6 @@ const ChatBody = ({
     setMessage,
     typingUser,
     currentUser,
-    onScroll,
     teamMembers,
     privateChatId,
     currentUserAvatarColor
@@ -29,6 +28,7 @@ const ChatBody = ({
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
     const authHeader = useAuthHeader();
+    const chatContainerRef = useRef(null);
 
     const tabsItems = [
         { key: '1', label: 'Group Chat', children: '' },
@@ -57,7 +57,7 @@ const ChatBody = ({
     const fetchMessage = async (messageId) => {
         try {
             console.log(`Fetching message with ID: ${messageId}`);
-            const response = await axios.get(`http://localhost:8000/api/chat/get-message/${messageId}`, {
+            const response = await axios.get(`/api/chat/get-message/${messageId}`, {
                 headers: {
                     "Authorization": authHeader(),
                 },
@@ -246,10 +246,11 @@ const ChatBody = ({
     };
 
     useEffect(() => {
-        if (searchTerm && currentResultIndex !== -1 && searchResults.length > 0) {
-            scrollToMessage(searchResults[currentResultIndex]);
+        // Scroll to bottom of chat container on new messages
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-    }, [currentResultIndex, searchResults, messages, searchTerm]);
+    }, [messages]);
 
     const filteredMessages = messages.filter(message => {
         if (privateChatId) {
@@ -262,7 +263,8 @@ const ChatBody = ({
     return (
         <div
             id={id}
-            className="flex-grow overflow-y-auto w-full px-4 pb-20 bg-chat-background border-t-4 border-chat-grid relative"
+            ref={chatContainerRef}
+            className="flex-grow overflow-y-auto w-full px-4 pb-5 bg-chat-background border-t-4 border-chat-grid relative"
         >
             <SubHeader>
                 <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2 relative">
@@ -355,17 +357,25 @@ const ChatBody = ({
                                     <span
                                         className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <Avatar className="w-8 h-8 md:w-12 md:h-12 ml-4 md:ml-10 mr-4 md:mr-8"
-                                    style={{ backgroundColor: avatarColor }}>
-                                    {message.senderId[0]}
-                                </Avatar>
+                                <div className="relative">
+                                    <Avatar className="w-8 h-8 md:w-12 md:h-12 ml-4 md:ml-10 mr-4 md:mr-8"
+                                        style={{ backgroundColor: avatarColor }}
+                                        >
+                                        {message.senderId[0]}
+                                    </Avatar>
+                                    <div className="text-center text-sm mt-1">{message.senderId}</div>
+                                </div>
                             </>
                         ) : (
                             <>
-                                <Avatar className="w-8 h-8 md:w-12 md:h-12 ml-4 md:ml-10 mr-4 md:mr-8"
-                                    style={{ backgroundColor: avatarColor }}>
-                                    {message.senderId[0]}
-                                </Avatar>
+                                <div className="relative">
+                                    <Avatar className="w-7 h-7 md:w-10 md:h-10 ml-4 md:ml-10 mr-4 md:mr-8"
+                                        style={{ backgroundColor: avatarColor }}
+                                    >
+                                        {message.senderId[0]}
+                                    </Avatar>
+                                    <div className="text-center text-sm mt-1">{message.senderId}</div>
+                                </div>
                                 <div
                                     className={`bg-chat-messages-received shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
                                     style={{ wordBreak: 'break-word', hyphens: 'auto' }}
@@ -415,11 +425,3 @@ const ChatBody = ({
 };
 
 export default ChatBody;
-
-/*          <div className="hidden md:flex flex-grow justify-center -mt-2">
-                        <div className="h-15 flex items-center gap-5 bg-chat-filter rounded-2xl py-2 px-4">
-                            <Button className="bg-white shadow-sm border-gray-300">Kanban Cards</Button>
-                            <Button className="bg-white shadow-sm border-gray-300">Polls</Button>
-                            <Button className="bg-white shadow-sm border-gray-300">Documents</Button>
-                        </div>
-                    </div>*/

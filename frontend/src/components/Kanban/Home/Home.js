@@ -68,7 +68,7 @@ const Home = () => {
 
 	const getTasks = async () => {
 		try {
-			const response = await axios.get('http://localhost:8000/api/kanban/get-tasks', {
+			const response = await axios.get('/api/kanban/get-tasks', {
 				headers: {
 					"Authorization": authHeader()
 				}
@@ -91,7 +91,7 @@ const Home = () => {
 
 	const postTask = async (taskData) => {
 		try {
-			const response = await axios.post('http://localhost:8000/api/kanban/create-task', taskData, {
+			const response = await axios.post('/api/kanban/create-task', taskData, {
 				headers: {
 					"Authorization": authHeader()
 				}
@@ -106,7 +106,7 @@ const Home = () => {
 	const putTask = async (taskData) => {
 		try {
 			const { id, ...taskDataWithoutId } = taskData;
-			const response = await axios.put(`http://localhost:8000/api/kanban/update-task/${taskData.id}`, taskDataWithoutId, {
+			const response = await axios.put(`/api/kanban/update-task/${taskData.id}`, taskDataWithoutId, {
 				headers: {
 					"Authorization": authHeader()
 				}
@@ -121,7 +121,7 @@ const Home = () => {
 	const updateTaskColumn = async (taskId, newColumn) => {
 	    try {
 			const response = await axios.put(
-				`http://localhost:8000/api/kanban/update-task/${taskId}/column`,
+				`/api/kanban/update-task/${taskId}/column`,
 				{ column: newColumn },
 				{
 					headers: {
@@ -192,7 +192,7 @@ const Home = () => {
 
 	const deleteTask = async (id) => {
 		try {
-			const response = await axios.delete(`http://localhost:8000/api/kanban/delete-task/${id}`, {
+			const response = await axios.delete(`/api/kanban/delete-task/${id}`, {
 				headers: {
 					"Authorization": authHeader()
 				}

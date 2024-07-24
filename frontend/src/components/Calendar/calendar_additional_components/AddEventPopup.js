@@ -213,7 +213,7 @@ const AddEventPopup = ({
                 uid: file.fileRef,
                 name: file.filename,
                 status: 'done',
-                url: `http://localhost:8000/calendar/files/${file.fileRef}`, // Construct the file URL
+                url: `/calendar/files/${file.fileRef}`, // Construct the file URL
             }));
         } else {
             return null
@@ -503,7 +503,7 @@ export async function uploadFile  (files, eventID) {
     });
 
     try {
-        const response = await axios.post(`http://localhost:8000/calendar/${eventID}/files`, formData, {
+        const response = await axios.post(`/calendar/${eventID}/files`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

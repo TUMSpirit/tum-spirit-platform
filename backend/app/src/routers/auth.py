@@ -94,6 +94,7 @@ class TeamUser(BaseModel):
     role: str
     team_id: PyObjectId
     avatar_color: Optional[str] = None
+    last_active: Optional[datetime] = None
     
     class Config:
         allow_population_by_field_name = True
@@ -204,6 +205,16 @@ async def check_role(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
+
+async def update_user_last_active(current_user: User = Depends(get_current_user)) -> None:
+    await user_collection.update_one({"_id": current_user["_id"]}, {"$set": {"last_active": datetime.now()}}, upsert=True)
+
+async def get_user_last_actives(current_user: User = Depends(get_current_user)) -> datetime:
+    user = await user_collection.find_one({"_id": current_user["_id"]})
+    if user:
+        return user.get("last_active")
+    return None
+
 
 
 @ router.get("/me", response_model=User)

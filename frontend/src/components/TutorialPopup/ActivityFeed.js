@@ -13,7 +13,7 @@ const ActivityFeed = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/notification/get-notifications', {
+        const response = await axios.get('/api/notification/get-notifications', {
           headers: {
             Authorization: authHeader(),
           },

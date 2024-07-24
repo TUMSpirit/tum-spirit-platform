@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useUnreadMessage } from '../context/UnreadMessageContext'; // Import the custom hook
+//import { useWebSocket } from '../context/WebSocketContext';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
 import socketIO from 'socket.io-client';
-import { Typography } from 'antd';
+import { Typography, notification } from 'antd';
 import { useAuthHeader } from 'react-auth-kit';
 import axios from 'axios';
 
@@ -10,6 +12,7 @@ const { Title } = Typography;
 const socket = socketIO.connect('http://localhost:4000', { autoConnect: false });
 
 const Chat = () => {
+    const { unreadCount, resetUnreadCount, incrementUnreadCount } = useUnreadMessage();
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
     const [editingMessage, setEditingMessage] = useState(null);
@@ -27,11 +30,11 @@ const Chat = () => {
     const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
     const [messagePage, setMessagePage] = useState(1); // For pagination
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
-
     // Fetch current user data
+
     const fetchCurrentUser = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/me', {
+            const response = await fetch('/api/me', {
                 headers: { 'Authorization': authHeader() },
             });
             const data = await response.json();
@@ -48,7 +51,7 @@ const Chat = () => {
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
             try {
-                const response = await axios.get('http://localhost:8000/api/get-team-members', {
+                const response = await axios.get('/api/get-team-members', {
                     headers: { 'Authorization': authHeader() },
                 });
                 const members = response.data;
@@ -73,7 +76,7 @@ const Chat = () => {
                     headers['Private-Chat-Id'] = privateChatId;
                 }
                 
-                const response = await fetch(`http://localhost:8000/api/chat/get-messages?page=${messagePage}`, {
+                const response = await fetch(`/api/chat/get-messages?page=${messagePage}`, {
                     method: 'GET',
                     headers: headers,
                 });
@@ -95,15 +98,25 @@ const Chat = () => {
 
     useEffect(() => {
         if (!currentUser) return;
-
-        fetchMessages(true);
-    
+        fetchMessages(true); // Fetch initial messages
         fetchTeamMembers();
-    
+        
         const handleMessageResponse = (data) => {
+            console.log('Message received:', data); // Debugging
+
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setMessages(prevMessages => [...prevMessages, data]);
                 setAutoScroll(true);
+
+                // Increment unread count for the current tab if it's not currently active
+                incrementUnreadCount();
+
+                // Show notification for new messages
+                notification.info({
+                    message: 'New Message',
+                    description: `New message in ${data.teamId || 'private chat'}.`,
+                    placement: 'topRight',
+                });
             }
         };
 
@@ -171,23 +184,21 @@ const Chat = () => {
             socket.off('typing', handleTyping);
             socket.off('stop typing', handleStopTyping);
         };
-    }, [currentUser]);
+    }, [currentUser, messagePage, privateChatId, currentTab]);
 
-    // Handle scroll to load more messages
-    const handleScroll = () => {
-        const element = document.getElementById('chat-body');
-        if (element) {
-            const { scrollTop, scrollHeight, clientHeight } = element;
-            if (scrollTop === 0 && hasMoreMessages) {
-                setMessagePage(prevPage => prevPage + 1);
-                fetchMessages();
-            }
-            setAutoScroll(scrollTop + clientHeight >= scrollHeight - 50);
-        }
-    };
+    useEffect(() => {
+        const handleNewMessage = () => {
+            incrementUnreadCount();
+        };
 
-    const getPrivateChatId = (user1, user2) => [user1, user2].sort().join('-');
+        socket.on('newMessage', handleNewMessage);
 
+        return () => {
+            socket.off('newMessage', handleNewMessage);
+        };
+    }, [socket, incrementUnreadCount]);
+
+    // Handle tab change
     const handleTabChange = async (key) => {
         setCurrentTab(key);
         if (key !== '1') {
@@ -202,10 +213,16 @@ const Chat = () => {
         setMessagePage(1);  // Reset the page to 1 when changing tabs
         setHasMoreMessages(true);  // Reset the hasMoreMessages flag
         fetchMessages(true);  // Fetch messages for the new tab
+
+        // Reset unread count when tab is changed
+        resetUnreadCount(key);
     };
+
+    const getPrivateChatId = (user1, user2) => [user1, user2].sort().join('-');
 
     return (
         <div className="mx-auto flex flex-col" style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}>
+            {/* Your sidebar component should be placed here */}
             <ChatBody
                 id="chat-body"
                 currentTab={currentTab}
@@ -221,7 +238,6 @@ const Chat = () => {
                 setMessage={setMessage}
                 typingUser={typingUser}
                 currentUser={currentUser}
-                onScroll={handleScroll}
                 teamMembers={teamMembers}
                 privateChatId={privateChatId}
                 currentUserAvatarColor={currentUserAvatarColor}

@@ -10,7 +10,7 @@ const columns = [
     dataIndex: 'avatarColor',
     key: 'avatarColor',
     render: (color, record) => (
-      <Avatar style={{ backgroundColor: color }}>
+      <Avatar style={{ backgroundColor: record.avatar_color }}>
         {record.username[0]}
       </Avatar>
     ),
@@ -42,7 +42,7 @@ const TeamMembers = () => {
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/get-team-members',
+        const response = await axios.get('/api/get-team-members',
           {
             headers: {
               "Authorization": authHeader()

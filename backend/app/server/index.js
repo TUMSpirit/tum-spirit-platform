@@ -109,6 +109,14 @@ socketIO.on('connection', (socket) => {
         }
     });
 
+    socket.on('newMessage', (message) => {
+        // Broadcast the new message to all clients in the same team
+        io.to(message.teamId).emit('messageNotification', message);
+
+        // Optionally, you might want to handle private chat messages differently
+        // io.to(message.privateChatId).emit('messageNotification', message);
+    });
+
     socket.on("deleteMessage", async ({ messageId, token }) => {
         try {
             const response = await axios.delete(`http://localhost:8000/api/chat/delete-message/${messageId}`, {

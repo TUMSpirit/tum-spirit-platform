@@ -11,7 +11,7 @@ const demoData = [
 
 export const useBig5Data = () => {
   const { loading, data } = useDataFetcher({
-    url: "http://localhost:8000/api/language/get-big5-data",
+    url: "/api/language/get-big5-data",
     demoData,
   });
   if (loading) return { data: [] };

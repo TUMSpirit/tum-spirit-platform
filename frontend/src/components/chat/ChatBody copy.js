@@ -57,7 +57,7 @@ const ChatBody = ({
     const fetchMessage = async (messageId) => {
         try {
             console.log(`Fetching message with ID: ${messageId}`);
-            const response = await axios.get(`http://localhost:8000/api/chat/get-message/${messageId}`, {
+            const response = await axios.get(`/api/chat/get-message/${messageId}`, {
                 headers: {
                     "Authorization": authHeader(),
                 },

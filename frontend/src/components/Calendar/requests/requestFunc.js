@@ -7,7 +7,7 @@ import { useAuthHeader } from 'react-auth-kit';
 
 /*
 export const getFn = async () => {
-    return fetch('http://localhost:8000/calendar').then(res => {
+    return fetch('/calendar').then(res => {
         if (!res.ok) {
             throw new Error('Network response was not ok');
         }
@@ -23,7 +23,7 @@ export const useEntries = (userId) => {
     const authHeader = useAuthHeader();
     return useQuery({
         queryFn: async () => {
-            const { data } = await axios.get(`http://localhost:8000/api/calendar/get-entries`, {
+            const { data } = await axios.get(`/api/calendar/get-entries`, {
                 headers: {
                     "Authorization": authHeader()
                 }
@@ -39,7 +39,7 @@ export const useEntries = (userId) => {
 const postEntry = async (newEntry, authHeader) => {
 
     console.log('new Entry: ', newEntry)
-    const { data } = await axios.post('http://localhost:8000/api/calendar/add-entry', {
+    const { data } = await axios.post('/api/calendar/add-entry', {
         title: newEntry.title,
         color: newEntry.color,
         startDate: moment(newEntry.start).format(),
@@ -74,7 +74,7 @@ export const useCreateEntries = () => {
 const putEntry = async (newEntry, authHeader) => {
     //const authHeader = useAuthHeader();
     console.log('putEntry: ', newEntry)
-    const { data } = await axios.put('http://localhost:8000/api/calendar/update-entry/' + newEntry.id, {
+    const { data } = await axios.put('/api/calendar/update-entry/' + newEntry.id, {
         title: newEntry.title,
         color: newEntry.color,
         startDate: moment(newEntry.start).format(),
@@ -108,7 +108,7 @@ export const useUpdateEntries = () => {
 const deleteEntry = async (id, authHeader) => {
     //const authHeader = useAuthHeader();
     console.log(id + ' deleted')
-    const { data } = await axios.delete('http://localhost:8000/api/calendar/delete-entry/' + id, {
+    const { data } = await axios.delete('/api/calendar/delete-entry/' + id, {
         headers: {
             "Authorization": authHeader
         }
@@ -139,7 +139,7 @@ const postFiles = async ({ files, eventID }, authHeader) => {
     });
 
     try {
-        const response = await axios.post(`http://localhost:8000/api/files/upload`, formData, {
+        const response = await axios.post(`/api/files/upload`, formData, {
             headers: {
                 Authorization: authHeader,
                 'Content-Type': 'multipart/form-data'
@@ -167,7 +167,7 @@ export const useUploadFile = () => {
 const deleteFile = async ({ eventId, fileId }, authHeader) => {
     //const authHeader = useAuthHeader();
     console.log(fileId + ' deleted, event id: ', eventId)
-    const { data } = await axios.delete(`http://localhost:8000/api/files/delete/` + fileId, {
+    const { data } = await axios.delete(`/api/files/delete/` + fileId, {
         headers: {
             "Authorization": authHeader
         }

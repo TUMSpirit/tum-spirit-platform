@@ -232,3 +232,11 @@ def get_message(message_id: str, current_user: User = Depends(get_current_user))
     except Exception as e:
         print(f"Error fetching message: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@router.get("/chat/get-unread-message-count", response_model=int, tags=["chat"])
+def get_missed_message_count(current_user: User = Depends(get_current_user)):
+    last_login = await get_user_last_login(current_user["_id"])
+    if last_login:
+        count = await messages_collection.count_documents({"teamId": team_id, "timestamp": {"$gt": last_login}})
+        return count
+    return 0

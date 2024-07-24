@@ -29,7 +29,7 @@ const Chat = () => {
     const fetchCurrentUser = async () => {
         if (!currentUser) {
             try {
-                const response = await fetch('http://localhost:8000/api/me', {
+                const response = await fetch('/api/me', {
                     headers: {
                         'Authorization': authHeader(),
                     },
@@ -48,7 +48,7 @@ const Chat = () => {
     const fetchTeamMembers = async () => {
         if (currentUser) {
             try {
-                const response = await axios.get(`http://localhost:8000/api/get-team-members`, {
+                const response = await axios.get(`/api/get-team-members`, {
                     headers: {
                         "Authorization": authHeader(),
                     },
@@ -77,7 +77,7 @@ const Chat = () => {
                 } else {
                     delete headers["Private-Chat-Id"];
                 }
-                const response = await fetch(`http://localhost:8000/api/chat/get-messages`, {
+                const response = await fetch(`/api/chat/get-messages`, {
                     method: 'GET',
                     headers: headers,
                 });
