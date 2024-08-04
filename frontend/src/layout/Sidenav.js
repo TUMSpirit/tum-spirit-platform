@@ -14,7 +14,7 @@ function Sidenav({ color }) {
   const page = pathname.replace("/", "");
   const { Title, Text } = Typography;
   const [opened, setOpened] = useState(false);
-  const { unreadCount } = useUnreadMessage();
+  const { unreadMessages } = useUnreadMessage();
 
   const calendar = [
     <svg
@@ -228,7 +228,7 @@ function Sidenav({ color }) {
               {chat}
             </span>
             <span className="label">Chat</span>
-            <Badge className="ml-auto" count={unreadCount}>
+            <Badge className="ml-auto" count={unreadMessages}>
             </Badge>
           </NavLink>
         </Menu.Item>

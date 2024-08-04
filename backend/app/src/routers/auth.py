@@ -80,11 +80,6 @@ class User(BaseModel):
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
 
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True  # required for the _id
-        json_encoders = {ObjectId: str}
-
 
 class UserInDB(User):
     password: str
@@ -206,25 +201,33 @@ async def check_role(
         )
     return current_user
 
-async def update_user_last_active(current_user: User = Depends(get_current_user)) -> None:
-    await user_collection.update_one({"_id": current_user["_id"]}, {"$set": {"last_active": datetime.now()}}, upsert=True)
 
-async def get_user_last_actives(current_user: User = Depends(get_current_user)) -> datetime:
-    user = await user_collection.find_one({"_id": current_user["_id"]})
-    if user:
-        return user.get("last_active")
-    return None
+#async def update_user_last_active(user_id: str) -> None:
+ #   await users_collection.update_one({"_id": user_id}, {"$set": {"last_active": datetime.utcnow()}}, upsert=True)
 
+#async def get_user_last_active(user_id: str) -> datetime:
+ #   user = await users_collection.find_one({"_id": user_id})
+  #  if user:
+   #     return user.get("last_active")
+    #return None
 
+#async def get_missed_messages(user_id: str, team_id: str) -> List[Message]:
+    #last_active = await get_user_last_active(user_id)
+    #if last_active:
+     #   messages = messages_collection.find({"teamId": team_id, "timestamp": {"$gt": last_active}})
+    #else:
+    #    messages = messages_collection.find({"teamId": team_id})
+    
+   # return [Message(**msg) for msg in await messages.to_list(length=None)]
 
-@ router.get("/me", response_model=User)
+@router.get("/me", response_model=TeamUser)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     return current_user
 
 
-@ router.post("/login")
+@router.post("/login")
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],) -> Token:
     """
     Authenticates a user and generates an access token for them.
@@ -254,7 +257,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     return Token(access_token=access_token, token_type="bearer")
 
 
-@ router.get("/get-team-members", response_model=List[TeamUser])
+@router.get("/get-team-members", response_model=List[TeamUser])
 async def get_team_members(current_user: User = Depends(get_current_user)):
     entries = user_collection.find({"team_id": current_user["team_id"]}, {"password": 0}) 
     return entries

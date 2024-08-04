@@ -15,10 +15,12 @@ import { useFormik } from "formik";
 import axios, { AxiosError } from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUnreadMessage } from '../context/UnreadMessageContext'; 
 
 function Login(props) {
   const [error, setError] = useState("");
   const signIn = useSignIn();
+  const { setUnreadMessages } = useUnreadMessage();  
   const navigate = useNavigate();
 
   const [form] = Form.useForm();
@@ -43,6 +45,12 @@ function Login(props) {
         tokenType: "bearer",
         authState: { username: values.username},
       });
+      
+      //NEW CODE
+      const { missed_count } = response.data;
+      setUnreadMessages(missed_count);
+
+
       navigate("/");
     } catch (err) {
       if (err && err instanceof AxiosError)

@@ -134,6 +134,7 @@ const HorizontalTimeline = () => {
 
   const openAiChat = () => {
     setOpened(true);
+    setShowConfetti(true);
   };
 
   const handleCreateMilestone = () => {

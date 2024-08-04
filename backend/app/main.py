@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-#import socketio
-#from .src.routers.socket import sio
 
 # import routers
 from .src.routers import auth
@@ -82,36 +80,6 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-
-
-
-
-
-
-#Chat socket.io
-
-# Define background tasks
-#async def background_task_name():
-  #  while True:
-        # Perform background task operations
-#        await asyncio.sleep(10)  # Example: Task runs every 10 seconds
-
-# Define your background tasks as a dictionary
-#background_tasks = {
-#    'background_task_name': background_task_name
-#}
-
-# Mount the Socket.IO application
-#app.mount("/", socketio.ASGIApp(sio))
-
-#@app.on_event("startup")
-#async def startup_event():
- #   await sio.start_background_task(background_tasks)
-
-#@app.on_event("shutdown")
-#async def shutdown_event():
- #   await sio.stop_background_task()
-    
 
 # Abhängigkeitsimport für OpenAPI
 from fastapi.openapi.utils import get_openapi

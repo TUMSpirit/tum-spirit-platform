@@ -277,11 +277,13 @@ function Header({
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const response = await fetch('/api/me', {
-          headers: { 'Authorization': authHeader() },
+        const response = await axios.get('/api/me',
+        {
+          headers: {
+            "Authorization": authHeader()
+          }
         });
-        const data = await response.json();
-        setMe(data);
+        setMe(response.data);
       } catch (error) {
         console.error('Failed to fetch current user:', error);
       }

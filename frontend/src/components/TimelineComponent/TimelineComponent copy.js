@@ -90,6 +90,7 @@ const HorizontalTimeline = () => {
       }
     });
 
+
     if (completedMilestones > 0) {
       setCurrent(completedMilestones - 1);
       setProgress(milestones[completedMilestones - 1].progress);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar, Badge } from 'antd';
+import { Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar } from 'antd';
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
 import { SubHeader } from '../../layout/SubHeader';
 import Search from 'antd/es/input/Search';
@@ -22,8 +22,7 @@ const ChatBody = ({
     currentUser,
     teamMembers,
     privateChatId,
-    currentUserAvatarColor,
-    onlineStatus // Add onlineStatus prop
+    currentUserAvatarColor
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -35,15 +34,7 @@ const ChatBody = ({
         { key: '1', label: 'Group Chat', children: '' },
         ...teamMembers.map((member, index) => ({
             key: (index + 2).toString(),
-            label: (
-                <span>
-                    {member.username}{' '}
-                    <Badge
-                        status={onlineStatus[member.username] === 'online' ? 'success' : 'default'}
-                        dot
-                    />
-                </span>
-            ),
+            label: member.username,
             children: ''
         })),
     ];

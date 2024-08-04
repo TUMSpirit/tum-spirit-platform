@@ -10,7 +10,7 @@ export const UnreadMessageProvider = ({ children }) => {
   };
 
   return (
-    <UnreadMessageContext.Provider value={{ unreadMessages, incrementNotifications }}>
+    <UnreadMessageContext.Provider value={{ unreadMessages, setUnreadMessages, incrementNotifications}}>
       {children}
     </UnreadMessageContext.Provider>
   );

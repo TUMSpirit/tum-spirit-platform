@@ -22,7 +22,7 @@ import Calendar from "./pages/Calendar";
 import socketIO from "socket.io-client";
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:8000';  // Default to localhost if no env var
+axios.defaults.baseURL = 'http://localhost:8000';   //Default to localhost if no env var
 
 
 /*const socket = socketIO.connect("http://localhost:4000");

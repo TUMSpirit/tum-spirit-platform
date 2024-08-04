@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useUnreadMessage } from '../context/UnreadMessageContext'; // Import the custom hook
-//import { useWebSocket } from '../context/WebSocketContext';
+import { useUnreadMessage } from '../context/UnreadMessageContext';
 import ChatBody from '../components/chat/ChatBody';
 import ChatFooter from '../components/chat/ChatFooter';
 import socketIO from 'socket.io-client';
@@ -9,10 +8,10 @@ import { useAuthHeader } from 'react-auth-kit';
 import axios from 'axios';
 
 const { Title } = Typography;
-const socket = socketIO.connect('http://localhost:4000', { autoConnect: false });
+const socket = socketIO.connect('http://localhost:4000');
 
 const Chat = () => {
-    const { unreadCount, resetUnreadCount, incrementUnreadCount } = useUnreadMessage();
+    const { unreadMessages, setUnreadMessages, incrementNotifications } = useUnreadMessage();
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
     const [editingMessage, setEditingMessage] = useState(null);
@@ -21,33 +20,34 @@ const Chat = () => {
     const [message, setMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [typingUser, setTypingUser] = useState(null);
-    const HEADER_HEIGHT_PX = 256;
+    const HEADER_HEIGHT_PX = 190;
     const authHeader = useAuthHeader();
     const [currentUser, setCurrentUser] = useState(null);
     const [autoScroll, setAutoScroll] = useState(true);
     const [teamMembers, setTeamMembers] = useState([]);
     const [privateChatId, setPrivateChatId] = useState(null);
     const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
-    const [messagePage, setMessagePage] = useState(1); // For pagination
+    const [messagePage, setMessagePage] = useState(1);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
-    // Fetch current user data
+    const [onlineStatus, setOnlineStatus] = useState({}); // New state for online status
 
     const fetchCurrentUser = async () => {
         try {
-            const response = await fetch('/api/me', {
-                headers: { 'Authorization': authHeader() },
+            const response = await axios.get('/api/me', {
+                headers: {
+                    "Authorization": authHeader()
+                }
             });
-            const data = await response.json();
-            setCurrentUser(data);
-            socket.auth = { teamId: data.team_id };
+            setCurrentUser(response.data);
+            socket.auth = { teamId: response.data.team_id };
             socket.connect();
-            socket.emit('joinTeam', data.team_id);
+            socket.emit('joinTeam', response.data.team_id);
+            socket.emit('userOnline', response.data.username); // Notify server that user is online
         } catch (error) {
             console.error('Failed to fetch current user:', error);
         }
     };
 
-    // Fetch team members data (cached)
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
             try {
@@ -67,7 +67,6 @@ const Chat = () => {
         }
     };
 
-    // Fetch messages with pagination
     const fetchMessages = async (reset = false) => {
         if (currentUser && hasMoreMessages) {
             try {
@@ -75,15 +74,13 @@ const Chat = () => {
                 if (privateChatId) {
                     headers['Private-Chat-Id'] = privateChatId;
                 }
-                
-                const response = await fetch(`/api/chat/get-messages?page=${messagePage}`, {
+                const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
                     method: 'GET',
                     headers: headers,
                 });
 
-                const data = await response.json();
-                setMessages(prevMessages => reset ? data : [...prevMessages, ...data]);
-                if (data.length === 0) {
+                setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
+                if (response.data.length === 0) {
                     setHasMoreMessages(false);
                 }
             } catch (error) {
@@ -98,20 +95,15 @@ const Chat = () => {
 
     useEffect(() => {
         if (!currentUser) return;
-        fetchMessages(true); // Fetch initial messages
+        fetchMessages(true);
         fetchTeamMembers();
-        
-        const handleMessageResponse = (data) => {
-            console.log('Message received:', data); // Debugging
 
+        const handleMessageResponse = (data) => {
+            console.log('Message received:', data);
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setMessages(prevMessages => [...prevMessages, data]);
                 setAutoScroll(true);
-
-                // Increment unread count for the current tab if it's not currently active
-                incrementUnreadCount();
-
-                // Show notification for new messages
+                incrementNotifications();
                 notification.info({
                     message: 'New Message',
                     description: `New message in ${data.teamId || 'private chat'}.`,
@@ -165,6 +157,10 @@ const Chat = () => {
             }
         };
 
+        const handleUpdateUserStatus = ({ userId, status }) => {
+            setOnlineStatus(prevStatus => ({ ...prevStatus, [userId]: status }));
+        };
+
         socket.on('messageResponse', handleMessageResponse);
         socket.on('messageUpdated', handleMessageUpdated);
         socket.on('emojiReactionRemoved', handleEmojiReactionRemoved);
@@ -173,6 +169,7 @@ const Chat = () => {
         socket.on('messagesUpdated', handleMessagesUpdated);
         socket.on('typing', handleTyping);
         socket.on('stop typing', handleStopTyping);
+        //socket.on('updateUserStatus', handleUpdateUserStatus); // Listen for status updates
 
         return () => {
             socket.off('messageResponse', handleMessageResponse);
@@ -183,12 +180,35 @@ const Chat = () => {
             socket.off('messagesUpdated', handleMessagesUpdated);
             socket.off('typing', handleTyping);
             socket.off('stop typing', handleStopTyping);
+            //socket.off('updateUserStatus', handleUpdateUserStatus); // Cleanup status updates
         };
     }, [currentUser, messagePage, privateChatId, currentTab]);
 
+
+    useEffect(() => {
+        socket.on('currentOnlineUsers', (users) => {
+            const onlineStatus = {};
+            users.forEach(user => {
+                onlineStatus[user.userId] = user.status;
+            });
+            setOnlineStatus(onlineStatus);
+        });
+        socket.on('updateUserStatus', ({ userId, status }) => {
+            setOnlineStatus(prevState => ({
+                ...prevState,
+                [userId]: status
+            }));
+        });
+    
+        return () => {
+            socket.off('currentOnlineUsers');
+            socket.off('updateUserStatus');
+        };
+    }, [socket]);
+    
     useEffect(() => {
         const handleNewMessage = () => {
-            incrementUnreadCount();
+            incrementNotifications();
         };
 
         socket.on('newMessage', handleNewMessage);
@@ -196,9 +216,8 @@ const Chat = () => {
         return () => {
             socket.off('newMessage', handleNewMessage);
         };
-    }, [socket, incrementUnreadCount]);
+    }, [socket, incrementNotifications]);
 
-    // Handle tab change
     const handleTabChange = async (key) => {
         setCurrentTab(key);
         if (key !== '1') {
@@ -210,19 +229,16 @@ const Chat = () => {
             setPrivateChatId(null);
             socket.emit('joinTeam', currentUser.team_id);
         }
-        setMessagePage(1);  // Reset the page to 1 when changing tabs
-        setHasMoreMessages(true);  // Reset the hasMoreMessages flag
-        fetchMessages(true);  // Fetch messages for the new tab
-
-        // Reset unread count when tab is changed
-        resetUnreadCount(key);
+        setMessagePage(1);
+        setHasMoreMessages(true);
+        fetchMessages(true);
+        setUnreadMessages(0);
     };
 
     const getPrivateChatId = (user1, user2) => [user1, user2].sort().join('-');
 
     return (
         <div className="mx-auto flex flex-col" style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}>
-            {/* Your sidebar component should be placed here */}
             <ChatBody
                 id="chat-body"
                 currentTab={currentTab}
@@ -241,6 +257,7 @@ const Chat = () => {
                 teamMembers={teamMembers}
                 privateChatId={privateChatId}
                 currentUserAvatarColor={currentUserAvatarColor}
+                onlineStatus={onlineStatus} // Pass online status to ChatBody
             />
             <ChatFooter
                 socket={socket}

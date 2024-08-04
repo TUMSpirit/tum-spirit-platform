@@ -42,19 +42,29 @@ const TeamMembers = () => {
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
-        const response = await axios.get('/api/get-team-members',
+        const response = await axios.get('/api/get-team-members', {
+          headers: {
+            "Authorization": authHeader()
+          }
+        });
+        // Add static member 'Spirit' to the team members
+        const updatedTeamMembers = [
+          ...response.data,
           {
-            headers: {
-              "Authorization": authHeader()
-            }
-          });
-        setTeamMembers(response.data);
+            _id: 'spirit-id', // Ensure this ID is unique
+            username: 'Spirit',
+            role: 'AI',
+            status: true,
+            avatar_color: '#f56a00', // Default color for Spirit's avatar
+          },
+        ];
+        setTeamMembers(updatedTeamMembers);
       } catch (error) {
         console.error('Error fetching team members:', error);
       }
     };
     fetchTeamMembers();
-  }, []);
+  }, [authHeader]);
 
   return (
     <Table
