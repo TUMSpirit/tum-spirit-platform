@@ -262,7 +262,7 @@ const ChatFooter = ({
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
-                                    <div ref={emojiPickerRef} className="absolute bottom-12 right-0 z-20">
+                                    <div ref={emojiPickerRef} style={{margin:"auto !important"}} className="absolute bottom-12 right-0 z-20">
                                         <Picker onEmojiClick={onEmojiClick} />
                                     </div>
                                 )}

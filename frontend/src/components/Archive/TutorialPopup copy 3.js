@@ -171,7 +171,7 @@ const TutorialPopup = () => {
       </Button>
       <Modal
         title="Complete the Tutorials"
-        visible={visible}
+        open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
         okText="Save Progress"

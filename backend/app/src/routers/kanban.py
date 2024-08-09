@@ -197,8 +197,8 @@ def get_tasks(current_user: Annotated[User, Depends(get_current_user)],
     try:
         # Create a record with a random ID (ObjectId) and a timestamp
         # Inserting the record into the database
-        query = {"team_id":current_user["team_id"]}
-        entries = collection.find()
+        query = {"team_id": current_user["team_id"]}
+        entries = collection.find(query)
         return entries
         #print(items)
           # Print the results

@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUnreadMessage } from '../context/UnreadMessageContext';
-import ChatBody from '../components/chat/ChatBody';
-import ChatFooter from '../components/chat/ChatFooter';
+import ChatBody from '../components/Chat/ChatBody';
+import ChatFooter from '../components/Chat/ChatFooter';
 import socketIO from 'socket.io-client';
-import { Typography, notification } from 'antd';
+import { notification } from 'antd';
 import { useAuthHeader } from 'react-auth-kit';
 import axios from 'axios';
-
-const { Title } = Typography;
-const socket = socketIO.connect('http://localhost:4000');
+import { useSocket } from '../context/SocketProvider';
 
 const Chat = () => {
-    const { unreadMessages, setUnreadMessages, incrementNotifications } = useUnreadMessage();
+
+    const {currentUser, onlineStatus, socket, updateLastLoggedIn} = useSocket(); 
+
+    const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages} = useUnreadMessage();
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
     const [editingMessage, setEditingMessage] = useState(null);
@@ -22,31 +23,32 @@ const Chat = () => {
     const [typingUser, setTypingUser] = useState(null);
     const HEADER_HEIGHT_PX = 190;
     const authHeader = useAuthHeader();
-    const [currentUser, setCurrentUser] = useState(null);
-    const [autoScroll, setAutoScroll] = useState(true);
+    //const [currentUser, setCurrentUser] = useState(null);
+    const [setAutoScroll] = useState(true);
     const [teamMembers, setTeamMembers] = useState([]);
     const [privateChatId, setPrivateChatId] = useState(null);
     const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
     const [messagePage, setMessagePage] = useState(1);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
-    const [onlineStatus, setOnlineStatus] = useState({}); // New state for online status
+    //const [onlineStatus, setOnlineStatus] = useState({}); // New state for online status
 
-    const fetchCurrentUser = async () => {
+    /*const fetchCurrentUser = async () => {
         try {
             const response = await axios.get('/api/me', {
                 headers: {
                     "Authorization": authHeader()
                 }
             });
-            setCurrentUser(response.data);
-            socket.auth = { teamId: response.data.team_id };
+            const {team_id, username} = response.data;
+            //setCurrentUser(response.data);
+            socket.auth = { teamId: team_id };
             socket.connect();
-            socket.emit('joinTeam', response.data.team_id);
-            socket.emit('userOnline', response.data.username); // Notify server that user is online
+            socket.emit('joinTeam', team_id);
+            socket.emit('userOnline', {team_id, username}); // Notify server that user is online
         } catch (error) {
             console.error('Failed to fetch current user:', error);
         }
-    };
+    };*/
 
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
@@ -90,7 +92,8 @@ const Chat = () => {
     };
 
     useEffect(() => {
-        fetchCurrentUser();
+        setTimeout(markAsRead("Team"), 3500);
+       // setUnreadMessages(currentTab);
     }, []);
 
     useEffect(() => {
@@ -102,13 +105,19 @@ const Chat = () => {
             console.log('Message received:', data);
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setMessages(prevMessages => [...prevMessages, data]);
-                setAutoScroll(true);
-                incrementNotifications();
-                notification.info({
-                    message: 'New Message',
-                    description: `New message in ${data.teamId || 'private chat'}.`,
-                    placement: 'topRight',
-                });
+                const chatId = privateChatId ? privateChatId.split('-')[1] : 'Team';
+
+                // Increment notifications
+                //incrementNotifications(privateChatId);
+                // Get the current username based on currentTab
+                const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
+                console.log(currentUser);
+                console.log(currentTab);
+              
+                // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
+                if (currentUser === chatId || (parseInt(currentTab) === 1 && chatId === 'Team')) {
+                 // markAsRead(privateChatId);
+                }
             }
         };
 
@@ -157,10 +166,6 @@ const Chat = () => {
             }
         };
 
-        const handleUpdateUserStatus = ({ userId, status }) => {
-            setOnlineStatus(prevStatus => ({ ...prevStatus, [userId]: status }));
-        };
-
         socket.on('messageResponse', handleMessageResponse);
         socket.on('messageUpdated', handleMessageUpdated);
         socket.on('emojiReactionRemoved', handleEmojiReactionRemoved);
@@ -169,7 +174,6 @@ const Chat = () => {
         socket.on('messagesUpdated', handleMessagesUpdated);
         socket.on('typing', handleTyping);
         socket.on('stop typing', handleStopTyping);
-        //socket.on('updateUserStatus', handleUpdateUserStatus); // Listen for status updates
 
         return () => {
             socket.off('messageResponse', handleMessageResponse);
@@ -180,35 +184,28 @@ const Chat = () => {
             socket.off('messagesUpdated', handleMessagesUpdated);
             socket.off('typing', handleTyping);
             socket.off('stop typing', handleStopTyping);
-            //socket.off('updateUserStatus', handleUpdateUserStatus); // Cleanup status updates
         };
     }, [currentUser, messagePage, privateChatId, currentTab]);
 
 
-    useEffect(() => {
-        socket.on('currentOnlineUsers', (users) => {
-            const onlineStatus = {};
-            users.forEach(user => {
-                onlineStatus[user.userId] = user.status;
-            });
-            setOnlineStatus(onlineStatus);
-        });
-        socket.on('updateUserStatus', ({ userId, status }) => {
-            setOnlineStatus(prevState => ({
-                ...prevState,
-                [userId]: status
-            }));
+  /*  useEffect(() => {
+        socket.on('updateUserStatus', ({ data }) => {
+            for (const username in data) {
+                data[username] = 'online'
+            }
+            setOnlineStatus(data);
         });
     
         return () => {
-            socket.off('currentOnlineUsers');
+            // socket.off('currentOnlineUsers');
             socket.off('updateUserStatus');
         };
     }, [socket]);
     
     useEffect(() => {
         const handleNewMessage = () => {
-            incrementNotifications();
+            console.log("trigger increment");
+            incrementNotifications('Team');
         };
 
         socket.on('newMessage', handleNewMessage);
@@ -216,29 +213,43 @@ const Chat = () => {
         return () => {
             socket.off('newMessage', handleNewMessage);
         };
-    }, [socket, incrementNotifications]);
+    }, [socket, incrementNotifications]);*/
 
     const handleTabChange = async (key) => {
+        console.log(key);
+        const currTab = currentTab;
+        console.log(currTab);
+        if (key !== '1') {
+        updateLastLoggedIn(teamMembers[1].username);
+        } else {
+        updateLastLoggedIn("Team");
+        }
+        //setLastVisited(privateChatId);
         setCurrentTab(key);
         if (key !== '1') {
             const memberUsername = teamMembers[parseInt(key) - 2].username;
             const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
+            markAsRead(newPrivateChatId);
+            updateLastLoggedIn(memberUsername);
             setPrivateChatId(newPrivateChatId);
+            console.log(newPrivateChatId);
             socket.emit('joinPrivateChat', newPrivateChatId);
         } else {
             setPrivateChatId(null);
+            updateLastLoggedIn("Team");
+            //setLastVisited(null);
+            markAsRead("Team");
             socket.emit('joinTeam', currentUser.team_id);
         }
         setMessagePage(1);
         setHasMoreMessages(true);
         fetchMessages(true);
-        setUnreadMessages(0);
     };
 
     const getPrivateChatId = (user1, user2) => [user1, user2].sort().join('-');
 
     return (
-        <div className="mx-auto flex flex-col" style={{ height: `calc(100vh - ${HEADER_HEIGHT_PX}px)` }}>
+        <div className="mx-auto flex flex-col" style={{ height: `100%` }}>
             <ChatBody
                 id="chat-body"
                 currentTab={currentTab}
@@ -257,7 +268,8 @@ const Chat = () => {
                 teamMembers={teamMembers}
                 privateChatId={privateChatId}
                 currentUserAvatarColor={currentUserAvatarColor}
-                onlineStatus={onlineStatus} // Pass online status to ChatBody
+                onlineStatus={onlineStatus}
+                getUnreadMessages={getUnreadMessages}// Pass online status to ChatBody
             />
             <ChatFooter
                 socket={socket}

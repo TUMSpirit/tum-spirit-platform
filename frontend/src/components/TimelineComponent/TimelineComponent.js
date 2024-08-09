@@ -227,7 +227,7 @@ const HorizontalTimeline = () => {
 
       <Modal
         title="Create New Milestone"
-        visible={modalVisible}
+        open={modalVisible}
         onOk={handleCreateMilestone}
         onCancel={() => setModalVisible(false)}
       >

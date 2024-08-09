@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Avatar, Tag } from 'antd';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
+import { useSocket } from '../../context/SocketProvider'; // Adjust the import path accordingly
 
 const columns = [
   {
@@ -30,13 +31,14 @@ const columns = [
     dataIndex: 'status',
     key: 'status',
     render: (status) => (
-      <Tag color={status ? 'green' : 'red'}>{status ? 'Online' : 'Offline'}</Tag>
+      <Tag color={status === 'online' ? 'green' : 'red'}>{status === 'online' ? 'Online' : 'Offline'}</Tag>
     ),
   },
 ];
 
 const TeamMembers = () => {
   const [teamMembers, setTeamMembers] = useState([]);
+  const { onlineStatus } = useSocket(); // Use the socket context to get the onlineStatus
   const authHeader = useAuthHeader();
 
   useEffect(() => {
@@ -47,6 +49,7 @@ const TeamMembers = () => {
             "Authorization": authHeader()
           }
         });
+
         // Add static member 'Spirit' to the team members
         const updatedTeamMembers = [
           ...response.data,
@@ -54,17 +57,35 @@ const TeamMembers = () => {
             _id: 'spirit-id', // Ensure this ID is unique
             username: 'Spirit',
             role: 'AI',
-            status: true,
+            status: 'online', // Default status for Spirit
             avatar_color: '#f56a00', // Default color for Spirit's avatar
           },
         ];
-        setTeamMembers(updatedTeamMembers);
+
+        // Merge online status with team members data
+        const teamMembersWithStatus = updatedTeamMembers.map(member => {
+          // Always set Spirit to online
+          if (member.username === 'Spirit') {
+            return {
+              ...member,
+              status: 'online',
+            };
+          }
+
+          return {
+            ...member,
+            status: onlineStatus[member.username] || 'offline'
+          };
+        });
+
+        setTeamMembers(teamMembersWithStatus);
       } catch (error) {
         console.error('Error fetching team members:', error);
       }
     };
+
     fetchTeamMembers();
-  }, [authHeader]);
+  }, []); // Re-run the effect if onlineStatus changes
 
   return (
     <Table

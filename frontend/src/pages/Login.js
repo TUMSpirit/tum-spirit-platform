@@ -15,12 +15,12 @@ import { useFormik } from "formik";
 import axios, { AxiosError } from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUnreadMessage } from '../context/UnreadMessageContext'; 
+import { useUnreadMessage } from '../context/UnreadMessageContext';
 
 function Login(props) {
   const [error, setError] = useState("");
   const signIn = useSignIn();
-  const { setUnreadMessages } = useUnreadMessage();  
+  const { setUnreadMessages } = useUnreadMessage();
   const navigate = useNavigate();
 
   const [form] = Form.useForm();
@@ -41,17 +41,12 @@ function Login(props) {
 
       signIn({
         token: response.data.access_token,
-        expiresIn: 4320000,
+        expiresIn: 129600,//90 tage logged in 
         tokenType: "bearer",
-        authState: { username: values.username},
+        authState: { username: values.username },
       });
-      
+      window.location.reload();
       //NEW CODE
-      const { missed_count } = response.data;
-      setUnreadMessages(missed_count);
-
-
-      navigate("/");
     } catch (err) {
       if (err && err instanceof AxiosError)
         setError(err.response?.data.message);
@@ -71,54 +66,54 @@ function Login(props) {
 
   return (
     <>
-    <div className="login-page">
-    <div className="picture-background">
-      <div className="test-container1"/>
-      <div className="test-container2">
-    <div className="login-box">
-      <Form
-          name="login-form"
-          form={form}
-          initialValues={{ remember: true }}
-          onFinish={onSubmit}
-      >
-        <img id="login-logo" src={Logo} alt="Login" width="120px"/>
-        <p className="form-title">Welcome back</p>
-        <p>Login to the Dashboard</p>
-        <Form.Item
-            name="username"
-            rules={[{ required: true, message: 'Please input your username!' }]}
-        >
-          <Input
-              placeholder="Username"
-          />
-        </Form.Item>
+      <div className="login-page">
+        <div className="picture-background">
+          <div className="test-container1" />
+          <div className="test-container2">
+            <div className="login-box">
+              <Form
+                name="login-form"
+                form={form}
+                initialValues={{ remember: true }}
+                onFinish={onSubmit}
+              >
+                <img id="login-logo" src={Logo} alt="Login" width="120px" />
+                <p className="form-title">Welcome back</p>
+                <p>Login to the Dashboard</p>
+                <Form.Item
+                  name="username"
+                  rules={[{ required: true, message: 'Please input your username!' }]}
+                >
+                  <Input
+                    placeholder="Username"
+                  />
+                </Form.Item>
 
-        <Form.Item
-            name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
-        >
-          <Input.Password
-              id="password-input" placeholder="Password"
-          />
-        </Form.Item>
+                <Form.Item
+                  name="password"
+                  rules={[{ required: true, message: 'Please input your password!' }]}
+                >
+                  <Input.Password
+                    id="password-input" placeholder="Password"
+                  />
+                </Form.Item>
 
-        <Form.Item className="form-checkbox" name="remember" valuePropName="checked">
-          <Checkbox height="50px">Remember me</Checkbox>
-        </Form.Item>
+                <Form.Item className="form-checkbox" name="remember" valuePropName="checked">
+                  <Checkbox height="50px">Remember me</Checkbox>
+                </Form.Item>
 
-        <Form.Item>
-          <Button type="primary" htmlType="submit" className="login-form-button">
-            LOGIN
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit" className="login-form-button">
+                    LOGIN
+                  </Button>
+                </Form.Item>
+              </Form>
+            </div>
+          </div>
+          <div className="test-container3" />
+        </div>
       </div>
-        <div className="test-container3"/>
-    </div>
-  </div>
-  </>
+    </>
   );
 }
 

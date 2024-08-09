@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # import routers
 from .src.routers import auth
-from .src.routers import celery
+#from .src.routers import celery
 from .src.routers import team
 
 from .src.routers import ai
@@ -25,7 +25,7 @@ def application_setup() -> FastAPI:
 
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
-    application.include_router(celery.router, prefix="/api")
+ #   application.include_router(celery.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
 
     application.include_router(chat.router, prefix="/api")

@@ -50,7 +50,7 @@ const ShopPopup = ({ coins, setCoins, activities, setActivities }) => {
     <div>
       <Modal
         title="Tutorial Shop"
-        visible={visible}
+        open={visible}
         onOk={handleOk}
         onCancel={handleCancel}
         okText="Close"

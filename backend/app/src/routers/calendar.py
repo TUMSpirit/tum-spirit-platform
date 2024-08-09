@@ -144,8 +144,8 @@ async def get_file(current_user: User = Depends(get_current_user)):
     try:
             # Convert current user id to string
             #current_user_id_str = str(current_user.id)
-            query = {"users": current_user['_id']}
-            entries = file_collection.find()
+            query = {"users": current_user['team_id']}
+            entries = file_collection.find(query)
             return entries
     except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

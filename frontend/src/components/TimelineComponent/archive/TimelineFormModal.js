@@ -12,7 +12,7 @@ const TimelineFormModal = ({ visible, onSubmit, onCancel }) => {
 	return (
 		<Modal
 			title="Do you want to advance the course progress"
-			visible={visible}
+			open={visible}
 			onOk={() => onSubmit()}
 			onCancel={() => handleOnCancel()}
 		>

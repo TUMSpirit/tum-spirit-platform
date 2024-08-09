@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Row, Col, Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar, Badge, Input } from 'antd';
+import { Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar, Badge } from 'antd';
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
 import { SubHeader } from '../../layout/SubHeader';
 import Search from 'antd/es/input/Search';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
-
 
 const ChatBody = ({
     id,
@@ -24,45 +23,29 @@ const ChatBody = ({
     teamMembers,
     privateChatId,
     currentUserAvatarColor,
-    onlineStatus,
-    getUnreadMessages // Add onlineStatus prop
+    onlineStatus // Add onlineStatus prop
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [totalResults, setTotalResults] = useState(0);
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
     const authHeader = useAuthHeader();
     const chatContainerRef = useRef(null);
 
-
-
     const tabsItems = [
-        { key: '1',  label: (
-            <span>
-                <Badge
-                    count={getUnreadMessages('Team')|| 0} // Display unread messages count
-                    overflowCount={9}
-                    offset={[10, -4]}
-                >
-                     Team
-                    </Badge>
-            </span>
-        ), children: '' },
+        { key: '1', label: 'Group Chat', children: '' },
         ...teamMembers.map((member, index) => ({
             key: (index + 2).toString(),
             label: (
                 <span>
+                    {member.username}{' '}
                     <Badge
-                        count={getUnreadMessages(currentUser.username+"-"+member.username)|| 0}// Display unread messages count
-                        overflowCount={9}
-                        offset={[10, -4]}
-                    >
-                         <Badge status={onlineStatus[member.username] ? 'processing' : 'default'} text={member.username}/>
-                        </Badge>
+                        status={onlineStatus[member.username] === 'online' ? 'success' : 'default'}
+                        dot
+                    />
                 </span>
             ),
             children: ''
-        }))
+        })),
     ];
 
     const getAvatarColor = (username) => {
@@ -121,7 +104,6 @@ const ChatBody = ({
         setSearchTerm(value);
         if (!value.trim()) {
             setSearchResults([]);
-            setTotalResults(0);
             setCurrentResultIndex(-1);
         } else {
             const lowerCaseTerm = value.toLowerCase();
@@ -130,12 +112,11 @@ const ChatBody = ({
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
-    
+
             setSearchResults(foundIndexes);
-            setTotalResults(foundIndexes.length);
             if (foundIndexes.length > 0) {
                 setCurrentResultIndex(0);
-                //scrollToMessage(foundIndexes[0]);
+                scrollToMessage(foundIndexes[0]);
             }
         }
     };
@@ -150,55 +131,11 @@ const ChatBody = ({
         }
     };
 
-    const navigatePreviousResult = () => {
-        if (searchResults.length > 1) {
-            setCurrentResultIndex(prev => {
-                const nextIndex = (prev - 1 + searchResults.length) % searchResults.length;
-                scrollToMessage(searchResults[nextIndex]);
-                return nextIndex;
-            });
-        }
-    };
-    
-    const navigateNextResult = () => {
-        if (searchResults.length > 1) {
-            setCurrentResultIndex(prev => {
-                const nextIndex = (prev + 1) % searchResults.length;
-                scrollToMessage(searchResults[nextIndex]);
-                return nextIndex;
-            });
-        }
-    };
-    
-
     const scrollToMessage = (index) => {
-        // Ensure the index is valid
-        if (index < 0 || index >= messages.length) {
-            console.warn(`Invalid index: ${index}`);
-            return;
-        }
-
-        const messageId = messages[index]?.id;
-        if (!messageId) {
-            console.warn(`No messageId found for index: ${index}`);
-            return;
-        }
-
+        const messageId = messages[index].id;
         const element = document.getElementById(`message-${messageId}`);
-        if (element && chatContainerRef.current) {
-            // Calculate the position of the element relative to the chat container
-            const elementTop = element.offsetTop;
-            const containerTop = chatContainerRef.current.scrollTop;
-            const containerHeight = chatContainerRef.current.clientHeight;
-            const elementHeight = element.offsetHeight;
-
-            // Scroll to position
-            chatContainerRef.current.scrollTo({
-                top: elementTop - containerHeight / 2 + elementHeight / 2,
-                behavior: 'smooth'
-            });
-        } else {
-            console.warn(`No element found with ID: message-${messageId}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     };
 
@@ -208,7 +145,7 @@ const ChatBody = ({
             <span className="text-l mb-0 word-break break-word hyphens-auto">
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
-                        <span key={index} style={{ borderRadius:"5px", padding:"5px", backgroundColor: 'rgb(220, 287, 305)' }}>{part}</span>
+                        <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
                     ) : part
                 )}
             </span>
@@ -336,38 +273,44 @@ const ChatBody = ({
         <div
             id={id}
             ref={chatContainerRef}
-            className="flex-grow overflow-y-auto w-full px-4 pb-5 bg-chat-background border-t-2 border-chat-grid relative"
-        style={{borderColor:"rgb(229, 231, 235)", height:"100px"}}>
-       <SubHeader>
-                <Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{marginTop:"-2px"}}>
-                    <Col xs={24} md={12} className="mt-2 w-full">
-                        <Tabs
-                            className="w-full m-0"
-                            activeKey={currentTab}
-                            onChange={key => setCurrentTab(key)}
-                            items={tabsItems}
-                        />
-                    </Col>
-                    <Col xs={24} md={12} className="flex flex-col md:flex-row justify-end">
-                    <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0">
-                        <Search
-                            className="w-full md:w-48 md:mb-0"
-                            placeholder="Search messages"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            onSearch={navigateSearchResults}
-                            onPressEnter={navigateSearchResults}
-                        />
-                 
-                            <Button className="ml-1" onClick={navigatePreviousResult}>
-                                Previous
-                            </Button>
-                            <Button className="ml-1" onClick={navigateNextResult}>
-                                Next
-                            </Button>
+            className="flex-grow overflow-y-auto w-full px-4 pb-5 bg-chat-background border-t-4 border-chat-grid relative"
+        >
+            <SubHeader>
+                <div className="flex flex-col md:flex-row justify-between items-center w-full -mb-2 relative">
+                    <ConfigProvider
+                        theme={{
+                            token: {
+                                lineHeight: 1.3,
+                                lineWidth: 10,
+                            },
+                        }}
+                    >
+                        <div className="h-14 mt-0 w-full md:w-auto">
+                            <Tabs
+                                activeKey={currentTab}
+                                onChange={(key) => setCurrentTab(key)}
+                                items={tabsItems}
+                                size="large"
+                                tabBarStyle={{
+                                    marginTop: '4px',
+                                    borderBottom: 'none'
+                                }}
+                            />
                         </div>
-                    </Col>
-                </Row>
+                    </ConfigProvider>
+                    <div className="hidden md:block">
+                        <Search
+                            placeholder="Search Message"
+                            size="medium"
+                            value={searchTerm}
+                            onChange={e => handleSearch(e.target.value)}
+                            onSearch={handleSearch}
+                            onPressEnter={navigateSearchResults}
+                            className="max-w-[300px]"
+                        />
+                    </div>
+                    <div className="border-t-2 border-gray-200 absolute bottom-0 w-full"></div>
+                </div>
             </SubHeader>
             {filteredMessages.map((message, index) => {
                 if (message.deleted) {
@@ -399,7 +342,7 @@ const ChatBody = ({
                         {isSender ? (
                             <>
                                 <div
-                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
+                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
                                     style={{ wordBreak: 'break-word', hyphens: 'auto' }}
                                 >
                                     {isReplyingTo && (
@@ -423,10 +366,10 @@ const ChatBody = ({
                                     <span
                                         className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                 </div>
-                                <div className="relative mt-2 ml-2">
-                                    <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
+                                <div className="relative">
+                                    <Avatar className="w-8 h-8 md:w-12 md:h-12 ml-4 md:ml-10 mr-4 md:mr-8"
                                         style={{ backgroundColor: avatarColor }}
-                                    >
+                                        >
                                         {message.senderId[0]}
                                     </Avatar>
                                     <div className="text-center text-sm mt-1">{message.senderId}</div>
@@ -434,8 +377,8 @@ const ChatBody = ({
                             </>
                         ) : (
                             <>
-                                <div className="relative mt-2 mr-2">
-                                    <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
+                                <div className="relative">
+                                    <Avatar className="w-7 h-7 md:w-10 md:h-10 ml-4 md:ml-10 mr-4 md:mr-8"
                                         style={{ backgroundColor: avatarColor }}
                                     >
                                         {message.senderId[0]}
@@ -443,7 +386,7 @@ const ChatBody = ({
                                     <div className="text-center text-sm mt-1">{message.senderId}</div>
                                 </div>
                                 <div
-                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
+                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle}`}
                                     style={{ wordBreak: 'break-word', hyphens: 'auto' }}
                                 >
                                     <div>

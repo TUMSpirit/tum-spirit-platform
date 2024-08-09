@@ -40,6 +40,8 @@ import TutorialPopup from '../components/TutorialPopup/TutorialPopup';
 import ImprintModal from '../components/Imprint/ImprintModal';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
+import { useSocket } from '../context/SocketProvider';
+import { useUnreadMessage } from '../context/UnreadMessageContext';
 
 const ButtonContainer = styled.div`
     .ant-btn-primary {
@@ -262,6 +264,8 @@ function Header({
 }) {
 
   const authHeader = useAuthHeader();
+  const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages} = useUnreadMessage();
+  const {socket} = useSocket();
   const [sidenavType, setSidenavType] = useState("transparent");
   const [visible, setVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -297,11 +301,27 @@ function Header({
   const { subHeader } = useSubHeaderContext();
 
 
+  const updateLastLoggedIn = async (unreadMessages) => {
+    console.log(unreadMessages);
+    try {
+      const response = await axios.post('/api/update-last-active', {"chatData":unreadMessages}, {
+        headers: {
+          "Authorization": authHeader()
+        }
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.error('Failed to update last log in', error);
+    }
+  };
+
   const handleLogout = () => {
     // Aufruf der logout-Funktion, um den Benutzer abzumelden
+    //updateLastLoggedIn();
+    socket.disconnect();
     logout();
+    navigate("/login");
     // Optional: Hier könntest du zur Startseite oder einer anderen Seite weiterleiten
-    navigate("/");
   };
 
   const showTutorials = () => {
@@ -359,11 +379,19 @@ function Header({
     },
   ];
 
-
+/*SHOPP AND COINS
+   <Button
+          type="primary"
+          icon={<ShoppingCartOutlined />}
+          style={{ marginRight: "10px" }}
+        />
+        <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight: "20px" }}>
+          <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight: "20px" }} />
+        </Badge>*/
   return (
     <>
-      <ImprintModal visible={imprintVisible} setVisible={setImprintVisible}></ImprintModal>
-      <TutorialPopup visible={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
+      <ImprintModal open={imprintVisible} setVisible={setImprintVisible}></ImprintModal>
+      <TutorialPopup open={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
       <div className="flex items-end justify-end">
         <div className="mr-auto header-control">
           <Button
@@ -374,14 +402,6 @@ function Header({
             }}
           />
         </div>
-        <Button
-          type="primary"
-          icon={<ShoppingCartOutlined />}
-          style={{ marginRight: "10px" }}
-        />
-        <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight: "20px" }}>
-          <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight: "20px" }} />
-        </Badge>
         {me && (
           <Dropdown
             menu={{

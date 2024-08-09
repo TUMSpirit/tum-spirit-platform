@@ -72,6 +72,15 @@
   }
 }
 
+@media (max-width: 768px) {
+ .chat-row{
+  padding-left:0;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  width: 100%;
+ }
+}
+
 body {
   --sb-track-color: rgba(255,255,255, 0);
   --sb-thumb-color: lightgrey;

@@ -228,7 +228,7 @@ function Sidenav({ color }) {
               {chat}
             </span>
             <span className="label">Chat</span>
-            <Badge className="ml-auto" count={unreadMessages}>
+            <Badge className="ml-auto" count={0}>
             </Badge>
           </NavLink>
         </Menu.Item>

@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
 import { SubHeader } from '../../layout/SubHeader';
+import { useSubHeaderContext } from '../../layout/SubHeaderContext';
 
 const { Search } = Input;
 
@@ -40,6 +41,7 @@ const FileTable = () => {
       };
 
         fetchFiles();
+    
     }, []);
 
     const downloadFile = (fileId) => {
@@ -98,7 +100,7 @@ const FileTable = () => {
         filterList(searchText, nextSelectedTags);
     };
 
-    const tagsData = ['image', 'pdf', 'word', 'excel'];
+    const tagsData = ['image', 'pdf', 'word'];
 
     const onSearch = (value) => {
         filterList(value, selectedTags);
@@ -146,18 +148,8 @@ const FileTable = () => {
           <div style={{borderRadius: '8px' }}>
             <SubHeader>
             <Row gutter={[24, 0]} style={{ marginBottom: '20px' }}>
-                <Col xs={12} sm={12}>
-                    <Search
-                        placeholder="Search files"
-                        onSearch={onSearch}
-                        enterButton
-                        style={{ marginBottom: '10px' }}
-                        prefix={<SearchOutlined />}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-                </Col>
-                <Col xs={8} sm={12}>
-                    <div>
+                <Col xs={12} sm={16}>
+                <div>
                         {tagsData.map(tag => (
                             <Tag.CheckableTag
                                 key={tag}
@@ -168,6 +160,16 @@ const FileTable = () => {
                             </Tag.CheckableTag>
                         ))}
                     </div>
+                </Col>
+                <Col xs={12} sm={8}>
+                <Search
+                        placeholder="Search files"
+                        onSearch={onSearch}
+                        enterButton
+                        style={{ marginBottom: '10px' }}
+                        prefix={<SearchOutlined />}
+                        onChange={(e) => setSearchText(e.target.value)}
+                    />
                 </Col>
             </Row>
             </SubHeader>

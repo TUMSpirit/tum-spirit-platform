@@ -39,7 +39,6 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chat']
 
-
 @router.post("/chat/new-message", tags=["chat"])
 def send_message(message: Message, current_user: User = Depends(get_current_user)):
     try:
