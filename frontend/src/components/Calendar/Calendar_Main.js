@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Calendar_Main.css"
 import "react-big-calendar/lib/css/react-big-calendar.css"
 import { Calendar, momentLocalizer } from "react-big-calendar";
@@ -18,48 +18,39 @@ import UploadImportPopup from "./calendar_additional_components/UploadImportPopu
 import TimelinePopup from "./calendar_additional_components/TimelinePopup";
 import { Button, Modal } from "antd";
 import TutorialPopup from "./calendar_additional_components/Tutorial Popup";
+import { useAuthHeader } from "react-auth-kit";
+import { useSocket } from "../../context/SocketProvider";
+import axios from "axios";
 
 
 const localizer = momentLocalizer(moment);
 
-const currentUser = {
-    name: "Josef Suckhart",
-    id: "664be96862095d5c01fafb58",
-    color: "green",
-    initialen: "YOU",
-    isFirstLogin: true
-};
-
-const users = [
-    {
-        name: "You",
-        id: "664be96862095d5c01fafb58",
-        color: "green",
-        initialen: "You",
-        isFirstLogin: true
-    },
-
-    {
-        name: "Clara Copyright",
-        id: "333333",
-        color: "blue",
-        initialen: "CC",
-        isFirstLogin: false
-    },
-
-    {
-        name: "Max Muster",
-        id: "444444",
-        color: "red",
-        initialen: "MM",
-        isFirstLogin: false
-    },
-
-]
-
 const Calendar_Main = () => {
+    //------------------------- State Hooks -------------------------------------------
+    const { currentUser: socketCurrentUser } = useSocket();
+    const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false)
+    const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false)
+    const [isUploadImportPopupOpen, setIsUploadImportPopupOpen] = useState(false)
+    const [isTimelineOpen, setIsTimelineOpen] = useState(false)
+    const [currentEvent, setCurrentEvent] = useState(null)
+    //const [isFirstLogin, setIsFirstLogin] = useState(currentUser.isFirstLogin)
+    const [startDate, setStartDate] = useState(null)
+    const [endDate, setEndDate] = useState(null)
+    const [users, setUsers] = useState(null);
+    const authHeader = useAuthHeader();
 
-    const fetchedData = useEntries(currentUser.id);
+    //------------------------- Button Events Handler -------------------------------------------
+
+    // Map currentUser to match team members format
+    const currentUser = {
+        name: socketCurrentUser._id === socketCurrentUser.id ? "You" : socketCurrentUser.username,
+        id: socketCurrentUser._id,
+        color: socketCurrentUser.avatar_color,
+        initialen: socketCurrentUser.username.charAt(0),
+        isFirstLogin: socketCurrentUser.isFirstLogin
+    };
+
+    const fetchedData = useEntries(currentUser._id);
 
     const entries = fetchedData.data?.map(entry => ({
         title: entry.title,
@@ -76,17 +67,6 @@ const Calendar_Main = () => {
         files: entry.files,
         users: entry.users,
     }))
-    //------------------------- State Hooks -------------------------------------------
-    const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false)
-    const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false)
-    const [isUploadImportPopupOpen, setIsUploadImportPopupOpen] = useState(false)
-    const [isTimelineOpen, setIsTimelineOpen] = useState(false)
-    const [currentEvent, setCurrentEvent] = useState(null)
-    const [isFirstLogin, setIsFirstLogin] = useState(currentUser.isFirstLogin)
-    const [startDate, setStartDate] = useState(null)
-    const [endDate, setEndDate] = useState(null)
-
-    //------------------------- Button Events Handler -------------------------------------------
 
 
     const closeEventPopup = () => {
@@ -131,12 +111,39 @@ const Calendar_Main = () => {
         //event: props => (<CustomEvent {...props} color={'#0047ab'}/>)
     }
 
+    // Fetch team members
+    const fetchTeamMembers = async () => {
+        try {
+            const response = await axios.get('/api/get-team-members', {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+            // Map the backend response to the expected user structure
+            const teamMembers = response.data.map(member => ({
+                name: member._id === currentUser.id ? "You" : member.username, // Check if the member is the current user
+                id: member._id,
+                color: member.avatar_color,
+                initialen: member.username.charAt(0),
+                isFirstLogin: member._id === currentUser.id ? currentUser.isFirstLogin : false
+            }));
+            setUsers(teamMembers);
+        } catch (error) {
+            console.error('Error fetching team members:', error);
+        }
+    };
+
+    useEffect(() => {
+        //fetchEntries();
+        fetchTeamMembers();
+    }, []);
+
     return (
         <div style={{ padding: "20px" }}>
             {(isUpdateEventPopupOpen || isCreateEventPopupOpen) && <AddEventPopup isUpdateEventOpen={isUpdateEventPopupOpen} isCreateEventOpen={isCreateEventPopupOpen}
                 setIsCreateEventOpen={setIsCreateEventPopupOpen} setIsUpdateEventOpen={setIsUpdateEventPopupOpen}
                 event={currentEvent}
-                users={users} currentUser={currentUser} startDate={startDate}  endDate={endDate} />}
+                users={users} currentUser={currentUser} startDate={startDate} endDate={endDate} />}
             {isUploadImportPopupOpen && <UploadImportPopup user={currentUser} isUploadImportPopupOpen={isUploadImportPopupOpen} onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} />}
             <div style={{ height: "80vh" }} className="kachel">
                 <Calendar
@@ -157,7 +164,7 @@ const Calendar_Main = () => {
                     selectable={true}
                     formats={{
                         timeGutterFormat: 'H:mm', // Format der Uhrzeiten im linken Bereich
-                      }}
+                    }}
                 />
             </div>
 

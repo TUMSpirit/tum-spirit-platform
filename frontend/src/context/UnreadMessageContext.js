@@ -9,36 +9,60 @@ export const UnreadMessageProvider = ({ children }) => {
   // 2D array: [[chatId, count, lastVisited], ...]
 
   // Increment notifications based on privateChatId or teamId
-  const incrementNotifications = (chatId) => {
-    //const chatId = privateChatId ? privateChatId.split('-')[1] : 'Team';
-
+  const incrementNotifications = (privateChatId) => {
     setUnreadMessages((prevData) => {
-      const index = prevData.findIndex(chat => chat[0] === chatId);
+      // Special case for "Team"
+      if (privateChatId === 'Team') {
+        const index = prevData.findIndex(chat => chat[0] === 'Team');
+        if (index !== -1) {
+          return prevData.map((chat, i) =>
+            i === index ? ['Team', chat[1] + 1] : chat
+          );
+        } else {
+          return [...prevData, ['Team', 1]];
+        }
+      }
+  
+      // General case for private chat IDs
+      const [user1, user2] = privateChatId.split('-');
+      const chatId1 = `${user1}-${user2}`;
+      const chatId2 = `${user2}-${user1}`;
       
+      const index = prevData.findIndex(chat => chat[0] === chatId1 || chat[0] === chatId2);
+  
       if (index !== -1) {
-        // Update the count if chatId already exists
         return prevData.map((chat, i) =>
-          i === index
-            ? [chat[0], chat[1] + 1]
-            : chat
+          i === index ? [chat[0], chat[1] + 1] : chat
         );
       } else {
-        // Add new entry if chatId does not exist
-        return [...prevData, [chatId, 1]];
+        return [...prevData, [chatId1, 1]];
       }
     });
   };
 
   // Mark messages as read for a specific chatId
   const markAsRead = (chatId) => {
-    //const chatId = privateChatId ? privateChatId.split('-')[1] : 'Team';
-    setUnreadMessages((prev) =>
-      prev.map((chat) =>
-        chat[0] === chatId
+    setUnreadMessages((prev) => {
+      if (chatId === 'Team') {
+        // Handle the special case for "Team"
+        return prev.map((chat) =>
+          chat[0] === 'Team'
+            ? ['Team', 0]
+            : chat
+        );
+      }
+  
+      // Handle the general case for private chat IDs
+      const [user1, user2] = chatId.split('-');
+      const chatId1 = `${user1}-${user2}`;
+      const chatId2 = `${user2}-${user1}`;
+  
+      return prev.map((chat) =>
+        chat[0] === chatId1 || chat[0] === chatId2
           ? [chat[0], 0]
           : chat
-      )
-    );
+      );
+    });
   };
 
   // Set last visited time for a specific chatId without marking messages as read
@@ -54,8 +78,19 @@ export const UnreadMessageProvider = ({ children }) => {
   };
 
   // Get unread messages count for a specific chatId
-  const getUnreadMessages = (chatId) => {
-    const entry = unreadMessages.find(chat => chat[0] === chatId);
+  const getUnreadMessages = (privateChatId) => {
+    // Handle the special case for "Team"
+    if (privateChatId === 'Team') {
+      const entry = unreadMessages.find(chat => chat[0] === 'Team');
+      return entry ? entry[1] : 0;
+    }
+  
+    // Handle the general case for private chat IDs
+    const [user1, user2] = privateChatId.split('-');
+    const chatId1 = `${user1}-${user2}`;
+    const chatId2 = `${user2}-${user1}`;
+  
+    const entry = unreadMessages.find(chat => chat[0] === chatId1 || chat[0] === chatId2);
     return entry ? entry[1] : 0;
   };
 

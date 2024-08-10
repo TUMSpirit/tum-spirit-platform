@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pymongo import MongoClient, ReturnDocument
-from pydantic import AfterValidator, BaseModel, PlainSerializer, WithJsonSchema
+from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJsonSchema
 from datetime import datetime, timedelta
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -97,6 +97,7 @@ class UserInDB(User):
     password: str
     
 class TeamUser(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     role: str
     team_id: PyObjectId
@@ -111,6 +112,7 @@ class TeamUser(BaseModel):
         json_encoders = {ObjectId: str}
 
 class TeamUserClean(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     role: str
     team_id: PyObjectId

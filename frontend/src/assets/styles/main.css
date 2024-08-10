@@ -3283,7 +3283,7 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile .header-
 
 .kanban-board {
   padding: 30px;
-  padding-top:15px
+  padding-top: 15px
 }
 
 .kanban-column {
@@ -3294,7 +3294,7 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile .header-
 }
 
 .kanban-column-content {
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   padding: 20px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
@@ -3315,13 +3315,14 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile .header-
 .ant-badge-count {
   background-color: #52c41a;
 }
-.ant-tabs-nav{
-  margin:0 !important;
+
+.ant-tabs-nav {
+  margin: 0 !important;
 }
 
 
 
-span.ant-badge-status-dot.ant-badge-status-processing{
+span.ant-badge-status-dot.ant-badge-status-processing {
   width: 8px !important;
   height: 8px !important;
   background-color: #53C41B !important;
@@ -3334,15 +3335,16 @@ span.ant-badge-status-dot.ant-badge-status-processing{
   padding: 7%;
   position: fixed;
   bottom: 0;
-  height:30%;
+  height: 30%;
   width: 96%;
-  box-sizing: border-box; /* Include padding in width */
+  box-sizing: border-box;
+  /* Include padding in width */
   background: white;
   border: 1px solid white;
   box-shadow: 0 1px 0 1px black,
-              inset 0 1px 0 1px black,
-              0 0 0 1px black,
-              inset 0 0 0 1px black;
+    inset 0 1px 0 1px black,
+    0 0 0 1px black,
+    inset 0 0 0 1px black;
   user-select: none;
 }
 
@@ -3354,19 +3356,26 @@ span.ant-badge-status-dot.ant-badge-status-processing{
   position: absolute;
   bottom: 10px;
   right: 15px;
-	animation: bounce 0.5s ease-in-out 0 infinite alternate;
-	-webkit-animation: bounce .5s steps(3) infinite;
-	-moz-animation: bounce .5s steps(3) infinite;
-	-ms-animation: bounce .5s steps(3) infinite;
-	-o-animation: bounce .5s steps(3) infinite;
+  animation: bounce 0.5s ease-in-out 0 infinite alternate;
+  -webkit-animation: bounce .5s steps(3) infinite;
+  -moz-animation: bounce .5s steps(3) infinite;
+  -ms-animation: bounce .5s steps(3) infinite;
+  -o-animation: bounce .5s steps(3) infinite;
 }
 
 @keyframes bounce {
-  from { margin-bottom: 0px; }
-  to { margin-bottom: 3px; }
+  from {
+    margin-bottom: 0px;
+  }
+
+  to {
+    margin-bottom: 3px;
+  }
 }
 
-
+.documents-table .ant-table-cell {
+  padding: 13px !important;
+}
 
 
 
@@ -3379,27 +3388,30 @@ span.ant-badge-status-dot.ant-badge-status-processing{
 
 @keyframes float {
   50% {
-     transform: translate(0, 20px);
+    transform: translate(0, 20px);
   }
 }
+
 .shadowFrame {
   width: 130px;
   margin-top: 15px;
 }
+
 .shadow-ghost {
   animation: shrink 3s ease-out infinite;
   transform-origin: center center;
+
   ellipse {
     transform-origin: center center;
   }
 }
 
-.ghost-container{
+.ghost-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height:inherit;
+  height: inherit;
 }
 
 @keyframes shrink {
@@ -3407,10 +3419,12 @@ span.ant-badge-status-dot.ant-badge-status-processing{
     width: 90%;
     margin: 0 5%;
   }
+
   50% {
     width: 60%;
     margin: 0 18%;
   }
+
   100% {
     width: 90%;
     margin: 0 5%;
@@ -3429,22 +3443,25 @@ span.ant-badge-status-dot.ant-badge-status-processing{
 }
 
 @keyframes float {
-  0%, 100% {
-      transform: translateY(0);
+
+  0%,
+  100% {
+    transform: translateY(0);
   }
+
   50% {
-      transform: translateY(-10px);
+    transform: translateY(-10px);
   }
 }
 
 @keyframes talking {
-  0%, 100% {
-      transform: translateY(0);
+
+  0%,
+  100% {
+    transform: translateY(0);
   }
+
   50% {
-      transform: translateY(-2px);
+    transform: translateY(-2px);
   }
 }
-
-
-

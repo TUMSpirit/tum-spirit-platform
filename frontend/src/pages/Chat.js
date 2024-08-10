@@ -91,8 +91,13 @@ const Chat = () => {
         }
     };
 
+
+    const markReadWithTeam = () => {
+        markAsRead("Team");
+    }
+
     useEffect(() => {
-        setTimeout(markAsRead("Team"), 3500);
+        setTimeout(markReadWithTeam, 1800);
        // setUnreadMessages(currentTab);
     }, []);
 
@@ -107,8 +112,6 @@ const Chat = () => {
                 setMessages(prevMessages => [...prevMessages, data]);
                 const chatId = privateChatId ? privateChatId.split('-')[1] : 'Team';
 
-                // Increment notifications
-                //incrementNotifications(privateChatId);
                 // Get the current username based on currentTab
                 const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
                 console.log(currentUser);

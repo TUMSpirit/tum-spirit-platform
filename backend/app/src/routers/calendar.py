@@ -52,9 +52,16 @@ class FileReference(BaseModel):
         arbitrary_types_allowed = True
 
 class FileEntry(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     filename: str
     contentType: str
     timestamp: datetime
+    size: int
+    
+    class Config:
+            allow_population_by_field_name = True
+            arbitrary_types_allowed = True #required for the _id
+            json_encoders = {ObjectId: str}
 
 class CalendarEntry(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -144,7 +151,7 @@ async def get_file(current_user: User = Depends(get_current_user)):
     try:
             # Convert current user id to string
             #current_user_id_str = str(current_user.id)
-            query = {"users": current_user['team_id']}
+            query = {"team_id": current_user['team_id']}
             entries = file_collection.find(query)
             return entries
     except Exception as e:
@@ -231,23 +238,26 @@ def delete_calendar_entry(entry_id: str, current_user: User = Depends(get_curren
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/files/upload", response_model=FileReference, tags=["files"])
-async def upload_file(files: List[UploadFile]):
+async def upload_file(files: List[UploadFile], current_user: User = Depends(get_current_user)):
     if not files:
-        raise HTTPException(status_code=400, detail="Item data is required")
+        raise HTTPException(status_code=400, detail="File is required")
 
     try:
-        #for file in files:
-        file_data = await files[0].read()
+        file = files[0]
+        file_data = await file.read()
+        file_size = len(file_data)  # Calculate file size in bytes
 
         file_record = {
-            "filename": files[0].filename,
-            "contentType": files[0].content_type,
+            "team_id": current_user["team_id"],
+            "filename": file.filename,
+            "contentType": file.content_type,
             "fileData": file_data,
+            "size": file_size,  # Store file size
             "timestamp": datetime.now()
         }
 
         result = file_collection.insert_one(file_record)
-        file_ref = FileReference(file_id=result.inserted_id, filename=files[0].filename)
+        file_ref = FileReference(file_id=str(result.inserted_id), filename=file.filename)
         return file_ref
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -260,4 +270,36 @@ async def delete_file(file_id: str, current_user: User = Depends(get_current_use
             raise HTTPException(status_code=404, detail="File not found")
         return {"detail": "File successfully deleted"}
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/files/download/{file_id}", tags=["files"])
+async def download_file(file_id: str, current_user: User = Depends(get_current_user)):
+    try:
+        # Validate ObjectId
+        if not ObjectId.is_valid(file_id):
+            raise HTTPException(status_code=400, detail="Invalid file ID format")
+
+        # Retrieve file record from the database
+        file_record = file_collection.find_one({"_id": ObjectId(file_id)})
+        if not file_record:
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Extract file data and content type
+        file_data = file_record.get("fileData")
+        content_type = file_record.get("contentType")
+        filename = file_record.get("filename")
+
+        # Check if required fields are present
+        if file_data is None or content_type is None or filename is None:
+            raise HTTPException(status_code=500, detail="File metadata missing")
+
+        # Return the file as a streaming response
+        return StreamingResponse(
+            io.BytesIO(file_data),
+            media_type=content_type,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        # Enhanced logging
+        print(f"Error downloading file {file_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

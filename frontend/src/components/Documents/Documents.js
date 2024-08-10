@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Table, Button, Input, Space, Tag, Col, Row } from 'antd';
+import { Table, Button, Input, Space, Tag, Col, Row, Modal, message, Upload } from 'antd';
 import moment from 'moment';
 import {
     FileOutlined,
@@ -11,6 +11,8 @@ import {
     FileZipOutlined,
     DownloadOutlined,
     SearchOutlined,
+    UploadOutlined,
+    PlusOutlined
 } from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
 import { SubHeader } from '../../layout/SubHeader';
@@ -22,30 +24,56 @@ const FileTable = () => {
     const [fileList, setFileList] = useState([]);
     const [filteredList, setFilteredList] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
+    const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
+    const [fileListUpload, setFileListUpload] = useState([]);
     const authHeader = useAuthHeader();
 
     useEffect(() => {
-      const fetchFiles = async () => {
-          try {
-              const response = await axios.get('/api/files/get-files',
-              {
-                headers: {
-                  "Authorization": authHeader()
-                }
-              });
-              setFileList(response.data);
-              setFilteredList(response.data);
-          } catch (error) {
-              console.error('Error fetching files:', error);
-          }
-      };
-
+        const fetchFiles = async () => {
+            try {
+                const response = await axios.get('/api/files/get-files', {
+                    headers: {
+                        "Authorization": authHeader()
+                    }
+                });
+                setFileList(response.data);
+                setFilteredList(response.data);
+            } catch (error) {
+                console.error('Error fetching files:', error);
+            }
+        };
         fetchFiles();
-    
     }, []);
 
-    const downloadFile = (fileId) => {
-        window.location.href = `http://localhost:8000/downloadfile/${fileId}`;
+    const downloadFile = async (fileId) => {
+        try {
+            const response = await axios.get(`/api/files/download/${fileId}`, {
+                responseType: 'blob',
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+
+            const contentType = response.headers['content-type'];
+            const contentDisposition = response.headers['content-disposition'];
+            
+            const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
+            const filename = filenameMatch ? filenameMatch[1] : 'downloaded-file';
+
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            message.error('Error downloading file');
+        }
     };
 
     const getFileIcon = (filename) => {
@@ -121,7 +149,11 @@ const FileTable = () => {
             title: 'Filename',
             dataIndex: 'filename',
             key: 'filename',
-            render: (text) => <Space>{getFileIcon(text)}{text}</Space>,
+            render: (text) => (
+                <Space>
+                    {getFileIcon(text)}{text}
+                </Space>
+            ),
         },
         {
             title: 'Size',
@@ -131,55 +163,134 @@ const FileTable = () => {
         },
         {
             title: 'Uploaded At',
-            dataIndex: 'uploaded_at',
-            key: 'uploaded_at',
+            dataIndex: 'timestamp',
+            key: 'timestamp',
             render: (text) => moment(text).format('DD.MM.YYYY HH:mm'),
         },
         {
             title: 'Action',
             key: 'action',
             render: (text, record) => (
-                <Button onClick={() => downloadFile(record.file_id)} icon={<DownloadOutlined />}>Download</Button>
+                <Button onClick={() => downloadFile(record._id)} icon={<DownloadOutlined />}></Button>
             ),
         },
     ];
 
+    const showUploadModal = () => {
+        setIsUploadModalVisible(true);
+    };
+
+    const handleUploadModalOk = async () => {
+        const formData = new FormData();
+        fileListUpload.forEach(file => {
+            if (file.originFileObj) {
+                formData.append('files', file.originFileObj);
+            }
+        });
+
+        try {
+            await axios.post('/api/files/upload', formData, {
+                headers: {
+                    Authorization: authHeader(),
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            message.success('Files uploaded successfully');
+            setIsUploadModalVisible(false);
+            setFileListUpload([]);
+            const response = await axios.get('/api/files/get-files', {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+            setFileList(response.data);
+            setFilteredList(response.data);
+        } catch (error) {
+            console.error('Error uploading files:', error);
+            message.error('Error uploading files');
+        }
+    };
+
+    const handleUploadModalCancel = () => {
+        setIsUploadModalVisible(false);
+        setFileListUpload([]);
+    };
+
+    const handleFileChange = ({ fileList }) => {
+        setFileListUpload(fileList);
+    };
+
     return (
-          <div style={{borderRadius: '8px' }}>
+        <div>
             <SubHeader>
-            <Row gutter={[24, 0]} style={{ marginBottom: '20px' }}>
-                <Col xs={12} sm={16}>
-                <div>
-                        {tagsData.map(tag => (
-                            <Tag.CheckableTag
-                                key={tag}
-                                checked={selectedTags.includes(tag)}
-                                onChange={checked => handleTagChange(tag, checked)}
-                            >
-                                {tag.toUpperCase()}
-                            </Tag.CheckableTag>
-                        ))}
-                    </div>
+                <Row gutter={[24, 16]} style={{ marginBottom: '10px' }}>
+                    <Col xs={13} sm={16}>
+                        <div>
+                            {tagsData.map(tag => (
+                                <Tag.CheckableTag
+                                    key={tag}
+                                    checked={selectedTags.includes(tag)}
+                                    onChange={checked => handleTagChange(tag, checked)}
+                                >
+                                    {tag.toUpperCase()}
+                                </Tag.CheckableTag>
+                            ))}
+                        </div>
+                    </Col>
+                    <Col xs={11} sm={8}>
+                        <Search
+                            placeholder="Search files"
+                            onSearch={onSearch}
+                            enterButton
+                            style={{ marginBottom: '10px', width: '100%' }}
+                            prefix={<SearchOutlined />}
+                            onChange={(e) => setSearchText(e.target.value)}
+                        />
+                    </Col>
+                </Row>
+                <Row gutter={[24, 16]}>
+                <Col xs={24} sm={24} style={{ marginBottom: '10px' }}>
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={showUploadModal}
+                    style={{float:'right'}}
+                >
+                    Upload File
+                </Button>
                 </Col>
-                <Col xs={12} sm={8}>
-                <Search
-                        placeholder="Search files"
-                        onSearch={onSearch}
-                        enterButton
-                        style={{ marginBottom: '10px' }}
-                        prefix={<SearchOutlined />}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-                </Col>
-            </Row>
+                </Row>
             </SubHeader>
             <Table
+                className='documents-table'
                 columns={columns}
                 dataSource={filteredList.map(file => ({ ...file, key: file.file_id }))}
                 pagination={{ pageSize: 10 }}
-                style={{margin:"20px"}}
+                style={{ margin: "10px", minHeight: "52vh" }}
                 scroll={{ x: true }}
             />
+            <Modal
+                title="Upload Document"
+                open={isUploadModalVisible}
+                onOk={handleUploadModalOk}
+                onCancel={handleUploadModalCancel}
+                footer={[
+                    <Button key="cancel" onClick={handleUploadModalCancel}>
+                        Cancel
+                    </Button>,
+                    <Button key="upload" type="primary" onClick={handleUploadModalOk}>
+                        Upload
+                    </Button>,
+                ]}
+            >
+                <Upload
+                    fileList={fileListUpload}
+                    beforeUpload={() => false}
+                    onChange={handleFileChange}
+                >
+                    <Button icon={<UploadOutlined />}>Select File</Button>
+                </Upload>
+            </Modal>
         </div>
     );
 };

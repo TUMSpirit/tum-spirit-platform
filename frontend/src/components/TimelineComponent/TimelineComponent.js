@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Steps, Card, Progress, notification, Col, Row, Button, Typography, Divider, Tag, Modal, Form, Input } from 'antd';
+import { Steps, Card, Progress, notification, Col, Row, Button, Typography, Divider, Tag, Modal, Form, Input, DatePicker } from 'antd';
 import Confetti from 'react-confetti';
 import ghost from "../../assets/images/ghost.png";
-import { ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, CalendarOutlined, TrophyOutlined } from '@ant-design/icons';
 import ActivityFeed from '../TutorialPopup/ActivityFeed';
 import Chatbot from '../AiChat/chat-bubble';
 import moment from 'moment';
@@ -71,31 +71,37 @@ const HorizontalTimeline = () => {
   const [opened, setOpened] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [celebrationVisible, setCelebrationVisible] = useState(false);
 
   useEffect(() => {
-    calculateProgress(milestones);
-    const randomIndex = Math.floor(Math.random() * greetings.length);
-    setRandomGreeting(greetings[randomIndex]);
+    const updatedMilestones = calculateProgress(milestones);
+    setMilestones(updatedMilestones);
 
     const now = moment();
     let completedMilestones = 0;
 
-    milestones.forEach((milestone, index) => {
-      const milestoneDate = moment(milestone.date);
-      if (milestoneDate.isBefore(now)) {
+    milestones.forEach((milestone) => {
+      if (moment(milestone.date).isBefore(now)) {
         completedMilestones++;
       }
     });
 
-    if (completedMilestones > 0) {
+    if (completedMilestones >= milestones.length) {
+      // Trigger celebration popup
+      setCelebrationVisible(true);
+      setShowConfetti(true);
+      setCurrent(milestones.length - 1); // Show last milestone
+      setProgress(100); // Set progress to 100% for the last milestone
+    } else {
       setCurrent(completedMilestones);
-      setProgress(milestones[completedMilestones].percent);
+      setProgress(milestones[completedMilestones]?.percent || 0);
     }
 
+    const randomIndex = Math.floor(Math.random() * greetings.length);
+    setRandomGreeting(greetings[randomIndex]);
   }, [milestones]);
 
   const calculateProgress = (milestones) => {
-    // Aktuelles Datum und Zeit als Moment.js-Objekt
     let now = moment();
     let currentDateTime = moment(milestones[0].date);
     let previousDateTime = moment(startDate);
@@ -105,31 +111,22 @@ const HorizontalTimeline = () => {
     progressPercent = Math.floor(Math.max(0, Math.min(progressPercent, 100)));
     milestones[0].percent = progressPercent;
 
-    // Durchlaufen des Arrays, beginnend ab dem zweiten Element
     for (let i = 1; i < milestones.length; i++) {
-      // Datum und Zeit des aktuellen Objekts als Moment.js-Objekt
       let currentDateTime = moment(milestones[i].date);
-      // Datum und Zeit des vorherigen Objekts als Moment.js-Objekt
       let previousDateTime = moment(milestones[i - 1].date);
-      // Berechnen der Differenz in Stunden zwischen den beiden Zeitpunkten
       let totalHours = currentDateTime.diff(previousDateTime, 'hours');
-      // Berechnen der vergangenen Stunden bis jetzt
       let elapsedHours = now.diff(previousDateTime, 'hours');
-      // Berechnen des Fortschritts in Prozent
       let progressPercent = (elapsedHours / totalHours) * 100;
-      // Begrenzung des Fortschritts zwischen 0 und 100 Prozent
       progressPercent = Math.floor(Math.max(0, Math.min(progressPercent, 100)));
-      // Aktualisierung des aktuellen Objekts im Array mit dem Fortschrittsprozentsatz
       milestones[i].percent = progressPercent;
     }
 
-    // Rückgabe des aktualisierten Arrays
     return milestones;
   };
 
   const onChange = (current) => {
     setCurrent(current);
-    setProgress(milestones[current].percent);
+    setProgress(milestones[current]?.percent || 0);
   };
 
   const openAiChat = () => {
@@ -138,10 +135,10 @@ const HorizontalTimeline = () => {
   };
 
   const handleCreateMilestone = () => {
-    /*form.validateFields().then(values => {
+    form.validateFields().then(values => {
       const newMilestone = {
         title: values.title,
-        date: values.date,
+        date: values.date.format('YYYY-MM-DDTHH:mm:ss'),
         details: values.details,
         percent: 0
       };
@@ -150,7 +147,7 @@ const HorizontalTimeline = () => {
       form.resetFields();
     }).catch(info => {
       console.log('Validate Failed:', info);
-    });*/
+    });
   };
 
   const stepItems = milestones.map((milestone, index) => ({
@@ -163,6 +160,27 @@ const HorizontalTimeline = () => {
   return (
     <div style={{ padding: '20px' }}>
       {showConfetti && <Confetti />}
+      {celebrationVisible && (
+        <Modal
+          title="Congratulations!"
+          visible={celebrationVisible}
+          onOk={() => setCelebrationVisible(false)}
+          onCancel={() => setCelebrationVisible(false)}
+          footer={[
+            <Button key="ok" type="primary" onClick={() => setCelebrationVisible(false)}>
+              OK
+            </Button>,
+          ]}
+        >
+          <div style={{ textAlign: 'center' }}>
+            <TrophyOutlined style={{ fontSize: '48px', color: '#fadb14' }} />
+            <Title level={2} style={{ margin: '20px 0' }}>Congratulations! All milestones are completed!</Title>
+            <Paragraph>
+              You’ve successfully completed all the milestones for this project. Great job!
+            </Paragraph>
+          </div>
+        </Modal>
+      )}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12}>
           <Card className="flex flex-col justify-between p-6 center-welcome" style={{ height: '250px' }}>
@@ -189,14 +207,14 @@ const HorizontalTimeline = () => {
           <Card title="Timeline" bordered={false}>
             <Steps current={current} type="default" percent={progress} onChange={onChange} direction="horizontal" items={stepItems} />
             <div style={{ marginTop: '20px' }}>
-              <Card title={milestones[current].title} className="milestone-card" extra={<Button type="primary" onClick={() => setModalVisible(true)}>+ Create Card</Button>}>
+              <Card title={milestones[current]?.title} className="milestone-card" extra={<Button type="primary" onClick={() => setModalVisible(true)}>+ Create Card</Button>}>
                 <Row>
                   <Col span={12}>
                     <Paragraph>
-                      <CalendarOutlined /> {moment(milestones[current].date).format('DD.MM.YYYY')}
+                      <CalendarOutlined /> {moment(milestones[current]?.date).format('DD.MM.YYYY')}
                     </Paragraph>
                     <Paragraph>
-                      <ClockCircleOutlined /> {moment(milestones[current].date).format('HH:mm')}
+                      <ClockCircleOutlined /> {moment(milestones[current]?.date).format('HH:mm')}
                     </Paragraph>
                   </Col>
                   <Col span={12}>
@@ -207,7 +225,7 @@ const HorizontalTimeline = () => {
                 </Row>
                 <Divider />
                 <Paragraph>
-                  <Text strong>Details:</Text> {milestones[current].details}
+                  <Text strong>Details:</Text> {milestones[current]?.details}
                 </Paragraph>
                 <Divider />
                 <Progress
@@ -241,10 +259,10 @@ const HorizontalTimeline = () => {
           </Form.Item>
           <Form.Item
             name="date"
-            label="date"
+            label="Date"
             rules={[{ required: true, message: 'Please input the date of the milestone!' }]}
           >
-            <Input />
+            <DatePicker format="YYYY-MM-DDTHH:mm:ss" showTime />
           </Form.Item>
           <Form.Item
             name="details"
