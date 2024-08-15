@@ -1,0 +1,8 @@
+[
+    { "word": "hello", "sentiment": 20, "neutrality": 80, "frequeny": 90 },
+    { "word": "where", "sentiment": 20, "neutrality": 80, "frequeny": 90 },
+    { "word": "how", "sentiment": 20, "neutrality": 80, "frequeny": 90 },
+    { "word": "agree", "sentiment": 20, "neutrality": 80, "frequeny": 90 },
+    { "word": "great", "sentiment": 20, "neutrality": 80, "frequeny": 90 },
+    { "word": "no", "sentiment": 20, "neutrality": 80, "frequeny": 90 }
+]

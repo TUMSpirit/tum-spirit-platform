@@ -1,0 +1,19 @@
+body{
+    background-color: #fafafa;
+}
+
+.radioView {
+    border-color: blue;
+}
+
+.toolbarWrapper {
+    background-color: #ffffff !important;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+.toolbarWrapper svg{
+    vertical-align: baseline;
+}

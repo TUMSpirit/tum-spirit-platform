@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+    env_file:
+      - .env
+
+  express:
+    build:
+      context: .
+      dockerfile: Dockerfile.express  # This points to the Express Dockerfile
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "54321:11434"
+    volumes:
+      - ollama:/root/.ollama
+    pull_policy: always
+    tty: true
+    command: "serve && run llama2"
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  ollama:
+  redis-data:
