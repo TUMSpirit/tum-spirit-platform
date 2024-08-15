@@ -98,6 +98,7 @@ const Chat = () => {
 
     useEffect(() => {
         setTimeout(markReadWithTeam, 1800);
+        updateLastLoggedIn("Team");
        // setUnreadMessages(currentTab);
     }, []);
 
@@ -110,16 +111,24 @@ const Chat = () => {
             console.log('Message received:', data);
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
                 setMessages(prevMessages => [...prevMessages, data]);
-                const chatId = privateChatId ? privateChatId.split('-')[1] : 'Team';
+                const chatId = privateChatId ? privateChatId : 'Team';
 
-                // Get the current username based on currentTab
+                // Get the current username based on currentTab CHECK THE CODE IMPORTANT
                 const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
+                let chatUser = "";
                 console.log(currentUser);
-                console.log(currentTab);
-              
-                // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
-                if (currentUser === chatId || (parseInt(currentTab) === 1 && chatId === 'Team')) {
-                 // markAsRead(privateChatId);
+                console.log(chatId);
+                if(teamMembers[parseInt(currentTab) - 2]){
+                     chatUser = teamMembers[parseInt(currentTab) - 2].username;
+                }else{
+                     chatUser = undefined;
+                }
+        
+        
+               // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
+               if (chatUser===currentUser) {
+                  markAsRead(chatId);
+                  chatUser? updateLastLoggedIn(chatUser):updateLastLoggedIn("Team");
                 }
             }
         };
@@ -219,11 +228,9 @@ const Chat = () => {
     }, [socket, incrementNotifications]);*/
 
     const handleTabChange = async (key) => {
-        console.log(key);
         const currTab = currentTab;
-        console.log(currTab);
         if (key !== '1') {
-        updateLastLoggedIn(teamMembers[1].username);
+        updateLastLoggedIn(teamMembers[key-2].username);
         } else {
         updateLastLoggedIn("Team");
         }

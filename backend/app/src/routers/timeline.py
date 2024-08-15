@@ -5,23 +5,13 @@ from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime
 from fastapi import HTTPException
-
 from app.src.routers.auth import get_current_user, User
+from app.config import MONGO_DB,MONGO_URI
+
 
 
 # Create a router
 router = APIRouter()
-
-
-# Retrieve MongoDB credentials and database info
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
-
-# connection string
-MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
 
 
 # Connect to MongoDB

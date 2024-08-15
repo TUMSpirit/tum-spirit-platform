@@ -1,5 +1,5 @@
 // Popup.js
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Button,
     Form,
@@ -32,6 +32,7 @@ import {
     useCreateEntries, useDeleteEntries, useDeleteFile, useUpdateEntries, useUploadFile
 } from "../requests/requestFunc";
 import TextArea from "antd/es/input/TextArea";
+import axios from 'axios';
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
 const fallbackImgRoomfinder = require('../img/Room not found.png')
@@ -250,7 +251,8 @@ const AddEventPopup = ({
 
 
     const onClickRemoteLink = () => {
-        console.log('open meeting')
+        console.log('open meeting');
+        console.log(formData.remoteLink);
         if (formData.remoteLink) {
             window.open(formData.remoteLink, '_blank')
         } else {
@@ -258,6 +260,40 @@ const AddEventPopup = ({
         }
     }
 
+    const onRoomChange = useCallback(async (event) => {
+        const newRoom = event.target.value;
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            room: newRoom,
+        }));
+        // Update the local state
+
+        // Make the Axios request
+        try {
+            //setLoading(true);
+            //setError(null); // Reset error state before making request
+
+            const response = await axios.get(`https://nav.tum.de/api/search?q=${newRoom}`);
+            // Handle response data as needed
+            console.log(response.data);
+            if (response.data.sections[0].entries.length) {
+                setFormData((prevFormData) => ({
+                    ...prevFormData,
+                    room: response.data.sections[0].entries[0].id,
+                }));
+            } else {
+                setFormData((prevFormData) => ({
+                    ...prevFormData,
+                    room: newRoom,
+                }));
+            }
+        } catch (err) {
+            //setError(err);
+            console.error(err);
+        } finally {
+            //setLoading(false);
+        }
+    }, []);
 
     return (
 
@@ -274,7 +310,7 @@ const AddEventPopup = ({
             <Form layout={'vertical'} onFinish={onSubmit} form={form} ref={formRef}
                 initialValues={getInitialFormValues()} requiredMark={false} >
                 <Row gutter={[32, 16]}>
-                    <Col span={12}>
+                    <Col lg={12} md={24}>
                         <Row gutter={[0, 16]}>
                             <Form.Item rules={[{ required: true, message: 'This field is required' }]} label={"Title"} name="title">
                                 <Input data-testid='titleInput' required placeholder={"Enter Title"} onChange={(e) => {
@@ -334,14 +370,6 @@ const AddEventPopup = ({
                                     }))
                                 }} />
                             </Form.Item>
-
-                            <Form.Item name='files'>
-                                <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload}
-                                    maxCount={10}
-                                    multiple={true}>
-                                    <Button icon={<UploadOutlined />}>Upload</Button>
-                                </Upload>
-                            </Form.Item>
                         </Row>
 
                         <Row className={'row-participants'} >
@@ -362,7 +390,7 @@ const AddEventPopup = ({
                     </Col>
 
 
-                    <Col span={12}>
+                    <Col lg={12} md={24}>
                         <div className='inset-shadow'>
                             <Row gutter={[0, 16]}>
                                 <Col>
@@ -380,7 +408,7 @@ const AddEventPopup = ({
 
                                 <Col style={{ marginLeft: '30%' }}>
                                     <Tooltip title={'Can\'t decide remote/online?'}>
-                                        <Button style={{ width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex' }} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />} />
+                                        <Button style={{ position: 'absolute', width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex' }} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />} />
                                     </Tooltip>
 
                                     <Modal title={'Location'} open={isLocationHelpOpen} footer={<Button type='primary' onClick={() => { setIsLocationHelpOpen(false) }}>ok</Button>}>
@@ -393,14 +421,11 @@ const AddEventPopup = ({
                             {formData.isOnSite && <Row className={'row-navigate'} >
                                 <Form.Item label={'Room'} name={'room'}>
                                     <Space.Compact style={{ width: '100%' }}>
-                                        <Input data-testid='roomNumberInput' defaultValue={formData.room} placeholder="Room ID" onChange={(event) => {
-                                            setFormData((prevFormData) => ({
-                                                ...prevFormData, room: event.target.value
-                                            }))
-                                        }} />
+                                        <Input data-testid='roomNumberInput' defaultValue={formData.room} placeholder="Room ID" onChange={onRoomChange}
+                                        />
                                     </Space.Compact>
                                 </Form.Item>
-                                <Image width={400} src={`https://nav.tum.de/api/preview/${formData.room}`}
+                                <Image width={400} src={`https://nav.tum.de/api/locations/${formData.room}/preview`}
                                     fallback={fallbackImgRoomfinder} />
                             </Row>}
 
@@ -438,50 +463,7 @@ const AddEventPopup = ({
 };
 
 export default AddEventPopup;
-/*
-const transformMonth = (m) => {
-    return (parseInt(m) - 1).toString().padStart(2, '0')
-}
 
-export const createEvent = (fieldsValue, currUserId) => {
-    console.log('fieldsValue: ', fieldsValue)
-    let color = fieldsValue['colorPicker'];
-
-
-    if (typeof color !== "string") {
-        color = color.toHexString()
-    }
-
-    const startYear = fieldsValue["rangepicker"][0].format('YYYY');
-    const startMonth = transformMonth(fieldsValue["rangepicker"][0].format('MM'));
-
-    const startDay = fieldsValue["rangepicker"][0].format('DD');
-    const startHour = fieldsValue["rangepicker"][0].format('HH');
-    const startMinute = fieldsValue["rangepicker"][0].format('mm');
-    const endYear = fieldsValue["rangepicker"][1].format('YYYY');
-    const endMonth = transformMonth(fieldsValue["rangepicker"][1].format('MM'));
-    const endDay = fieldsValue["rangepicker"][1].format('DD');
-    const endHour = fieldsValue["rangepicker"][1].format('HH');
-    const endMinute = fieldsValue["rangepicker"][1].format('mm');
-    const id = fieldsValue['params'].id ? fieldsValue['params'].id : undefined;
-    const users = fieldsValue['sharedUsers'] ? fieldsValue['sharedUsers'] : [currUserId]
-    const room = fieldsValue['room']
-    console.log('users: ', users)
-    const newEvent = {
-        id: id,
-        title: fieldsValue["eventTitle"],
-        start: new Date(startYear, startMonth, startDay, startHour, startMinute),
-        end: new Date(endYear, endMonth, endDay, endHour, endMinute),
-        color: color,
-        isOnSite: fieldsValue['isOnSite'],
-        room: room,
-        remoteLink: fieldsValue['isRemoteLink'],
-        users: users,
-    }
-
-    return newEvent;
-}
-*/
 
 const AvatarDisplay = ({ selectedUsers }) => {
     return (<Avatar.Group>
@@ -490,32 +472,3 @@ const AvatarDisplay = ({ selectedUsers }) => {
         </Avatar>))}
     </Avatar.Group>);
 };
-
-
-/*
-export async function uploadFile  (files, eventID) {
-
-    const formData = new FormData();
-    files.fileList.forEach((file) => {
-        if (file.originFileObj) { // Check if file is available for upload
-            formData.append('files', file.originFileObj);
-        }
-    });
-
-    try {
-        const response = await axios.post(`/calendar/${eventID}/files`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        message.success('File uploaded successfully');
-
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        message.error('Error uploading file');
-    }
-
-
-}
-*/
-

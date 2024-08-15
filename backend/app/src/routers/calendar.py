@@ -6,22 +6,29 @@ from bson import ObjectId, json_util
 from datetime import datetime
 from app.src.routers.auth import get_current_user, User
 from fastapi.responses import StreamingResponse
+from app.src.routers.notification import add_notification
 import io
+from dotenv import load_dotenv
+import os
+from app.config import MONGO_DB,MONGO_URI
 
+
+# Load environment variables from a .env file
+#load_dotenv()
 
 # Create a router
 router = APIRouter()
 
 
-# Retrieve MongoDB credentials and database info
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
+# MongoDB credentials and database info
+#MONGO_USER = os.getenv("MONGO_USER")
+#MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+#MONGO_HOST = os.getenv("MONGO_HOST")
+#MONGO_PORT = os.getenv("MONGO_PORT")
+#MONGO_DB = os.getenv("MONGO_DB")
 
-# connection string
-MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
+# Connection string
+#MONGO_URI = os.getenv("MONGO_URI")
 
 
 # Connect to MongoDB
@@ -127,6 +134,16 @@ def add_calendar_entry(calendar_entry: CreateCalendarEntry, current_user: User =
 
         result = collection.insert_one(record)
 
+
+        notification = {
+            'team_id': current_user["team_id"],
+            'title': "Calendar",
+            'description': current_user["username"] + " added a Calendar Entry",
+            'type': "calendar_added",
+            'timestamp': datetime.now()
+        }
+        add_notification(notification)
+        
         return {"id": str(result.inserted_id), **record}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -229,6 +246,15 @@ def delete_calendar_entry(entry_id: str, current_user: User = Depends(get_curren
 
         # Löschen des Eintrags aus der MongoDB
         result = collection.delete_one({"_id": ObjectId(entry_id)})
+        
+        notification = {
+            'team_id': current_user["team_id"],
+            'title': "Calendar",
+            'description': current_user["username"] + " deleted a Calendar Entry",
+            'type': "calendar_deleted",
+            'timestamp': datetime.now()
+        }
+        add_notification(notification)
 
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Entry not found")

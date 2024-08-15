@@ -2,7 +2,7 @@ from typing import Annotated, Any, Dict, List, Optional, Union
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJsonSchema
-from ..language_helpers.analyze_chat import analyze_chat, analyze_chat2
+from ..language_helpers.analyze_chat import analyze_chat, analyze_chat_demo
 from ..language_helpers.api.sentiment import get_sentiment, get_big5, get_big5_team
 
 from app.src.routers.auth import get_current_user, User
@@ -96,13 +96,13 @@ def calculate_average(predictions_list: List[Dict[str, float]]) -> Dict[str, flo
     return avg_predictions
 
 ## Scheduler method, that gets triggered to create new metadata
-@router.get("/language/analyze", tags=["language"])
-def predict():    
-    return analyze_chat()
+#@router.get("/language/analyze", tags=["language"])
+#def predict():    
+ #   return analyze_chat()
 
 @router.get("/language/analyze-demo", tags=["language"])
 def predictdemo(input:str):    
-    return analyze_chat2(input)
+    return analyze_chat_demo(input)
 
 @router.get("/language/get-big5-data", tags=["language"])
 async def big5(current_user: Annotated[User, Depends(get_current_user)], startDate:datetime=None, endDate:datetime=None):

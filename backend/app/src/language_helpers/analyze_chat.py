@@ -34,7 +34,19 @@ def analyze_user_big5(user_id):
 
     store_OCEAN(user_id, big5_result)
 
-def analyze_chat2(input):
+
+
+def analyze_chat_prod(latest):
+    latest_metadata = latest #"2024-01-01"
+
+    messages = retrieve_chat(since=latest_metadata)
+
+    for message in messages:
+        metadata = generate_metadata(message["content"])
+        store_metadata(message["id"], message["sender_id"], message["timestamp"], metadata)
+
+
+def analyze_chat_demo(input):
     metadata = generate_metadata(input)
     return metadata
 

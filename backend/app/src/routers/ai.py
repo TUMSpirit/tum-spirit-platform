@@ -5,9 +5,10 @@ from openai import OpenAI
 from datetime import datetime
 from typing import List
 import pytz
+from dotenv import load_dotenv
 import os
+from app.config import MONGO_DB,MONGO_URI
 from pymongo import MongoClient
-
 
 # Define a BaseModel for representing a single message
 
@@ -35,15 +36,6 @@ router = APIRouter()
 
 # Access environment variables for database credentials
 # Retrieve MongoDB credentials and database info
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
-
-
-# Construct the MongoDB connection URI
-MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)

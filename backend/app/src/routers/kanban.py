@@ -6,22 +6,12 @@ from bson import ObjectId, json_util
 from datetime import datetime
 from fastapi import HTTPException
 from app.src.routers.auth import get_current_user, User
+from app.src.routers.notification import add_notification
+from app.config import MONGO_DB,MONGO_URI
 
 
 # Create a router
 router = APIRouter()
-
-
-# Retrieve MongoDB credentials and database info
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
-
-# connection string
-MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
-
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
@@ -103,6 +93,15 @@ def insert_task(task_entry: TaskCreate, current_user: Annotated[User, Depends(ge
         }
         # Inserting the record into the database
         result = collection.insert_one(record)
+        
+        notification = {
+            'team_id': current_user["team_id"],
+            'title': "Kanban",
+            'description': current_user["username"] + " created a Kanban Card in '" +task_entry.column+"'",
+            'type': "kanban_added",
+            'timestamp': datetime.now()
+        }
+        add_notification(notification)
         # Return the ID of the inserted record
         return {"id": str(result.inserted_id), **record}
     except Exception as e:
@@ -184,6 +183,15 @@ def delete_task(task_id: str, current_user: Annotated[User, Depends(get_current_
         # Löschen des Eintrags aus der MongoDB
         result = collection.delete_one({"_id": ObjectId(task_id)})
 
+        notification = {
+            'team_id': current_user["team_id"],
+            'title': "Kanban",
+            'description': current_user["username"] + " deleted a Kanban Card",
+            'type': "kanban_deleted",
+            'timestamp': datetime.now()
+        }
+        add_notification(notification)
+        
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Entry not found")
 

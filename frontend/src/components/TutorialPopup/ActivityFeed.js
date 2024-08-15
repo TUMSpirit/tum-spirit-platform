@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { List, Card, Tooltip } from 'antd';
+import { List, Card } from 'antd';
 import { CalendarTwoTone, CheckCircleTwoTone, DeleteTwoTone } from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
 import moment from 'moment'; // Import Moment.js
@@ -18,8 +18,9 @@ const ActivityFeed = () => {
             Authorization: authHeader(),
           },
         });
-        setActivityList(response.data);
-        setFilteredList(response.data);
+        const data = response.data;
+        setActivityList(data);
+        setFilteredList(data);
       } catch (error) {
         console.error('Error fetching notifications:', error);
       }
@@ -70,7 +71,8 @@ const ActivityFeed = () => {
     >
       <List
         itemLayout="horizontal"
-        dataSource={filteredList}
+        dataSource={filteredList.slice().reverse()}
+        style={{marginBottom: '10px'}} // Reverse the list to show newest items on top
         renderItem={(activity) => (
           <List.Item style={{ paddingLeft: '25px' }}>
             <List.Item.Meta

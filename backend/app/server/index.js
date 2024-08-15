@@ -49,11 +49,11 @@ socketIO.on('connection', (socket) => {
                 }
             });
             if (data.privateChatId) {
-                socketIO.to(data.privateChatId).emit("messageResponse", response.data);
                 socketIO.to(data.privateChatId).emit('newMessageMetadata', response.data);
+                socketIO.to(data.privateChatId).emit("messageResponse", response.data);
             } else {
-                socketIO.to(data.teamId).emit("messageResponse", response.data);
                 socketIO.to(data.teamId).emit('newMessageMetadata', response.data);
+                socketIO.to(data.teamId).emit("messageResponse", response.data);
             }
         } catch (err) {
             console.error(err);

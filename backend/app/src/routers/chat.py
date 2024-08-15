@@ -5,16 +5,12 @@ from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 from app.src.routers.auth import get_current_user, User
+from app.config import MONGO_DB,MONGO_URI
 
+
+
+# Create a router
 router = APIRouter()
-
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
-MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
-
 
 class Message(BaseModel):
     id: Optional[str] = None
@@ -38,6 +34,30 @@ class Message(BaseModel):
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chat']
+
+
+def get_messages(latest: datetime):
+    try:
+        query = {'timestamp': latest}
+        items = []
+
+        for item in collection.find(query):
+            print(f"Found message: {item}")
+            item['id'] = str(item['_id'])
+            item['teamId'] = str(item['teamId'])
+            item['senderId'] = str(item['senderId'])
+            item['timestamp'] = item['timestamp'] + timedelta(hours=2)
+            item['reactions'] = dict(item.get('reactions', {}))
+            item['isGif'] = item.get('isGif', False)
+            item['privateChatId'] = item.get('privateChatId', None)
+            items.append(Message(**item))
+
+        print(f"Total messages found: {len(items)}")
+        return items
+    except Exception as e:
+        print(f"Error fetching messages: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+ 
 
 @router.post("/chat/new-message", tags=["chat"])
 def send_message(message: Message, current_user: User = Depends(get_current_user)):

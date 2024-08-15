@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, Button, Badge } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "../assets/images/Spirit.png";
@@ -15,6 +15,9 @@ function Sidenav({ color }) {
   const { Title, Text } = Typography;
   const [opened, setOpened] = useState(false);
   const { unreadMessages } = useUnreadMessage();
+  const [totalCount, setTotalCount] = useState(0);
+
+  
 
   const calendar = [
     <svg
@@ -174,6 +177,10 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
+  useEffect(() => {
+    setTotalCount(unreadMessages.reduce((total, [_, count]) => total + count, 0));
+}, [unreadMessages]);
+
   const openAiChat = () => {
     setOpened(true);
   };
@@ -228,7 +235,7 @@ function Sidenav({ color }) {
               {chat}
             </span>
             <span className="label">Chat</span>
-            <Badge className="ml-auto" count={0}>
+            <Badge className="ml-auto" count={totalCount}>
             </Badge>
           </NavLink>
         </Menu.Item>

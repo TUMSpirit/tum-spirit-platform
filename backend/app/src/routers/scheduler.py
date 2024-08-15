@@ -3,20 +3,7 @@ from pymongo import ASCENDING, MongoClient
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.cron import CronTrigger
-import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# MongoDB configuration from environment
-MONGO_USER = os.getenv("MONGO_USER", "root")
-MONGO_PASSWORD = os.getenv("MONGO_PASSWORD", "example")
-MONGO_HOST = os.getenv("MONGO_HOST", "mongo")
-MONGO_PORT = os.getenv("MONGO_PORT", "27017")
-MONGO_DB = os.getenv("MONGO_DB", "TUMSpirit")
-
-MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
+from app.config import MONGO_DB,MONGO_URI
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
@@ -90,7 +77,7 @@ def start_scheduler():
     #scheduler.add_job(daily_task, CronTrigger(hour=4, minute=00))
 
     # Schedule weekly task every Monday at midnight
-    #scheduler.add_job(weekly_task, CronTrigger(hour=0, minute=0, day_of_week="mon"))
+    #scheduler.add_job(weekly_task, CronTrigger(hour=2, minute=0, day_of_week="mon"))
 
     # Start the scheduler
     scheduler.start()

@@ -12,7 +12,8 @@ import {
     DownloadOutlined,
     SearchOutlined,
     UploadOutlined,
-    PlusOutlined
+    PlusOutlined,
+    DeleteOutlined
 } from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
 import { SubHeader } from '../../layout/SubHeader';
@@ -26,6 +27,8 @@ const FileTable = () => {
     const [selectedTags, setSelectedTags] = useState([]);
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
     const [fileListUpload, setFileListUpload] = useState([]);
+    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [fileToDelete, setFileToDelete] = useState(null);
     const authHeader = useAuthHeader();
 
     useEffect(() => {
@@ -73,6 +76,30 @@ const FileTable = () => {
         } catch (error) {
             console.error('Error downloading file:', error);
             message.error('Error downloading file');
+        }
+    };
+
+    const deleteFile = async (file_id) => {
+        try {
+            await axios.delete(`/api/files/delete/${fileToDelete}`, {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+            message.success('File deleted successfully');
+            setIsDeleteModalVisible(false);
+            setFileToDelete(null);
+            // Refresh file list
+            const response = await axios.get('/api/files/get-files', {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+            setFileList(response.data);
+            setFilteredList(response.data);
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            message.error('Error deleting file');
         }
     };
 
@@ -149,6 +176,7 @@ const FileTable = () => {
             title: 'Filename',
             dataIndex: 'filename',
             key: 'filename',
+            sorter: (a, b) => a.filename.localeCompare(b.filename),
             render: (text) => (
                 <Space>
                     {getFileIcon(text)}{text}
@@ -159,19 +187,28 @@ const FileTable = () => {
             title: 'Size',
             dataIndex: 'size',
             key: 'size',
+            sorter: (a, b) => a.size - b.size,
             render: (size) => `${(size / 1024).toFixed(2)} KB`,
         },
         {
             title: 'Uploaded At',
             dataIndex: 'timestamp',
             key: 'timestamp',
+            sorter: (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
             render: (text) => moment(text).format('DD.MM.YYYY HH:mm'),
+            defaultSortOrder: 'ascend', // Default sort by date descending
         },
         {
             title: 'Action',
             key: 'action',
             render: (text, record) => (
-                <Button onClick={() => downloadFile(record._id)} icon={<DownloadOutlined />}></Button>
+                <Space>
+                    <Button onClick={() => downloadFile(record._id)} icon={<DownloadOutlined />} />
+                    <Button onClick={() => {
+                        setFileToDelete(record._id);
+                        setIsDeleteModalVisible(true);
+                    }} icon={<DeleteOutlined />} />
+                </Space>
             ),
         },
     ];
@@ -220,6 +257,11 @@ const FileTable = () => {
         setFileListUpload(fileList);
     };
 
+    const handleDeleteModalCancel = () => {
+        setIsDeleteModalVisible(false);
+        setFileToDelete(null);
+    };
+
     return (
         <div>
             <SubHeader>
@@ -249,16 +291,16 @@ const FileTable = () => {
                     </Col>
                 </Row>
                 <Row gutter={[24, 16]}>
-                <Col xs={24} sm={24} style={{ marginBottom: '10px' }}>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={showUploadModal}
-                    style={{float:'right'}}
-                >
-                    Upload File
-                </Button>
-                </Col>
+                    <Col xs={24} sm={24} style={{ marginBottom: '10px' }}>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={showUploadModal}
+                            style={{ float: 'right' }}
+                        >
+                            Upload File
+                        </Button>
+                    </Col>
                 </Row>
             </SubHeader>
             <Table
@@ -290,6 +332,21 @@ const FileTable = () => {
                 >
                     <Button icon={<UploadOutlined />}>Select File</Button>
                 </Upload>
+            </Modal>
+            <Modal
+                title="Confirm Deletion"
+                open={isDeleteModalVisible}
+                onCancel={handleDeleteModalCancel}
+                footer={[
+                    <Button key="cancel" onClick={handleDeleteModalCancel}>
+                        Cancel
+                    </Button>,
+                    <Button key="delete" type="primary" danger onClick={deleteFile}>
+                        Delete
+                    </Button>,
+                ]}
+            >
+                <p>Are you sure you want to delete this file?</p>
             </Modal>
         </div>
     );

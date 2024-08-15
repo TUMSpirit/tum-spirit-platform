@@ -6,6 +6,7 @@ import { ClockCircleOutlined, CalendarOutlined, TrophyOutlined } from '@ant-desi
 import ActivityFeed from '../TutorialPopup/ActivityFeed';
 import Chatbot from '../AiChat/chat-bubble';
 import moment from 'moment';
+import { useSocket } from '../../context/SocketProvider';
 
 const { Step } = Steps;
 const { Title, Text, Paragraph } = Typography;
@@ -45,21 +46,21 @@ const initialMilestones = [
   },
   {
     title: 'Meilenstein 7',
-    date: '2024-08-09T16:00:00',
+    date: '2024-09-10T16:00:00',
     details: 'Weitere wichtige Informationen zu Meilenstein 7.',
   }
 ];
 
 const greetings = [
-  'Hallo, Jonas', // Deutsch
-  'Hello, Jonas', // Englisch
-  'Hola, Jonas',  // Spanisch
-  'Bonjour, Jonas', // Französisch
-  'Ciao, Jonas', // Italienisch
-  'Olá, Jonas', // Portugiesisch
-  'こんにちは、Jonas', // Japanisch
-  '你好, Jonas', // Chinesisch
-  'Привет, Jonas', // Russisch
+  'Hallo, ', // Deutsch
+  'Hello, ', // Englisch
+  'Hola, ',  // Spanisch
+  'Bonjour, ', // Französisch
+  'Ciao, ', // Italienisch
+  'Olá, ', // Portugiesisch
+  'こんにちは、', // Japanisch
+  '你好, ', // Chinesisch
+  'Привет, ', // Russisch
 ];
 
 const HorizontalTimeline = () => {
@@ -72,6 +73,7 @@ const HorizontalTimeline = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [celebrationVisible, setCelebrationVisible] = useState(false);
+  const {currentUser} = useSocket()
 
   useEffect(() => {
     const updatedMilestones = calculateProgress(milestones);
@@ -131,7 +133,7 @@ const HorizontalTimeline = () => {
 
   const openAiChat = () => {
     setOpened(true);
-    setShowConfetti(true);
+    //setShowConfetti(true);
   };
 
   const handleCreateMilestone = () => {
@@ -186,7 +188,7 @@ const HorizontalTimeline = () => {
           <Card className="flex flex-col justify-between p-6 center-welcome" style={{ height: '250px' }}>
             <div className="flex justify-between">
               <div>
-                <Title level={2} className="text-left">{randomGreeting}</Title>
+                <Title level={2} className="text-left">{randomGreeting}{currentUser.username}</Title>
                 <Button type="primary" className="mt-2" onClick={openAiChat}>Chat with me</Button>
               </div>
               <img

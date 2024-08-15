@@ -1,4 +1,3 @@
-
 import { UserAddOutlined } from '@ant-design/icons';
 
 const Task = ({ task, provided, editModal }) => {
@@ -9,14 +8,14 @@ const Task = ({ task, provided, editModal }) => {
 			ref={provided.innerRef}
 			{...provided.draggableProps}
 			{...provided.dragHandleProps}
-			className="w-full cursor-pointer bg-[#fff] flex flex-col justify-between gap-3 items-start shadow-sm my-4 rounded-xl px-3 py-4"
+			className="w-full cursor-pointer bg-white flex flex-col justify-between gap-3 items-start shadow-sm my-4 rounded-xl px-3 py-4"
 			onClick={() => editModal(task)}
 		>
 			{image && alt && (
 				<img
 					src={image}
 					alt={alt}
-					className="w-full h-[170px] rounded-lg"
+					className="w-full h-auto max-h-[170px] object-cover rounded-lg"
 				/>
 			)}
 			{milestone && (
@@ -30,7 +29,7 @@ const Task = ({ task, provided, editModal }) => {
 					{milestone}
 				</div>
 			)}
-			<div className="flex items-center gap-2">
+			<div className="flex flex-wrap gap-2">
 				{tags.map((tag) => (
 					<span
 						key={tag.title}
@@ -41,18 +40,18 @@ const Task = ({ task, provided, editModal }) => {
 					</span>
 				))}
 			</div>
-			<div className="w-full flex items-start flex-col gap-0">
+			<div className="w-full flex flex-col gap-1">
 				<span className="text-[15.5px] font-medium text-[#555]">{title}</span>
-				<span className="text-[13.5px] truncate overflow-hidden text-gray-500">{description}</span>
+				{description && (
+					<span className="text-[13.5px] text-gray-500 line-clamp-3">
+						{description}
+					</span>
+				)}
 			</div>
 			<div className="w-full border border-dashed"></div>
 			<div className="w-full flex items-center justify-between">
 				<div className="flex items-center gap-1">
-					<UserAddOutlined
-						color={"#666"}
-						width="19px"
-						height="19px"
-					/>
+					<UserAddOutlined color={"#666"} width="19px" height="19px" />
 					<span className="text-[13px] text-gray-700">{deadline} mins</span>
 				</div>
 				<div
@@ -70,3 +69,4 @@ const Task = ({ task, provided, editModal }) => {
 
 export default Task;
 
+/*<span className="text-[13.5px] truncate overflow-hidden text-gray-500">{description}</span>*/

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Row, Col, Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar, Badge, Input } from 'antd';
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
 import { SubHeader } from '../../layout/SubHeader';
@@ -35,35 +35,53 @@ const ChatBody = ({
     const chatContainerRef = useRef(null);
 
 
+    const getPrivateChatId = (user1, user2) => {
+        const [firstUser, secondUser] = [user1, user2].sort();
+        return `${firstUser}-${secondUser}`;
+    };
 
-    const tabsItems = [
-        { key: '1',  label: (
-            <span>
-                <Badge
-                    count={getUnreadMessages('Team')|| 0} // Display unread messages count
-                    overflowCount={9}
-                    offset={[10, -4]}
-                >
-                     Team
-                    </Badge>
-            </span>
-        ), children: '' },
-        ...teamMembers.map((member, index) => ({
-            key: (index + 2).toString(),
+    const tabsItems = useMemo(() => {
+        // Generate the Team tab
+        const teamTab = {
+            key: '1',
             label: (
                 <span>
                     <Badge
-                        count={getUnreadMessages(currentUser.username+"-"+member.username)|| 0}// Display unread messages count
+                        count={getUnreadMessages('Team') || 0}
                         overflowCount={9}
                         offset={[10, -4]}
                     >
-                         <Badge status={onlineStatus[member.username] ? 'processing' : 'default'} text={member.username}/>
-                        </Badge>
+                        Team
+                    </Badge>
                 </span>
             ),
             children: ''
-        }))
-    ];
+        };
+
+        // Generate the member tabs
+        const memberTabs = teamMembers.map((member, index) => {
+            // Generate the chat ID based on sorted usernames
+            const privateChatId = getPrivateChatId(currentUser.username, member.username);
+            return {
+                key: (index + 2).toString(),
+                label: (
+                    <span>
+                        <Badge
+                            count={getUnreadMessages(privateChatId) || 0}
+                            overflowCount={9}
+                            offset={[10, -4]}
+                        >
+                            <Badge status={onlineStatus[member.username] ? 'processing' : 'default'} text={member.username} />
+                        </Badge>
+                    </span>
+                ),
+                children: ''
+            };
+        });
+        // Return the combined tabs array with the team tab first
+        return [teamTab, ...memberTabs];
+    }, [currentTab, teamMembers, getUnreadMessages, onlineStatus, currentUser.username]);
+
 
     const getAvatarColor = (username) => {
         if (username === currentUser?.username) {
@@ -117,25 +135,45 @@ const ChatBody = ({
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
+
+    const navigatePreviousResult = () => {
+        if (searchResults.length > 1) {
+            setCurrentResultIndex(prev => {
+                const nextIndex = (prev - 1 + searchResults.length) % searchResults.length;
+                scrollToMessage(searchResults[nextIndex]);
+                return nextIndex;
+            });
+        }
+    };
+
+    const navigateNextResult = () => {
+        if (searchResults.length > 0) {
+            setCurrentResultIndex(prev => {
+                const nextIndex = (prev + 1) % searchResults.length;
+                scrollToMessage(searchResults[nextIndex]);
+                return nextIndex;
+            });
+        }
+    };
+
+
     const handleSearch = (value) => {
         setSearchTerm(value);
         if (!value.trim()) {
             setSearchResults([]);
-            setTotalResults(0);
             setCurrentResultIndex(-1);
         } else {
             const lowerCaseTerm = value.toLowerCase();
             const foundIndexes = messages
-                .map((message, index) => ({ text: message.content.toLowerCase(), index }))
+                .map((message, index) => ({text: message.content.toLowerCase(), index}))
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
-    
+
             setSearchResults(foundIndexes);
-            setTotalResults(foundIndexes.length);
             if (foundIndexes.length > 0) {
                 setCurrentResultIndex(0);
-                //scrollToMessage(foundIndexes[0]);
+                scrollToMessage(foundIndexes[0]);
             }
         }
     };
@@ -150,57 +188,30 @@ const ChatBody = ({
         }
     };
 
-    const navigatePreviousResult = () => {
-        if (searchResults.length > 1) {
-            setCurrentResultIndex(prev => {
-                const nextIndex = (prev - 1 + searchResults.length) % searchResults.length;
-                scrollToMessage(searchResults[nextIndex]);
-                return nextIndex;
-            });
-        }
-    };
-    
-    const navigateNextResult = () => {
-        if (searchResults.length > 1) {
-            setCurrentResultIndex(prev => {
-                const nextIndex = (prev + 1) % searchResults.length;
-                scrollToMessage(searchResults[nextIndex]);
-                return nextIndex;
-            });
-        }
-    };
-    
+const scrollToMessage = (index) => {
+    // Ensure index is within the bounds of the messages array
+    if (index < 0 || index >= messages.length) {
+        console.warn(`Invalid index: ${index}`);
+        return;
+    }
 
-    const scrollToMessage = (index) => {
-        // Ensure the index is valid
-        if (index < 0 || index >= messages.length) {
-            console.warn(`Invalid index: ${index}`);
-            return;
-        }
+    // Get the message ID and corresponding element
+    const messageId = messages[index]?.id;
+    const messageElement = document.getElementById(`message-${messageId}`);
+    const containerElement = chatContainerRef.current;
 
-        const messageId = messages[index]?.id;
-        if (!messageId) {
-            console.warn(`No messageId found for index: ${index}`);
-            return;
-        }
-
-        const element = document.getElementById(`message-${messageId}`);
-        if (element && chatContainerRef.current) {
-            // Calculate the position of the element relative to the chat container
-            const elementTop = element.offsetTop;
-            const containerTop = chatContainerRef.current.scrollTop;
-            const containerHeight = chatContainerRef.current.clientHeight;
-            const elementHeight = element.offsetHeight;
-
-            // Scroll to position
-            chatContainerRef.current.scrollTo({
-                top: elementTop - containerHeight / 2 + elementHeight / 2,
-                behavior: 'smooth'
-            });
-        } else {
-            console.warn(`No element found with ID: message-${messageId}`);
-        }
-    };
+    if (messageElement && containerElement) {
+        // Get the offsetTop of the message element
+        const messageTop = messageElement.offsetTop;
+        // Scroll to the message element's position within the container
+        containerElement.scrollTo({
+            top: messageTop - containerElement.clientHeight / 2 + messageElement.clientHeight / 2,
+            behavior: 'smooth'
+        });
+    } else {
+        console.warn(`No element found with ID: ${messageId}`);
+    }
+};
 
     const highlightText = (text) => {
         const parts = !searchTerm ? [text] : text.split(new RegExp(`(${searchTerm})`, 'gi'));
@@ -208,7 +219,7 @@ const ChatBody = ({
             <span className="text-l mb-0 word-break break-word hyphens-auto">
                 {parts.map((part, index) =>
                     searchTerm && part.toLowerCase() === searchTerm.toLowerCase() ? (
-                        <span key={index} style={{ borderRadius:"5px", padding:"5px", backgroundColor: 'rgb(220, 287, 305)' }}>{part}</span>
+                        <span key={index} style={{ borderRadius: "5px", padding: "5px", backgroundColor: 'rgb(220, 287, 305)' }}>{part}</span>
                     ) : part
                 )}
             </span>
@@ -337,9 +348,9 @@ const ChatBody = ({
             id={id}
             ref={chatContainerRef}
             className="flex-grow overflow-y-auto w-full px-4 pb-5 bg-chat-background border-t-2 border-chat-grid relative"
-        style={{borderColor:"rgb(229, 231, 235)", height:"100px"}}>
-       <SubHeader>
-                <Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{marginTop:"-2px"}}>
+            style={{ borderColor: "rgb(229, 231, 235)", height: "100px" }}>
+            <SubHeader>
+                <Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{ marginTop: "-2px" }}>
                     <Col xs={24} md={12} className="mt-2 w-full">
                         <Tabs
                             className="w-full m-0"
@@ -349,22 +360,20 @@ const ChatBody = ({
                         />
                     </Col>
                     <Col xs={24} md={12} className="flex flex-col md:flex-row justify-end">
-                    <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0">
-                        <Search
-                            className="w-full md:w-48 md:mb-0"
-                            placeholder="Search messages"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            onSearch={navigateSearchResults}
-                            onPressEnter={navigateSearchResults}
-                        />
-                 
-                            <Button className="ml-1" onClick={navigatePreviousResult}>
-                                Previous
-                            </Button>
-                            <Button className="ml-1" onClick={navigateNextResult}>
-                                Next
-                            </Button>
+                        <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0 items-center">
+                            <Search
+                                className="md:w-42 md:mb-0"
+                                placeholder="Search messages"
+                                value={searchTerm}
+                                onChange={e => handleSearch(e.target.value)}
+                                onSearch={navigateNextResult}
+                                onPressEnter={navigateNextResult}
+                            />
+                                {searchResults.length > 0 && (
+                                <div className="ml-4 w-14 text-sm font-medium text-gray-600">
+                                    {currentResultIndex + 1} / {searchResults.length}
+                                </div>
+                            )}
                         </div>
                     </Col>
                 </Row>

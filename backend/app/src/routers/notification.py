@@ -5,23 +5,13 @@ from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime, timezone
 from fastapi import HTTPException
-
 from app.src.routers.auth import get_current_user, User
+from app.config import SECRET_KEY, MONGO_USER,MONGO_PASSWORD,MONGO_HOST,MONGO_PORT,MONGO_DB,MONGO_URI
+
 
 
 # Create a router
 router = APIRouter()
-
-
-# Retrieve MongoDB credentials and database info
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
-
-# connection string
-MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
 
 
 # Connect to MongoDB
@@ -78,14 +68,21 @@ class Notification(NotificationCreate):
             arbitrary_types_allowed = True #required for the _id 
             json_encoders = {ObjectId: str}
 
+
+def add_notification(record):
+    try:
+        collection.insert_one(record)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/calendar/create-notification", response_model=NotificationCreate, tags=["notification"])
-def add_notification(notification: NotificationCreate, current_user: User = Depends(get_current_user)):
+def create_notification(notification: NotificationCreate, current_user: User = Depends(get_current_user)):
     try:
 
         record = {
-            'team_id': notification.team_id,
+            'team_id': current_user["team_id"],
             'title': notification.title,
-            'description': notification.description,
+            'description': current_user["username"] + notification.description,
             'type': notification.type,
             'timestamp': datetime.now()
         }

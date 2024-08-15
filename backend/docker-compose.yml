@@ -6,32 +6,25 @@ services:
       - "8000:8000"
     depends_on:
       - mongo
-    environment:
-      - MONGO_URI=mongodb://mongo:27017
-  #redis:
-   # image: redis
-    #command: redis-server --requirepass Sp!r!t#24
-    #ports:
-     # - "6379:6379"
-    #volumes:
-     # - redis-data:/data
+    env_file:
+      - .env
+
   express:
     build:
       context: .
       dockerfile: Dockerfile.express  # This points to the Express Dockerfile
     ports:
       - "4000:4000"
-    environment:
-     - MONGO_URI=mongodb://mongo:27017
     depends_on:
       - mongo
+
   mongo:
     image: mongo:latest
     restart: always
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
-      - MONGO_INITDB_DATABASE=mydatabase
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     volumes:
       - mongodb_data:/data/db
     ports:
@@ -40,7 +33,8 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    ports: ["54321:11434"]
+    ports:
+      - "54321:11434"
     volumes:
       - ollama:/root/.ollama
     pull_policy: always

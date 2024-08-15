@@ -10,17 +10,15 @@ from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJson
 from datetime import datetime, timedelta
 from bson import ObjectId
 from bson.errors import InvalidId
-
-from dotenv import load_dotenv
+from app.config import SECRET_KEY,MONGO_DB,MONGO_URI
 
 # Create a router
 router = APIRouter()
 # Load environment variables from a .env file
-load_dotenv()
 
 # to get a string like this run:
 # openssl rand -hex 32
-SECRET_KEY = "b84be05f4f7e6307639b11d5be65d3c4e53bb2142a83e07b643953709e29b3a5"  # ADD SECRETS
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 139600
 
@@ -28,16 +26,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Retrieve MongoDB credentials and database info
-MONGO_USER = "root"
-MONGO_PASSWORD = "example"
-MONGO_HOST = "mongo"
-MONGO_PORT = "27017"
-MONGO_DB = "TUMSpirit"
+# MongoDB credentials and database info
+#MONGO_USER = os.getenv("MONGO_USER")
+#MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
+#MONGO_HOST = os.getenv("MONGO_HOST")
+#MONGO_PORT = os.getenv("MONGO_PORT")
+#MONGO_DB = os.getenv("MONGO_DB")
 
-# connection string
-MONGO_URI = "mongodb://root:example@mongo:27017/mydatabase?authSource=admin"
-
+# Connection string
+#MONGO_URI = os.getenv("MONGO_URI")
 
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
@@ -382,7 +379,13 @@ async def get_missed_chats(current_user: User = Depends(get_current_user)):
             private_chat_id = None
             search_key = "Team"
         else:
-            private_chat_id = current_user["username"] + "-" + missed_message[0]
+                   # Create a list of the two items to be sorted
+            items = [current_user["username"],missed_message[0]]
+            # Sort the items alphabetically
+            sorted_items = sorted(items)
+            # Join the sorted items with a hyphen
+            private_chat_id = "-".join(sorted_items)
+            #private_chat_id = current_user["username"] + "-" + missed_message[0]
             search_key = private_chat_id
 
         if timestamp:

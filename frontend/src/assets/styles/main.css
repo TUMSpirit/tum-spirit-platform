@@ -1334,8 +1334,8 @@ span.ismobile {
   }
 
   .ant-row {
-    margin-left: -12px;
-    margin-right: -12px;
+    /*margin-left: -12px;
+    margin-right: -12px;*/
   }
 
   span.ismobile {
@@ -3464,4 +3464,41 @@ span.ant-badge-status-dot.ant-badge-status-processing {
   50% {
     transform: translateY(-2px);
   }
+}
+
+/* Add this to your CSS file */
+
+@keyframes appear {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes disappear {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+.ghost-appear {
+  animation: appear 1s forwards;
+}
+
+.ghost-disappear {
+  animation: disappear 1s forwards;
+}
+
+.ghost-container {
+  position: relative;
+  text-align: center;
+}
+
+.ghost-image {
+  transition: opacity 1s ease-out;
+}
+
+.hidden {
+  opacity: 0;
+}
+
+.visible {
+  opacity: 1;
 }

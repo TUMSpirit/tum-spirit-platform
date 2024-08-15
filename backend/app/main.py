@@ -1,9 +1,11 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.config import SECRET_KEY
 
+from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
 # import routers
 from .src.routers import auth
-#from .src.routers import celery
 from .src.routers import team
 
 from .src.routers import ai
@@ -16,12 +18,21 @@ from .src.routers import chat
 
 # from .src.routers import chat
 
+# Define the lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    start_scheduler()
+    yield
+    # Shutdown
+    stop_scheduler()
+
 
 def application_setup() -> FastAPI:
     ''' Configure, start, and return the application '''
 
     # Start FastApi App
-    application = FastAPI()
+    application = FastAPI(lifespan=lifespan)
 
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
