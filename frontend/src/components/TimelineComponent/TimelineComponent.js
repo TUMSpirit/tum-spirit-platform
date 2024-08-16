@@ -188,7 +188,7 @@ const HorizontalTimeline = () => {
           <Card className="flex flex-col justify-between p-6 center-welcome" style={{ height: '250px' }}>
             <div className="flex justify-between">
               <div>
-                <Title level={2} className="text-left">{randomGreeting}{currentUser.username}</Title>
+                <Title level={2} className="text-left">{randomGreeting}{currentUser?currentUser.username:"Friend"}</Title>
                 <Button type="primary" className="mt-2" onClick={openAiChat}>Chat with me</Button>
               </div>
               <img
@@ -209,7 +209,7 @@ const HorizontalTimeline = () => {
           <Card title="Timeline" bordered={false}>
             <Steps current={current} type="default" percent={progress} onChange={onChange} direction="horizontal" items={stepItems} />
             <div style={{ marginTop: '20px' }}>
-              <Card title={milestones[current]?.title} className="milestone-card" extra={<Button type="primary" onClick={() => setModalVisible(true)}>+ Create Card</Button>}>
+              <Card title={milestones[current]?.title} className="milestone-card">
                 <Row>
                   <Col span={12}>
                     <Paragraph>
@@ -280,3 +280,5 @@ const HorizontalTimeline = () => {
 };
 
 export default HorizontalTimeline;
+
+//extra={<Button type="primary" onClick={() => setModalVisible(true)}>+ Create Card</Button>} As Extra button for milestone-card

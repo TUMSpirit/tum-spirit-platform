@@ -81,7 +81,7 @@ export const SocketProvider = ({ children }) => {
 
 
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated) {
       const token = authHeader().split(' ')[1]; // Extract the token from "Bearer <token>"
       const socketInstance = io('http://localhost:4000', {
         query: { token },

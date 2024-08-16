@@ -108,7 +108,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
             ]}
         >
             <Form layout={'vertical'} onFinish={handleSubmit} requiredMark={false} form={form} ref={formRef} initialValues={getInitialFormValues()}>
-                <Form.Item label={"Title"} name="title">
+                <Form.Item label={"Title"} name="title" rules={[{ required: true, message: 'Please set a title' }]}>
                     <Input
                         type="text"
                         name="title"
@@ -147,7 +147,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         tooltip={{ formatter: value => `${value} min` }}
                     />
                 </Form.Item>
-                <Form.Item name="milestone" label="Milestone" rules={[{ required: true, message: 'Please select a milestone' }]}>
+                <Form.Item name="milestone" label="Milestone">
                     <Select
                         style={{ width: '100%' }}
                         value={taskData.milestone}

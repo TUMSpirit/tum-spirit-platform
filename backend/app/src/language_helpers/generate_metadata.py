@@ -10,9 +10,9 @@ from .generate_emotion import generate_emotion
 
 def generate_metadata(text: str):
 
-    ocean_result = generate_OCEAN([text])
+    #ocean_result = generate_OCEAN([text])
 
-    mtbi_result = generate_MTBI(text)
+    #mtbi_result = generate_MTBI(text)
 
     grammar_result = generate_grammar(text)
 
@@ -34,9 +34,10 @@ def generate_metadata(text: str):
         "sentiment": sentiment_dict,
         "emotion": emotion_result,
         "flesh_reading_ease": reading_ease,
-        "grammar": grammar_result,
-        "MTBI": mtbi_result,
-        "OCEAN": ocean_result
+        "grammar": grammar_result
     }
 
     return output_dict
+
+#      "MTBI": mtbi_result,
+ #       "OCEAN": ocean_result

@@ -13,6 +13,7 @@ function Login(props) {
   const signIn = useSignIn();
   const { setUnreadMessages } = useUnreadMessage();
   const navigate = useNavigate();
+  
 
   const [form] = Form.useForm();
 
@@ -32,7 +33,8 @@ function Login(props) {
         tokenType: "bearer",
         authState: { username: values.username },
       });
-      window.location.reload();
+      console.log("TEST");
+      window.location.reload(true);
     } catch (err) {
       if (err && err instanceof AxiosError) {
         setError(err.response?.data.message || "Incorrect username or password.");

@@ -85,7 +85,7 @@ class User(BaseModel):
     team_id: PyObjectId
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
 
@@ -104,7 +104,7 @@ class TeamUser(BaseModel):
     missed_messages_chat: Optional[List[List[Optional[Union[str, str]]]]] = []
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
 
@@ -118,7 +118,7 @@ class TeamUserClean(BaseModel):
     missed_messages: Optional[int] = 0
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
 
@@ -238,6 +238,55 @@ async def get_user_last_active(user_id: str) -> datetime:
     if user:
         return user.get("last_active")
     return None
+
+def get_users():
+    # Example endpoint to fetch all users
+    users = user_collection.find({}, {'username': 1})
+    return {"users": [str(user['username']) for user in users]}
+
+
+@router.post("/create-users")
+async def create_users(user_data: List[UserInDB], current_user: User = Depends(get_current_user)):
+    """
+    Creates users with hashed passwords.
+
+    Args:
+        user_data (List[UserInDB]): A list of UserInDB instances containing user details and passwords.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        dict: A confirmation message.
+    
+    Raises:
+        HTTPException: If the current user is not an admin.
+    """
+    # Check if the current user is an admin
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action"
+        )
+
+    try:
+        # Prepare user documents with hashed passwords
+        user_docs = []
+        for user in user_data:
+            hashed_password = get_password_hash(user.password)
+            user_docs.append({
+                "username": user.username,
+                "password": hashed_password,
+                "role": user.role,
+                "team_id": user.team_id
+            })
+
+        # Insert users into the database
+        user_collection.insert_many(user_docs)
+        
+        return {"message": "Users created successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/me", response_model=TeamUser)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):

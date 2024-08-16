@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Body
+from fastapi import APIRouter, Depends, HTTPException, Header, Body, Query
 from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 from pymongo import MongoClient
@@ -24,7 +24,7 @@ class Message(BaseModel):
     privateChatId: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         json_encoders = {
             ObjectId: str,
             datetime: lambda dt: dt.isoformat(),
@@ -56,6 +56,34 @@ def get_messages(latest: datetime):
         return items
     except Exception as e:
         print(f"Error fetching messages: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+def get_combined_messages(
+    since: str,
+    user_id: str
+) -> Dict[str, List[str]]:
+    try:
+        # Convert ISO 8601 string to datetime object
+        since_datetime = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        
+        query = {
+            'senderId': user_id,
+            'timestamp': {'$gte': since_datetime}
+        }
+
+        messages_cursor = collection.find(query)
+        messages = list(messages_cursor)  # Convert cursor to list for easier processing
+
+        # Extract message content into a list
+        message_contents = [message['content'] for message in messages]
+        # Count the number of messages
+        message_count = len(messages)
+
+        return {
+            "combined_messages": message_contents,
+            "message_count": message_count
+        }
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
 
@@ -251,6 +279,8 @@ def get_message(message_id: str, current_user: User = Depends(get_current_user))
     except Exception as e:
         print(f"Error fetching message: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+    
+
 
 #@router.get("/chat/get-unread-message-count", response_model=int, tags=["chat"])
 #def get_missed_message_count(current_user: User = Depends(get_current_user)):

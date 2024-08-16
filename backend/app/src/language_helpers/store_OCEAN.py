@@ -6,7 +6,7 @@ from ..utils.db import get_db
 from datetime import datetime
 
 
-metadata_collection = get_db("user_OCEAN")
+metadata_collection = get_db("users_OCEAN")
 
 def store_OCEAN(user_id, OCEAN_result: OCEANResult):
     record = {
