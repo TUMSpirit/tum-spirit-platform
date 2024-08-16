@@ -18,9 +18,7 @@ function Login(props) {
   const [form] = Form.useForm();
 
   const onSubmit = async (values) => {
-    console.log("Values: ", values);
     setError("");
-
     const form_data = new FormData();
     form_data.append("username", values.username);
     form_data.append("password", values.password);
