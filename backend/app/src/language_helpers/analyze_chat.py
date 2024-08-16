@@ -1,3 +1,4 @@
+from typing import List
 from .generate_metadata import generate_metadata
 from .retrieve_chat import retrieve_chat
 from .store_metadata import store_metadata
@@ -35,6 +36,22 @@ def analyze_user_big5(user_id):
     store_OCEAN(user_id, big5_result)
 
 
+def analyze_big5(user_id: str, chat_string: List[str]):
+    try:
+        # Check if the chat_string array is empty
+        if not chat_string:
+            # If empty, store an empty result
+            big5_result = {}
+        else:
+            # Process the chat_string to generate Big Five (OCEAN) result
+            big5_result = generate_OCEAN(chat_string)
+        
+        # Store the result
+        store_OCEAN(user_id, big5_result)
+    
+    except Exception as e:
+        # Handle exceptions if necessary
+        print(f"Error analyzing Big Five: {str(e)}")
 
 def analyze_chat_prod(latest):
     latest_metadata = latest #"2024-01-01"

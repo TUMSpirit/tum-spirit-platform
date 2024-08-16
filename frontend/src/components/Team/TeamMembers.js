@@ -1,9 +1,10 @@
-// Team.js
 import React, { useEffect, useState } from 'react';
-import { Table, Avatar, Tag } from 'antd';
+import { Table, Avatar, Tag, Typography } from 'antd';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
 import { useSocket } from '../../context/SocketProvider'; // Adjust the import path accordingly
+
+const { Title } = Typography;
 
 const columns = [
   {
@@ -85,16 +86,34 @@ const TeamMembers = () => {
     };
 
     fetchTeamMembers();
-  }, []); // Re-run the effect if onlineStatus changes
+  }, [onlineStatus]); // Re-run the effect if onlineStatus changes
+
+  // Separate real team members from AI members
+  const realTeamMembers = teamMembers.filter(member => member.username !== 'Spirit');
+  const aiTeamMembers = teamMembers.filter(member => member.username === 'Spirit');
 
   return (
-    <Table
-      style={{ margin: "20px" }}
-      dataSource={teamMembers}
-      columns={columns}
-      rowKey="_id"
-      pagination={false}
-    />
+    <div style={{ margin: "20px" }}>
+      <Title level={4}>Team Members</Title>
+      <Table
+        dataSource={realTeamMembers}
+        columns={columns}
+        rowKey="_id"
+        pagination={false}
+        style={{ marginBottom: "20px" }}
+      />
+      {aiTeamMembers.length > 0 && (
+        <>
+          <Title level={4}>AI</Title>
+          <Table
+            dataSource={aiTeamMembers}
+            columns={columns}
+            rowKey="_id"
+            pagination={false}
+          />
+        </>
+      )}
+    </div>
   );
 };
 

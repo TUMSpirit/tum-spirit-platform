@@ -281,7 +281,7 @@ const AddEventPopup = ({
                     ...prevFormData,
                     room: response.data.sections[0].entries[0].id,
                 }));
-            } else {
+            } else {
                 setFormData((prevFormData) => ({
                     ...prevFormData,
                     room: newRoom,
@@ -447,12 +447,25 @@ const AddEventPopup = ({
 
                         <Row >
                             <Form.Item name={'isMilestone'} label={'Meeting Type'}>
-                                <Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
-                                    onChange={(e) => {
-                                        setFormData((prevFormData) => ({
-                                            ...prevFormData, isMilestone: e
-                                        }))
-                                    }} />
+                                <Row align="middle">
+                                    <Col flex="none">
+                                        <span style={{ marginRight: 8 }}>Regular</span>
+                                    </Col>
+                                    <Col flex="auto">
+                                        <Switch
+                                            data-testid='milestoneSwitch'
+                                            checked={formData.isMilestone}
+                                            onChange={(e) => {
+                                                setFormData((prevFormData) => ({
+                                                    ...prevFormData, isMilestone: e
+                                                }))
+                                            }}
+                                        />
+                                    </Col>
+                                    <Col flex="none">
+                                        <span style={{ marginLeft: 8 }}>Milestone</span>
+                                    </Col>
+                                </Row>
                             </Form.Item>
                         </Row>
                     </Col>
@@ -472,3 +485,12 @@ const AvatarDisplay = ({ selectedUsers }) => {
         </Avatar>))}
     </Avatar.Group>);
 };
+
+/*        <Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
+                                    onChange={(e) => {
+                                        setFormData((prevFormData) => ({
+                                            ...prevFormData, isMilestone: e
+                                        }))
+                                    }} />
+                                    ALTERNATIVER SWITCH
+                                    */
