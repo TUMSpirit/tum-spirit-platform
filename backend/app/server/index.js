@@ -34,7 +34,7 @@ socketIO.on('connection', (socket) => {
 
     socket.on("message", async (data) => {
         try {
-            const response = await axios.post('http://app:8000/api/chat/new-message', {
+            const response = await axios.post('http://app/api/chat/new-message', {
                 teamId: data.teamId,
                 content: data.content,
                 senderId: data.senderId,
@@ -66,7 +66,7 @@ socketIO.on('connection', (socket) => {
 
     socket.on("emojiReaction", async ({messageId, emoji, token}) => {
         try {
-            const response = await axios.put(`http://app:8000/api/chat/add-reaction/${messageId}`, {emoji}, {
+            const response = await axios.put(`http://app/api/chat/add-reaction/${messageId}`, {emoji}, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -140,7 +140,7 @@ socketIO.on('connection', (socket) => {
 
     socket.on("removeEmojiReaction", async ({messageId, token}) => {
         try {
-            const response = await axios.put(`http://app:8000/api/chat/remove-reaction/${messageId}`, {}, {
+            const response = await axios.put(`http://app/api/chat/remove-reaction/${messageId}`, {}, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -161,7 +161,7 @@ socketIO.on('connection', (socket) => {
     
     socket.on("deleteMessage", async ({messageId, token}) => {
         try {
-            const response = await axios.delete(`http://app:8000/api/chat/delete-message/${messageId}`, {
+            const response = await axios.delete(`http://app/api/chat/delete-message/${messageId}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -178,7 +178,7 @@ socketIO.on('connection', (socket) => {
     socket.on("editMessage", async (updatedMessage) => {
         try {
             console.log(`Editing message with ID: ${updatedMessage.id}`);
-            const response = await axios.put(`http://app:8000/api/chat/edit-message/${updatedMessage.id}`, {
+            const response = await axios.put(`http://app/api/chat/edit-message/${updatedMessage.id}`, {
                 teamId: updatedMessage.teamId,
                 content: updatedMessage.content,
                 senderId: updatedMessage.senderId,
