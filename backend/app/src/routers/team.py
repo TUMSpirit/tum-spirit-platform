@@ -51,7 +51,7 @@ class TeamCreate(BaseModel):
     members: List[PyObjectId]
     
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id 
             json_encoders = {ObjectId: str}
 
@@ -59,7 +59,7 @@ class Team(TeamCreate):
     id: PyObjectId
 
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id 
             json_encoders = {ObjectId: str}
 

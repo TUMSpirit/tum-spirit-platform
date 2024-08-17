@@ -72,7 +72,7 @@ class User(BaseModel):
     team_id: PyObjectId
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -88,7 +88,7 @@ class TeamUser(BaseModel):
     missed_messages: Optional[int] = 0
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 

@@ -44,7 +44,7 @@ class NotificationModel(BaseModel):
     timestamp: datetime
 
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id 
             json_encoders = {ObjectId: str}
 
@@ -56,7 +56,7 @@ class NotificationCreate(BaseModel):
     type: Optional[str] = ""
 
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id 
             json_encoders = {ObjectId: str}
 

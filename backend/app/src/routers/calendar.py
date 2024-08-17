@@ -66,7 +66,7 @@ class FileEntry(BaseModel):
     size: int
     
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id
             json_encoders = {ObjectId: str}
 
@@ -86,7 +86,7 @@ class CalendarEntry(BaseModel):
     users: List[PyObjectId]
 
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id
             json_encoders = {ObjectId: str}
             
@@ -106,7 +106,7 @@ class CreateCalendarEntry(BaseModel):
     users: List[PyObjectId]
     
     class Config:
-            allow_population_by_field_name = True
+            populate_by_name = True
             arbitrary_types_allowed = True #required for the _id
             json_encoders = {ObjectId: str}
 
