@@ -7,7 +7,7 @@ const axios = require('axios');
 
 const socketIO = require('socket.io')(http, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: "https://spirit.lfe.ed.tum.de"
     }
 });
 
