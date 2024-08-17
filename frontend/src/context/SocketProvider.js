@@ -83,7 +83,7 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (isAuthenticated) {
       const token = authHeader().split(' ')[1]; // Extract the token from "Bearer <token>"
-      const socketInstance = io('https://spirit.lfe.ed.tum.de:4000', {
+      const socketInstance = io('https://spirit.lfe.ed.tum.de', {
         query: { token },
         autoConnect: false, // Prevent auto connection
       });
