@@ -85,6 +85,7 @@ export const SocketProvider = ({ children }) => {
       const token = authHeader().split(' ')[1]; // Extract the token from "Bearer <token>"
       const socketInstance = io('https://spirit.lfe.ed.tum.de/express', {
         query: { token },
+        transports: ['websocket'],
         autoConnect: false, // Prevent auto connection
       });
 
