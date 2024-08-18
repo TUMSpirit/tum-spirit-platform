@@ -16,7 +16,13 @@ const socketIO = require('socket.io')(http, {
 });
 
 // Middleware to verify token on connection
-socketIO.use(async (socket, next) => {
+
+socketIO.use((socket, next) => {
+    next(); // Allow all connections
+});
+
+
+/*socketIO.use(async (socket, next) => {
     const token = socket.handshake.auth.token || socket.handshake.query.token;
     console.log(token);
     if (!token) {
@@ -30,7 +36,7 @@ socketIO.use(async (socket, next) => {
     } catch (err) {
         return next(new Error('Authentication error'));
     }
-});
+});*/
 
 app.use(cors());
 app.use(express.json());
