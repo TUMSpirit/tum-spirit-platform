@@ -1,23 +1,21 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const http = require('http');
+const http = require('http').Server(app);
 const PORT = 4000;
 const axios = require('axios');
-//const SECRET_KEY = process.env.SECRET_KEY;
+const SECRET_KEY = process.env.SECRET_KEY;
 
 
-const socketIOs = require('socket.io');
-const server = http.createServer(app);
-const socketIO = socketIOs(server);
-
-// Middleware to verify token on connection
-
-socketIO.use((socket, next) => {
-    next(); // Allow all connections
+const socketIO = require('socket.io')(http, {
+    cors: {
+        origin: "https://spirit.lfe.ed.tum.de",
+        methods: ["GET", "POST"]
+    },
+    perMessageDeflate: false 
 });
 
-
+// Middleware to verify token on connection
 /*socketIO.use(async (socket, next) => {
     const token = socket.handshake.auth.token || socket.handshake.query.token;
     console.log(token);
@@ -33,6 +31,10 @@ socketIO.use((socket, next) => {
         return next(new Error('Authentication error'));
     }
 });*/
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 
 app.use(cors());
 app.use(express.json());
@@ -222,6 +224,6 @@ socketIO.on('connection', (socket) => {
     });
 });
 
-server.listen(PORT, () => {
+http.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
 });
