@@ -13,11 +13,13 @@ import {
     Typography,
 } from "antd";
 import TeamMembers from '../components/Team/TeamMembers';
+import { SubHeader } from '../layout/SubHeader';
 function Team() {
 
     return (
         <>
-                <TeamMembers></TeamMembers>
+            <SubHeader></SubHeader>
+            <TeamMembers></TeamMembers>
         </>
     );
 }

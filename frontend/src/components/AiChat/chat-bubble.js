@@ -3,6 +3,7 @@ import { CloseOutlined, MessageOutlined } from "@ant-design/icons";
 import { Button, FloatButton, Input } from "antd";
 import logo from "../../assets/images/ghost.png";
 import { v4 as uuidv4 } from "uuid";
+import axios from 'axios';
 
 const Chatbot = ({ opened, setOpened }) => {
   // State to hold messages
@@ -23,42 +24,44 @@ const Chatbot = ({ opened, setOpened }) => {
 
   // Function to send the message
   const sendMessage = async () => {
-    //set loading to true
+    // Set loading to true
     setLoading(true);
-
+  
     if (inputValue.trim()) {
       // Add user message to the chat
       setMessages([...messages, { role: "user", content: inputValue }]);
       // Clear the input
       setInputValue("");
-
-      // post request to the backend to get the bot response
-      const botResponse = await fetch("http://localhost:8000/api/ai/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [...messages, { role: "user", content: inputValue }],
-        }),
-      });
-
-      if (!botResponse.ok) {
-        throw new Error("Failed to get bot response");
+  
+      try {
+        // Post request to the backend to get the bot response using axios
+        const response = await axios.post(
+          "/api/ai/generate",{
+            messages: [...messages, { role: "user", content: inputValue }],
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        // Set loading to false
+        setLoading(false);
+  
+        // Add bot response to the chat
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { content: response.data.choices[0].message.content, role: "assistant" },
+        ]);
+      } catch (error) {
+        // Handle error
+        console.error("Failed to get bot response", error);
+        setLoading(false);
       }
-
-      const response = await botResponse.json();
-
-      //set loading to false
+    } else {
+      // Ensure loading is set to false if the input is empty
       setLoading(false);
-
-      // Add bot response to the chat
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { content: response.choices[0].message.content, role: "assistant" },
-      ]);
-
-      return;
     }
   };
 
@@ -75,20 +78,23 @@ const Chatbot = ({ opened, setOpened }) => {
     setSessionId(newSessionId);
 
     // Then, send a "loaded chatbox" event to the backend with the sessionId
-    fetch("http://localhost:8000/api/ai/analytics", {
-      method: "POST",
+    axios.post('/api/ai/analytics', {
+      event_type: 'loaded_chatbox',
+      session_id: newSessionId,
+      data: {},
+    }, {
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        event_type: "loaded_chatbox",
-        session_id: newSessionId,
-        data: {},
-      }),
+    })
+    .catch(error => {
+      console.error('Error sending loaded chatbox event:', error);
+      // Handle the error appropriately
+      // For example, you might want to display a message to the user
     });
 
     // This empty dependency array ensures this effect runs once, at mount time
-  }, []);
+  }, []); 
 
   return (
     <>

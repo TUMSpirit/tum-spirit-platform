@@ -1,28 +1,17 @@
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from 'react';
 
-export const SubHeaderContext = createContext({
-    subHeader: null,
-    updateSubHeader: () => undefined,
-});
+// Create the SubHeader context
+const SubHeaderContext = createContext();
 
+// Custom hook to use the SubHeader context
 export const useSubHeaderContext = () => useContext(SubHeaderContext);
 
+// Provider component for the SubHeader context
 export const SubHeaderContextProvider = ({ children }) => {
-    const [subHeader, setSubHeader] = useState(null);
-
-    const updateSubHeader = (el) => {
-        console.log("SubHeader in");
-        const oldSubHeader = null;
-        setSubHeader(el);
-        return () => {
-            console.log("SubHeader out");
-            setSubHeader(oldSubHeader);
-        };
-    };
+    const [subHeader, setSubHeader] = useState('');
 
     return (
-        
-        <SubHeaderContext.Provider value={{ subHeader, updateSubHeader }}>
+        <SubHeaderContext.Provider value={{ subHeader, setSubHeader }}>
             {children}
         </SubHeaderContext.Provider>
     );

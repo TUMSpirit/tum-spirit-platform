@@ -1,10 +1,13 @@
-import { useEffect } from "react";
-import { useSubHeaderContext } from "./SubHeaderContext";
+import { useEffect } from 'react';
+import { useSubHeaderContext } from './SubHeaderContext';
 
 export const SubHeader = ({ children }) => {
-    const { updateSubHeader } = useSubHeaderContext();
+    const { setSubHeader } = useSubHeaderContext();
 
-    useEffect(() => updateSubHeader(children), [children]);
+    useEffect(() => {
+        console.log("Updating subheader:", children);
+        setSubHeader(children);
+    }, [setSubHeader]);
 
     return null;
 };
