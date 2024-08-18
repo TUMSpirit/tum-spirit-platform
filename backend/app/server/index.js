@@ -4,10 +4,30 @@ const cors = require("cors");
 const http = require('http').Server(app);
 const PORT = 4000;
 const axios = require('axios');
+const SECRET_KEY = process.env.SECRET_KEY;
+
 
 const socketIO = require('socket.io')(http, {
     cors: {
-        origin: "https://spirit.lfe.ed.tum.de"
+        origin: "https://spirit.lfe.ed.tum.de",
+        methods: ["GET", "POST"]
+    },
+    perMessageDeflate: false 
+});
+
+// Middleware to verify token on connection
+socketIO.use(async (socket, next) => {
+    const token = socket.handshake.auth.token || socket.handshake.query.token;
+    if (!token) {
+        return next(new Error('Authentication error'));
+    }
+
+    try {
+        const payload = jwt.verify(token, SECRET_KEY);
+        socket.user = payload; // Attach user data to the socket instance
+        next(); // Proceed to connection
+    } catch (err) {
+        return next(new Error('Authentication error'));
     }
 });
 
