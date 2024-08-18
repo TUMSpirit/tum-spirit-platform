@@ -18,6 +18,7 @@ const socketIO = require('socket.io')(http, {
 // Middleware to verify token on connection
 socketIO.use(async (socket, next) => {
     const token = socket.handshake.auth.token || socket.handshake.query.token;
+    console.log(token);
     if (!token) {
         return next(new Error('Authentication error'));
     }
