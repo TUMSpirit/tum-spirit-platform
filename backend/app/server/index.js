@@ -1,19 +1,15 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const http = require('http').Server(app);
+const http = require('http');
 const PORT = 4000;
 const axios = require('axios');
-const SECRET_KEY = process.env.SECRET_KEY;
+//const SECRET_KEY = process.env.SECRET_KEY;
 
 
-const socketIO = require('socket.io')(http, {
-    cors: {
-        origin: "https://spirit.lfe.ed.tum.de",
-        methods: ["GET", "POST"]
-    },
-    perMessageDeflate: false 
-});
+const socketIOs = require('socket.io');
+const server = http.createServer(app);
+const socketIO = socketIOs(server);
 
 // Middleware to verify token on connection
 
