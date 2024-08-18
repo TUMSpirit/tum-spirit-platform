@@ -222,6 +222,6 @@ socketIO.on('connection', (socket) => {
     });
 });
 
-http.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server listening on ${PORT}`);
 });
