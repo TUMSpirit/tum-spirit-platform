@@ -57,7 +57,7 @@ socketIO.on('connection', (socket) => {
 
     socket.on("message", async (data) => {
         try {
-            const response = await axios.post('https://app/api/chat/new-message', {
+            const response = await axios.post('http://app/api/chat/new-message', {
                 teamId: data.teamId,
                 content: data.content,
                 senderId: data.senderId,
