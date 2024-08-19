@@ -3258,6 +3258,10 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile .header-
   min-height: 75px;
 }
 
+.GifPickerReact.gpr-main{
+  width:auto !important;
+}
+
 /*.custom-active-step button{
   color:rgba(23, 7, 199, 0.05) !important;
   border-radius: "10px" !important;
