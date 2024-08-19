@@ -18,7 +18,7 @@ import Calendar from "./pages/Calendar";
 import axios from 'axios';
 import TypewriterDialog from "./pages/Intro.js";
 
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'; // Fallback to localhost if undefined
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
 
 function AuthRedirect({ children }) {
   const auth = useAuthUser();

@@ -230,7 +230,7 @@ const ChatFooter = ({
     }, [editingMessage]);
 
     return (
-        <div className={`bottom-0 left-0 right-0 p-4 bg-white border-t-2 border-gray-200`}>
+        <div className={`bottom-0 fixed left-0 right-0 p-4 bg-white border-t-2 border-gray-200`}>
             <div className="container mx-auto max-w-full">
                 <form className="flex items-center justify-between gap-2 md:gap-4 w-full px-2 md:px-4"
                       onSubmit={handleSendMessage}>
@@ -262,7 +262,7 @@ const ChatFooter = ({
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
-                                    <div ref={emojiPickerRef} style={{margin:"auto !important"}} className="absolute bottom-12 right-0 z-20">
+                                    <div ref={emojiPickerRef} style={{width:"260px"}} className="absolute bottom-12 right-0 z-20 w-full max-w-xs">
                                         <Picker onEmojiClick={onEmojiClick} />
                                     </div>
                                 )}
@@ -319,6 +319,9 @@ const ChatFooter = ({
                         Upload
                     </Button>,
                 ]}
+                className="upload-modal"
+                style={{ maxWidth: '90vw', width: 'auto' }}
+                bodyStyle={{ padding: '10px' }}
             >
                 <Upload
                     fileList={fileList}
@@ -334,9 +337,11 @@ const ChatFooter = ({
                     open={showGifPicker}
                     onCancel={() => setShowGifPicker(false)}
                     footer={null}
-                    className='fit-content'
+                    className="gif-modal"
+                    style={{ maxWidth: '90vw', width: 'auto' }}
+                    bodyStyle={{ padding: '10px' }}
                 >
-                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
+                    <GifPicker style={{width:"auto !important"}} onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
                 </Modal>
             )}
         </div>

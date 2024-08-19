@@ -188,7 +188,7 @@ const HorizontalTimeline = () => {
           <Card className="flex flex-col justify-between p-6 center-welcome" style={{ height: '250px' }}>
             <div className="flex justify-between">
               <div>
-                <Title level={2} className="text-left">{randomGreeting}{currentUser?currentUser.username:"Friend"}</Title>
+                <Title level={2} style={{fontSize:'2.9vh'}} className="text-left">{randomGreeting}{currentUser?currentUser.username:"Friend"}</Title>
                 <Button type="primary" className="mt-2" onClick={openAiChat}>Chat with me</Button>
               </div>
               <img
