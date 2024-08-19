@@ -18,7 +18,7 @@ import Calendar from "./pages/Calendar";
 import axios from 'axios';
 import TypewriterDialog from "./pages/Intro.js";
 
-axios.defaults.baseURL = 'https://spirit.lfe.ed.tum.de'; // Default to localhost if no env var
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL
 
 function AuthRedirect({ children }) {
   const auth = useAuthUser();
