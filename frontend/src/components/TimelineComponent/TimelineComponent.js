@@ -8,7 +8,6 @@ import Chatbot from '../AiChat/chat-bubble';
 import moment from 'moment';
 import { useSocket } from '../../context/SocketProvider';
 
-const { Step } = Steps;
 const { Title, Text, Paragraph } = Typography;
 
 const startDate = '2023-04-01T16:00:00';
@@ -188,7 +187,7 @@ const HorizontalTimeline = () => {
           <Card className="flex flex-col justify-between p-6 center-welcome" style={{ height: '250px' }}>
             <div className="flex justify-between">
               <div>
-                <Title level={2} className="text-left">{randomGreeting}{currentUser?currentUser.username:"Friend"}</Title>
+                <Title level={2} style={{fontSize:"1.3rem"}} className="text-left">{randomGreeting}{currentUser?currentUser.username:"Friend"}</Title>
                 <Button type="primary" className="mt-2" onClick={openAiChat}>Chat with me</Button>
               </div>
               <img

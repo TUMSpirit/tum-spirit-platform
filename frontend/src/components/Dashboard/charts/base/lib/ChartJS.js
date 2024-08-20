@@ -27,5 +27,5 @@ export const ChartJS = ({ type, data, options, plugins }) => {
         chartRef.current.update();
     }, [data]);
 
-    return <canvas ref={canvasRef} />;
+    return <canvas style={{paddingBottom: '20px'}} ref={canvasRef} />;
 };

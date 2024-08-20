@@ -74,7 +74,7 @@ export const ChatDashboard = () => {
                     if (key === "sentiment")
                         return (
                             <DashboardCard
-                                className="h-96 pb-6"
+                                className="h-96"
                                 caption="Sentiment"
                                 helpContent={getHelpContent(key)}
                                 key={key}
@@ -86,7 +86,7 @@ export const ChatDashboard = () => {
                     else if (key === "subjectivity")
                         return (
                             <DashboardCard
-                                className="h-96 pb-6"
+                                className="h-96"
                                 caption="Subjectivity"
                                 helpContent={getHelpContent(key)}
                                 key={key}

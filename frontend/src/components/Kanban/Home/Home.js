@@ -1,15 +1,17 @@
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import React, { useState, useEffect } from "react";
-import { Row, Col, Button, Input, Tag, Badge, Typography, Select, message } from "antd";
+import { Row, Col, Button, Input, Tag, Badge, Typography, Select, message, Tabs } from "antd";
 import { PlusOutlined } from '@ant-design/icons';
 import axios from "axios";
 import { useAuthHeader } from 'react-auth-kit';
-import { v4 as uuidv4 } from "uuid";
+import Archive from "../Archive/Archive"; 
 
 import AddModal from "../Modals/AddModal";
 import Task from "../Task";
-import { SubHeader } from '../../../layout/SubHeader';
+import { useSubHeader } from '../../../layout/SubHeaderContext';
 
+
+const { TabPane } = Tabs;
 const { Search } = Input;
 const { Text } = Typography;
 const { Option } = Select;
@@ -44,7 +46,7 @@ const KanbanColumn = ({ columnId, column, editModal, openModal }) => (
         <Droppable droppableId={columnId} key={columnId}>
             {(provided) => (
                 <div ref={provided.innerRef} {...provided.droppableProps} className="kanban-column-content">
-                    <div className="kanban-column-header">
+                    <div className="kanban-column-header" style={{ backgroundColor: '#f0f2f5', padding: '8px', borderRadius: '4px' }}>
                         <div className="kanban-column-title">
                             <Text style={{ textTransform: "uppercase" }}>{column.name}</Text>
                             <Badge count={column.items.length} style={{ backgroundColor: 'grey', marginLeft: '10px' }} />
@@ -76,7 +78,9 @@ const Home = () => {
     const [selectedMilestones, setSelectedMilestones] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredTasks, setFilteredTasks] = useState([]);
+    const [activeTab, setActiveTab] = useState('board');
     const authHeader = useAuthHeader();
+    const {setSubHeaderComponent} = useSubHeader();
 
     const getTasks = async () => {
         try {
@@ -127,6 +131,27 @@ const Home = () => {
         } catch (error) {
             console.error("Error updating task:", error);
             message.error('Error updating task');
+        }
+    };
+    
+    const archiveTask = async (taskId) => {
+        try {
+            const response = await axios.put(`/api/kanban/archive-task/${taskId}`, {}, {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+            if (response.data) {
+                const tasksFromServer = await getTasks();
+                setTasks(tasksFromServer);
+                updateFilteredTasks(tasksFromServer, searchTerm, selectedTags, selectedMilestones);
+                const updatedBoard = createBoard(tasksFromServer);
+                setBoard(updatedBoard);
+                message.success('Task archived successfully');
+            }
+        } catch (error) {
+            console.error("Error archiving task:", error);
+            message.error('Error archiving task');
         }
     };
 
@@ -336,14 +361,28 @@ const Home = () => {
         getTasks();
     }, []);
 
-    return (
-        <>
-            <SubHeader>
-                <Row className="subheader-content" align="middle" justify="space-between" gutter={[16, 16]}>
-                    <Col xs={24} sm={24} md={12}>
+    useEffect(() => {
+        setSubHeaderComponent({
+            component: (
+                <>
+          <Row align="middle" justify="space-between" gutter={[16, 16]} order={1} orderSm={0}>
+            <Col xs={24} sm={24} md={6}>
+                <Tabs defaultActiveKey={activeTab} onChange={(key) => {
+                                setActiveTab(key);
+                                if (key === 'board') {
+                                    getTasks();
+                                }
+                            }}>
+                    <TabPane tab="Board" key="board" />
+                    <TabPane tab="Archive" key="archive" />
+                </Tabs>
+            </Col>
+            <Col xs={24} sm={24} md={18}>
+                <Row gutter={[16, 16]} align="middle" justify="end">
+                    <Col xs={24} sm={12} md={8}>
                         <Select
                             mode="multiple"
-                            style={{ width: '100%', maxWidth:'400px' }}
+                            style={{ width: '100%' }}
                             placeholder="Select tags"
                             onChange={handleTagChange}
                             value={selectedTags}
@@ -356,50 +395,59 @@ const Home = () => {
                         </Select>
                     </Col>
 
-                    <Col xs={24} sm={24} md={12}>
-                        <Row gutter={[16, 16]} align="middle" justify="end">
-                            <Col xs={24} sm={12} md={10}>
-                                <Select
-                                    mode="multiple"
-                                    style={{ width: '100%' }}
-                                    placeholder="Select milestones"
-                                    onChange={handleMilestonesChange}
-                                    value={selectedMilestones}
-                                >
-                                    {milestonesData.map((milestone) => (
-                                        <Option key={milestone} value={milestone}>
-                                            {milestone}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Col>
+                    <Col xs={24} sm={12} md={8}>
+                        <Select
+                            mode="multiple"
+                            style={{ width: '100%' }}
+                            placeholder="Select milestones"
+                            onChange={handleMilestonesChange}
+                            value={selectedMilestones}
+                        >
+                            {milestonesData.map((milestone) => (
+                                <Option key={milestone} value={milestone}>
+                                    {milestone}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Col>
 
-                            <Col xs={24} sm={12} md={14}>
-                                <Search
-                                    placeholder="Search tasks"
-                                    allowClear
-                                    enterButton="Search"
-                                    onSearch={handleSearch}
-                                    style={{ width: '100%' }}
-                                />
-                            </Col>
-                        </Row>
+                    <Col xs={24} sm={12} md={8}>
+                        <Search
+                            placeholder="Search tasks"
+                            allowClear
+                            enterButton="Search"
+                            onSearch={handleSearch}
+                            style={{ width: '100%' }}
+                        />
                     </Col>
                 </Row>
-            </SubHeader>
-            <DragDropContext onDragEnd={(result) => onDragEnd(result, board, setBoard)}>
-                <Row gutter={[16, 16]} className="kanban-board">
-                    {Object.entries(board).map(([columnId, column]) => (
-                        <KanbanColumn
-                            key={columnId}
-                            columnId={columnId}
-                            column={column}
-                            editModal={editModal}
-                            openModal={openModal}
-                        />
-                    ))}
-                </Row>
-            </DragDropContext>
+            </Col>
+        </Row>
+                </>
+            )
+        });
+        return () => setSubHeaderComponent(null); // Clear subheader when unmounting
+    }, [selectedMilestones, selectedTags]);
+
+    return (
+        <>
+          {activeTab === 'board' && (
+                <DragDropContext onDragEnd={(result) => onDragEnd(result, board, setBoard)}>
+                    <Row gutter={[16, 16]} className="kanban-board">
+                        {Object.entries(board).map(([columnId, column]) => (
+                            <KanbanColumn
+                                key={columnId}
+                                columnId={columnId}
+                                column={column}
+                                editModal={editModal}
+                                openModal={openModal}
+                            />
+                        ))}
+                    </Row>
+                </DragDropContext>
+            )}
+
+            {activeTab === 'archive' && <Archive />} {/* Render Archive component when archive tab is active */}
 
             {(isUpdateEventPopupOpen || isCreateEventPopupOpen) && (
                 <AddModal
@@ -409,6 +457,7 @@ const Home = () => {
                     handleAddTask={handleAddTask}
                     handleEditTask={handleEditTask}
                     handleDeleteTask={deleteTask}
+                    handleArchiveTask={archiveTask}
                     initValues={currentEvent}
                 />
             )}
