@@ -1,10 +1,11 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Row, Col, Button, ConfigProvider, Tabs, Dropdown, Menu, Avatar, Badge, Input } from 'antd';
+import { Row, Col, Tabs, Dropdown, Menu, Avatar, Badge} from 'antd';
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
-import { SubHeader } from '../../layout/SubHeader';
 import Search from 'antd/es/input/Search';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
+import { useSubHeader } from '../../layout/SubHeaderContext'; 
+
 
 
 const ChatBody = ({
@@ -28,11 +29,11 @@ const ChatBody = ({
     getUnreadMessages // Add onlineStatus prop
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [totalResults, setTotalResults] = useState(0);
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
     const authHeader = useAuthHeader();
     const chatContainerRef = useRef(null);
+    const { setSubHeaderComponent } = useSubHeader();
 
 
     const getPrivateChatId = (user1, user2) => {
@@ -80,7 +81,7 @@ const ChatBody = ({
         });
         // Return the combined tabs array with the team tab first
         return [teamTab, ...memberTabs];
-    }, [currentTab, teamMembers, getUnreadMessages, onlineStatus, currentUser.username]);
+    }, [teamMembers, getUnreadMessages, onlineStatus, currentUser.username]);
 
 
     const getAvatarColor = (username) => {
@@ -335,6 +336,44 @@ const scrollToMessage = (index) => {
         }
     }, [messages]);
 
+
+
+    useEffect(() => {
+        setSubHeaderComponent({
+            component:(<Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{ marginTop: "-2px" }}>
+            <Col xs={24} md={12} className="mt-2 w-full">
+                <Tabs
+                    className="w-full m-0"
+                    activeKey={currentTab}
+                    onChange={key => setCurrentTab(key)}
+                    items={tabsItems}
+                />
+            </Col>
+            <Col xs={24} md={12} className="flex flex-col md:flex-row justify-end">
+                <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0 items-center">
+                    <Search
+                        className="md:w-42 md:mb-0"
+                        placeholder="Search messages"
+                        value={searchTerm}
+                        onChange={e => handleSearch(e.target.value)}
+                        onSearch={navigateNextResult}
+                        onPressEnter={navigateNextResult}
+                    />
+                        {searchResults.length > 0 && (
+                        <div className="ml-4 w-14 text-sm font-medium text-gray-600">
+                            {currentResultIndex + 1} / {searchResults.length}
+                        </div>
+                    )}
+                </div>
+            </Col>
+        </Row>
+        )
+        });
+  
+        return () => setSubHeaderComponent(null); // Clear subheader when unmounting
+    }, [currentTab, tabsItems, setSubHeaderComponent, searchTerm]);
+
+
     const filteredMessages = messages.filter(message => {
         if (privateChatId) {
             return message.privateChatId === privateChatId;
@@ -347,37 +386,8 @@ const scrollToMessage = (index) => {
         <div
             id={id}
             ref={chatContainerRef}
-            className="flex-grow overflow-y-auto w-full px-4 pb-5 bg-chat-background border-t-2 border-chat-grid relative"
+            className="flex-grow overflow-y-auto w-full px-4 chat-container-component pb-5 bg-chat-background border-t-2 border-chat-grid relative"
             style={{ borderColor: "rgb(229, 231, 235)", height: "100px" }}>
-            <SubHeader>
-                <Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{ marginTop: "-2px" }}>
-                    <Col xs={24} md={12} className="mt-2 w-full">
-                        <Tabs
-                            className="w-full m-0"
-                            activeKey={currentTab}
-                            onChange={key => setCurrentTab(key)}
-                            items={tabsItems}
-                        />
-                    </Col>
-                    <Col xs={24} md={12} className="flex flex-col md:flex-row justify-end">
-                        <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0 items-center">
-                            <Search
-                                className="md:w-42 md:mb-0"
-                                placeholder="Search messages"
-                                value={searchTerm}
-                                onChange={e => handleSearch(e.target.value)}
-                                onSearch={navigateNextResult}
-                                onPressEnter={navigateNextResult}
-                            />
-                                {searchResults.length > 0 && (
-                                <div className="ml-4 w-14 text-sm font-medium text-gray-600">
-                                    {currentResultIndex + 1} / {searchResults.length}
-                                </div>
-                            )}
-                        </div>
-                    </Col>
-                </Row>
-            </SubHeader>
             {filteredMessages.map((message, index) => {
                 if (message.deleted) {
                     return null;

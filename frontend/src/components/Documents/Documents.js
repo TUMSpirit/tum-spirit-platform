@@ -17,7 +17,7 @@ import {
 } from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
 import { SubHeader } from '../../layout/SubHeader';
-import { useSubHeaderContext } from '../../layout/SubHeaderContext';
+import { useSubHeader } from '../../layout/SubHeaderContext';
 
 const { Search } = Input;
 
@@ -30,6 +30,7 @@ const FileTable = () => {
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [fileToDelete, setFileToDelete] = useState(null);
     const authHeader = useAuthHeader();
+    const { setSubHeaderComponent } = useSubHeader();
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -59,7 +60,7 @@ const FileTable = () => {
 
             const contentType = response.headers['content-type'];
             const contentDisposition = response.headers['content-disposition'];
-            
+
             const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
             const filename = filenameMatch ? filenameMatch[1] : 'downloaded-file';
 
@@ -262,47 +263,56 @@ const FileTable = () => {
         setFileToDelete(null);
     };
 
+    useEffect(() => {
+        setSubHeaderComponent({
+            component: (
+                <>
+                    <Row gutter={[24, 16]} style={{ marginBottom: '10px' }}>
+                        <Col xs={13} sm={16}>
+                            <div>
+                                {tagsData.map(tag => (
+                                    <Tag.CheckableTag
+                                        key={tag}
+                                        checked={selectedTags.includes(tag)}
+                                        onChange={checked => handleTagChange(tag, checked)}
+                                    >
+                                        {tag.toUpperCase()}
+                                    </Tag.CheckableTag>
+                                ))}
+                            </div>
+                        </Col>
+                        <Col xs={11} sm={8}>
+                            <Search
+                                placeholder="Search files"
+                                onSearch={onSearch}
+                                enterButton
+                                style={{ marginBottom: '10px', width: '100%' }}
+                                prefix={<SearchOutlined />}
+                                onChange={(e) => setSearchText(e.target.value)}
+                            />
+                        </Col>
+                    </Row>
+                    <Row gutter={[24, 16]}>
+                        <Col xs={24} sm={24} style={{ marginBottom: '10px' }}>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={showUploadModal}
+                                style={{ float: 'right' }}
+                            >
+                                Upload File
+                            </Button>
+                        </Col>
+                    </Row>
+                </>
+            )
+        });
+
+        return () => setSubHeaderComponent(null); // Clear subheader when unmounting
+    }, [filteredList, selectedTags]);
+
     return (
         <div>
-            <SubHeader>
-                <Row gutter={[24, 16]} style={{ marginBottom: '10px' }}>
-                    <Col xs={13} sm={16}>
-                        <div>
-                            {tagsData.map(tag => (
-                                <Tag.CheckableTag
-                                    key={tag}
-                                    checked={selectedTags.includes(tag)}
-                                    onChange={checked => handleTagChange(tag, checked)}
-                                >
-                                    {tag.toUpperCase()}
-                                </Tag.CheckableTag>
-                            ))}
-                        </div>
-                    </Col>
-                    <Col xs={11} sm={8}>
-                        <Search
-                            placeholder="Search files"
-                            onSearch={onSearch}
-                            enterButton
-                            style={{ marginBottom: '10px', width: '100%' }}
-                            prefix={<SearchOutlined />}
-                            onChange={(e) => setSearchText(e.target.value)}
-                        />
-                    </Col>
-                </Row>
-                <Row gutter={[24, 16]}>
-                    <Col xs={24} sm={24} style={{ marginBottom: '10px' }}>
-                        <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={showUploadModal}
-                            style={{ float: 'right' }}
-                        >
-                            Upload File
-                        </Button>
-                    </Col>
-                </Row>
-            </SubHeader>
             <Table
                 className='documents-table'
                 columns={columns}

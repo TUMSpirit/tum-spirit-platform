@@ -230,25 +230,10 @@ const ChatFooter = ({
     }, [editingMessage]);
 
     return (
-        <div className={`bottom-0 fixed left-0 right-0 p-4 bg-white border-t-2 border-gray-200`}>
+        <div className={`chat-component-input bottom-0 left-0 right-0 p-4 bg-white border-t-2 border-gray-200`}>
             <div className="container mx-auto max-w-full">
                 <form className="flex items-center justify-between gap-2 md:gap-4 w-full px-2 md:px-4"
                       onSubmit={handleSendMessage}>
-                    <Tooltip title="Upload File">
-                        <Button
-                            type="primary"
-                            shape="circle"
-                            className="bg-blue-600 text-white"
-                            style={{
-                                fontSize: '24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                            icon={<PlusOutlined />}
-                            onClick={showUploadModal}
-                        />
-                    </Tooltip>
                     <Input
                         className="flex-grow mx-2 md:mx-5 bg-chat-input-bar border-1 focus:outline-none rounded-lg p-2"
                         placeholder={getPlaceholderText()}
@@ -262,7 +247,7 @@ const ChatFooter = ({
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
-                                    <div ref={emojiPickerRef} style={{width:"260px"}} className="absolute bottom-12 right-0 z-20 w-full max-w-xs">
+                                   <div ref={emojiPickerRef} style={{width:"260px"}} className="absolute bottom-12 right-0 z-20 w-full max-w-xs">
                                         <Picker onEmojiClick={onEmojiClick} />
                                     </div>
                                 )}
@@ -319,9 +304,6 @@ const ChatFooter = ({
                         Upload
                     </Button>,
                 ]}
-                className="upload-modal"
-                style={{ maxWidth: '90vw', width: 'auto' }}
-                bodyStyle={{ padding: '10px' }}
             >
                 <Upload
                     fileList={fileList}
@@ -337,11 +319,9 @@ const ChatFooter = ({
                     open={showGifPicker}
                     onCancel={() => setShowGifPicker(false)}
                     footer={null}
-                    className="gif-modal"
-                    style={{ maxWidth: '90vw', width: 'auto' }}
-                    bodyStyle={{ padding: '10px' }}
+                    className='fit-content'
                 >
-                    <GifPicker style={{width:"auto !important"}} onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
+                    <GifPicker onGifClick={handleGifSelect} tenorApiKey={"AIzaSyAk91-aEz1P6kvOwEuTsRPUtS1YzFsdIzY"} />
                 </Modal>
             )}
         </div>
@@ -349,3 +329,23 @@ const ChatFooter = ({
 }
 
 export default ChatFooter;
+
+
+/*UPLOAD BUTTON
+
+                      <Tooltip title="Upload File">
+                        <Button
+                            type="primary"
+                            shape="circle"
+                            className="bg-blue-600 text-white"
+                            style={{
+                                fontSize: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            icon={<PlusOutlined />}
+                            onClick={showUploadModal}
+                        />
+                    </Tooltip>
+                        */

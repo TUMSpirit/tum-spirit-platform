@@ -33,7 +33,7 @@ import {
 import { NavLink, Link } from "react-router-dom";
 import styled from "styled-components";
 import avtar from "../assets/images/team-2.jpg";
-import { useSubHeaderContext } from "./SubHeaderContext";
+//import { useSubHeaderContext } from "./SubHeaderContext";
 import { useSignOut } from 'react-auth-kit';
 import { useNavigate } from 'react-router-dom';
 import TutorialPopup from '../components/TutorialPopup/TutorialPopup';
@@ -42,6 +42,8 @@ import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
 import { useSocket } from '../context/SocketProvider';
 import { useUnreadMessage } from '../context/UnreadMessageContext';
+import { useSubHeader } from "./SubHeaderContext";
+
 
 const ButtonContainer = styled.div`
     .ant-btn-primary {
@@ -275,6 +277,8 @@ function Header({
   const [me, setMe] = useState();
   const logout = useSignOut();
   const navigate = useNavigate();
+  const { subHeaderComponent } = useSubHeader();
+
 
   useEffect(() => window.scrollTo(0, 0));
 
@@ -298,7 +302,7 @@ function Header({
   const showDrawer = () => setVisible(true);
   const hideDrawer = () => setVisible(false);
 
-  const { subHeader } = useSubHeaderContext();
+ // const { subHeader } = useSubHeaderContext();
 
 
   const updateLastLoggedIn = async (unreadMessages) => {
@@ -419,7 +423,7 @@ function Header({
           </Dropdown>
         )}
       </div>
-      <Row style={{ paddingBottom: "20px" }} gutter={[24, 0]}>
+      <Row style={{ paddingBottom: "16px" }} gutter={[24, 0]}>
         <Col span={24}>
           <div className="ant-page-header-heading">
             <span
@@ -431,7 +435,11 @@ function Header({
           </div>
         </Col>
       </Row>
-      {subHeader}
+      {subHeaderComponent && (
+                <div className="header-subheader">
+                    {subHeaderComponent.component}
+                </div>
+            )}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button, Modal, Form, Input, message, Select, Tag, Slider } from "antd";
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, FolderAddOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -16,7 +16,7 @@ const predefinedTags = [
 
 const milestonesData = ['M1', 'M2', 'M3'];
 
-const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, initValues }) => {
+const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, handleArchiveTask, initValues }) => {
     const initialTaskData = {
         id: isUpdateEventOpen ? initValues._id : "",
         title: isUpdateEventOpen ? initValues.title : "",
@@ -74,6 +74,21 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
         });
     };
 
+    const confirmArchive = () => {
+        Modal.confirm({
+            title: 'Are you sure you want to archive this task?',
+            content: 'You can restore this task from the archive later.',
+            okText: 'Yes',
+            cancelText: 'No',
+            onOk: () => {
+                handleArchiveTask(taskData.id);
+                form.resetFields();
+                setTaskData(initialTaskData); // Reset task data to initial state
+                closeModal();
+            },
+        });
+    };
+
     const getInitialFormValues = () => {
         return {
             title: taskData.title,
@@ -92,15 +107,24 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
             title={"Task"}
             open={isCreateEventOpen || isUpdateEventOpen}
             className={"modal-addEvent"}
-            footer={[
+            footer={[/*         isUpdateEventOpen && (
+                <Button
+                    data-testid='deleteEventButton'
+                    onClick={confirmDelete}
+                    type='primary'
+                    icon={<DeleteOutlined />}
+                >
+                    Delete
+                </Button>
+            ),*/
                 isUpdateEventOpen && (
                     <Button
-                        data-testid='deleteEventButton'
-                        onClick={confirmDelete}
+                        data-testid='archiveEventButton'
+                        onClick={confirmArchive}
                         type='primary'
-                        icon={<DeleteOutlined />}
+                        icon={<FolderAddOutlined />}
                     >
-                        Delete
+                        Archive
                     </Button>
                 ),
                 <Button onClick={closeModal}>Cancel</Button>,

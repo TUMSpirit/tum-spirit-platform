@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import {
   Row,
   Col,
@@ -26,6 +26,7 @@ import doctype from "../assets/images/doc-type.png";
 import filetype from "../assets/images/file-type.png";
 import pencil from "../assets/images/pencil.svg";
 import FileList from '../components/Documents/Documents';
+import { useSubHeader } from "../layout/SubHeaderContext";
 
 const { Title } = Typography;
 

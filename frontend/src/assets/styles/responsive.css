@@ -67,6 +67,12 @@
 }
 
 @media (max-width: 768px) {
+  .chat-component-input{
+    position: fixed;
+  }
+  .chat-container-component{
+    padding-bottom: 5.25rem;
+  }
   .layout-dashboard.layout-dashboard-rtl .header-control {
     justify-content: flex-end;
   }
