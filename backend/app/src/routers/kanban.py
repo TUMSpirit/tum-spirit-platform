@@ -42,6 +42,8 @@ class TaskModel(BaseModel):
     deadline: Optional[int] = 0
     tags: Optional[List] = []
     milestone: str
+    sharedUsers: List[PyObjectId]
+    created_by: str
 
     class Config:
         populate_by_name = True
@@ -59,6 +61,12 @@ class TaskCreate(BaseModel):
     deadline: int
     tags: List
     milestone: str
+    sharedUsers: List[PyObjectId]
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True  # Required for the _id 
+        json_encoders = {ObjectId: str}
 
 class Task(TaskCreate):
     id: PyObjectId
@@ -85,7 +93,7 @@ def archive_task(task_id: str, current_user: Annotated[User, Depends(get_current
             'team_id': current_user["team_id"],
             'title': "Kanban",
             'description': f"{current_user['username']} archived a Kanban Card",
-            'type': "kanban_archived",
+            'type': "kanban_deleted",
             'timestamp': datetime.now()
         }
         add_notification(notification)
@@ -111,7 +119,7 @@ def restore_task(task_id: str, current_user: Annotated[User, Depends(get_current
             'team_id': current_user["team_id"],
             'title': "Kanban",
             'description': f"{current_user['username']} restored a Kanban Card",
-            'type': "kanban_restored",
+            'type': "kanban_added",
             'timestamp': datetime.now()
         }
         add_notification(notification)
@@ -146,6 +154,8 @@ def insert_task(task_entry: TaskCreate, current_user: Annotated[User, Depends(ge
             'deadline': task_entry.deadline,
             'tags':task_entry.tags,
             'milestone':task_entry.milestone,
+            'sharedUsers':task_entry.sharedUsers,
+            'created_by': current_user["username"],
             'timestamp': datetime.now()
         }
         # Inserting the record into the database
@@ -184,6 +194,7 @@ def update_task(task_id: str, task_entry: TaskCreate, current_user: Annotated[Us
             'deadline': task_entry.deadline,
             'tags':task_entry.tags,
             'milestone':task_entry.milestone,
+            'sharedUsers':task_entry.sharedUsers,
             'timestamp': datetime.now()
         }
         # Inserting the record into the database

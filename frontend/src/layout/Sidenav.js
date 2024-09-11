@@ -297,10 +297,10 @@ function Sidenav({ color }) {
         <div
           className="footer-box"
           style={{
-            background: color,
+            background: "#7D4EBC",
           }}
         >
-          <span className="icon" style={{ color }}>
+          <span className="icon" style={{color:"#7D4EBC"}}>
             <RobotFilled></RobotFilled>
           </span>
           <h6>Need Help?</h6>

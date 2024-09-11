@@ -107,7 +107,7 @@ def start_scheduler():
     #scheduler.add_job(daily_task, CronTrigger(hour=1, minute=3), id="daily_task")
 
     # Schedule monthly task on the 15th of each month at midnight
-    #scheduler.add_job(monthly_task, CronTrigger(day=15, hour=0, minute=0), id="monthly_task")
+    #scheduler.add_job(monthly_task, CronTrigger(day=9, hour=13, minute=30), id="monthly_task")
     # Schedule weekly task every Monday at midnight
     #scheduler.add_job(weekly_task, CronTrigger(hour=2, minute=0, day_of_week="mon"))
 

@@ -164,7 +164,7 @@ const HorizontalTimeline = () => {
       {celebrationVisible && (
         <Modal
           title="Congratulations!"
-          visible={celebrationVisible}
+          open={celebrationVisible}
           onOk={() => setCelebrationVisible(false)}
           onCancel={() => setCelebrationVisible(false)}
           footer={[
@@ -188,7 +188,7 @@ const HorizontalTimeline = () => {
             <div className="flex justify-between">
               <div>
                 <Title level={2} style={{fontSize:"1.3rem"}} className="text-left">{randomGreeting}{currentUser?currentUser.username:"Friend"}</Title>
-                <Button type="primary" className="mt-2" onClick={openAiChat}>Chat with me</Button>
+                <Button style={{background:"#7D4EBC"}} type="primary" className="mt-2" onClick={openAiChat}>Chat with me</Button>
               </div>
               <img
                 src={ghost}

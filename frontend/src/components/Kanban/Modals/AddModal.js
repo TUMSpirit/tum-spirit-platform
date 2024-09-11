@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Button, Modal, Form, Input, message, Select, Tag, Slider } from "antd";
+import { Avatar, Button, Modal, Form, Input, message, Select, Tag, Slider } from "antd";
 import { DeleteOutlined, FolderAddOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
@@ -16,16 +16,17 @@ const predefinedTags = [
 
 const milestonesData = ['M1', 'M2', 'M3'];
 
-const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, handleArchiveTask, initValues }) => {
+const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, handleArchiveTask, initValues, users, currentUser }) => {
     const initialTaskData = {
         id: isUpdateEventOpen ? initValues._id : "",
         title: isUpdateEventOpen ? initValues.title : "",
         column: isUpdateEventOpen ? initValues.column : "",
         description: isUpdateEventOpen ? initValues.description : "",
         priority: isUpdateEventOpen ? initValues.priority : "",
-        deadline: isUpdateEventOpen ? initValues.deadline : 0,
+        deadline: isUpdateEventOpen ? initValues.deadline : 180,
         tags: isUpdateEventOpen ? initValues.tags : [],
-        milestone: isUpdateEventOpen ? initValues.milestone : ""
+        milestone: isUpdateEventOpen ? initValues.milestone : "",
+        sharedUsers: isUpdateEventOpen ? users.filter(user => initValues.sharedUsers.includes(user.id)) : []
     };
 
     const [taskData, setTaskData] = useState(initialTaskData);
@@ -49,14 +50,34 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
     };
 
     const handleSubmit = () => {
+        const taskDataFormatted = {
+            id:taskData.id,
+            title: taskData.title,
+            column: taskData.column,
+            description: taskData.description,
+            priority: taskData.priority,
+            deadline: taskData.deadline,
+            tags: taskData.tags,
+            milestone: taskData.milestone,
+            sharedUsers: taskData.sharedUsers.map(user => user.id)
+        };
         if (isUpdateEventOpen) {
-            handleEditTask(taskData);
+            handleEditTask(taskDataFormatted);
         } else {
-            handleAddTask(taskData);
+            handleAddTask(taskDataFormatted);
         }
         form.resetFields();
         closeModal();
     };
+
+    const onChangeParticipants = (selectedUserIds) => {
+        setTaskData((prevFormData) => ({
+            ...prevFormData, sharedUsers: users.filter(user => selectedUserIds.includes(user.id))
+        }));
+
+
+        console.log('shared:', taskData.sharedUsers)
+    }
 
     const confirmDelete = () => {
         Modal.confirm({
@@ -97,7 +118,8 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
             priority: taskData.priority,
             deadline: taskData.deadline,
             tags: taskData.tags,
-            milestone: taskData.milestone
+            milestone: taskData.milestone,
+            sharedUsers: taskData.sharedUsers.map(user => user.id),
         };
     };
 
@@ -168,7 +190,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         value={taskData.deadline}
                         onChange={value => setTaskData({ ...taskData, deadline: value })}
                         marks={{ 0: '0', 800: '800' }}
-                        tooltip={{ formatter: value => `${value} min` }}
+                   
                     />
                 </Form.Item>
                 <Form.Item name="milestone" label="Milestone">
@@ -219,9 +241,23 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         ))}
                     </div>
                 </Form.Item>
-            </Form>
-        </Modal>
+                <Form.Item name={'sharedUsers'} label="Contributors" style={{ marginBottom: '8px' }}>
+                    <Select fieldNames={{ label: 'name', value: 'id' }}
+                        placeholder="Add Contributors" mode="tags" allowClear={true} options={users}
+                        onChange={onChangeParticipants} style={{ width: 200 }} />
+                </Form.Item>
+                <AvatarDisplay selectedUsers={taskData.sharedUsers}></AvatarDisplay>
+        </Form>
+        </Modal >
     );
 };
 
 export default AddModal;
+
+const AvatarDisplay = ({ selectedUsers }) => {
+    return (<Avatar.Group>
+        {selectedUsers.map(user => (<Avatar key={user.id} style={{ backgroundColor: user.color, color: 'white' }}>
+            {user.initialen}
+        </Avatar>))}
+    </Avatar.Group>);
+};

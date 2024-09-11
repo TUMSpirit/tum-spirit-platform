@@ -1710,9 +1710,9 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav li.ant-menu-it
   color: #8c8c8c;
 }
 
-.text-sm {
-  font-size: 12px;
-  color: #8c8c8c;
+.text-sm-white {
+  font-size: 14px;
+  color: #fff;
   font-weight: 600;
 }
 
@@ -1724,13 +1724,11 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav li.ant-menu-it
   font-weight: 600;
   color: #8c8c8c;
 }
-
 .text-sm {
   font-size: 12px;
-  color: #8c8c8c;
+  color: #222222;
   font-weight: 600;
 }
-
 .ant-progress-project .ant-progress-bg {
   height: 3px !important;
 }
@@ -3324,12 +3322,25 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile .header-
   margin: 0 !important;
 }
 
-
-
 span.ant-badge-status-dot.ant-badge-status-processing {
   width: 8px !important;
   height: 8px !important;
   background-color: #53C41B !important;
+}
+
+.documents-table .ant-table-cell {
+  padding: 13px !important;
+}
+
+
+
+
+.ghost-container {
+  transition: transform 1s;
+}
+
+.ghost-side {
+  transform: translateX(-50%);
 }
 
 .dialogbox {
@@ -3342,8 +3353,7 @@ span.ant-badge-status-dot.ant-badge-status-processing {
   height: 30%;
   width: 96%;
   box-sizing: border-box;
-  /* Include padding in width */
-  background: white;
+  background: #e5e7eb;
   border: 1px solid white;
   box-shadow: 0 1px 0 1px black,
     inset 0 1px 0 1px black,
@@ -3377,132 +3387,110 @@ span.ant-badge-status-dot.ant-badge-status-processing {
   }
 }
 
-.documents-table .ant-table-cell {
-  padding: 13px !important;
-}
-
-
-
-
-
-
-.ghost {
-  animation: float 3s ease-out infinite;
-}
-
-@keyframes float {
-  50% {
-    transform: translate(0, 20px);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
-.shadowFrame {
-  width: 130px;
-  margin-top: 15px;
-}
-
-.shadow-ghost {
-  animation: shrink 3s ease-out infinite;
-  transform-origin: center center;
-
-  ellipse {
-    transform-origin: center center;
-  }
-}
-
-.ghost-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: inherit;
-}
-
-@keyframes shrink {
-  0% {
-    width: 90%;
-    margin: 0 5%;
-  }
-
-  50% {
-    width: 60%;
-    margin: 0 18%;
-  }
-
-  100% {
-    width: 90%;
-    margin: 0 5%;
-  }
-}
-
-
-.ghost-container {
-  position: relative;
-  margin-bottom: 20px;
+.ghost-image {
   animation: float 3s ease-in-out infinite;
 }
 
-.ghost-talking {
-  animation: talking 0.5s steps(4) infinite;
-}
-
 @keyframes float {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(-10px);
   }
 }
 
-@keyframes talking {
 
-  0%,
-  100% {
-    transform: translateY(0);
+
+/* Blue gradient background */
+.background-animation {
+  display: flex;
+  background-image: url("../images/background-intro.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 100vw;
+  height: 100vh;
+}
+
+@media screen and (max-width: 1024px) {
+  .background-animation {
+    display: flex;
+    background-image: url("../images/background-intro-mobile.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
+/* Gradient animation */
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Responsive dialog box */
+.dialogbox {
+  box-sizing: border-box;
+}
+
+/* Text content styling */
+.text-content {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+}
+
+/* Spacer for vertical spacing */
+.spacer {
+  margin: 20px 0;
+}
+
+/* Color legend styling */
+.color-legend {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.color-box {
+  width: 50px;
+  height: 50px;
+  margin: 0 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.purple {
+  background-color: #7D4EBC;
+}
+
+.blue {
+  background-color: #1677ff;
+}
+
+.legend-text {
+  font-weight: bold;
+}
+
+/* Responsive text size and dialog width */
+@media (max-width: 600px) {
+  .text-content {
+      font-size: 0.9rem;
   }
 
-  50% {
-    transform: translateY(-2px);
+  .dialogbox {
+      width: 95%;
+      max-width: none;
+      padding: 15px;
   }
-}
-
-/* Add this to your CSS file */
-
-@keyframes appear {
-  0% { opacity: 0; transform: scale(0.5); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes disappear {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.5); }
-}
-
-.ghost-appear {
-  animation: appear 1s forwards;
-}
-
-.ghost-disappear {
-  animation: disappear 1s forwards;
-}
-
-.ghost-container {
-  position: relative;
-  text-align: center;
-}
-
-.ghost-image {
-  transition: opacity 1s ease-out;
-}
-
-.hidden {
-  opacity: 0;
-}
-
-.visible {
-  opacity: 1;
 }

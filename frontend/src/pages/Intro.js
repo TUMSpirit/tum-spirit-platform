@@ -1,127 +1,165 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ghost from "../assets/images/ghost.png";
-
-const timer = 5; // The delay for the typewriter effect
+import appScreen1 from "../assets/images/task.jpg";
+import appScreen2 from "../assets/images/task2.jpg";
+import { Button } from 'antd';
+import { useNavigate } from 'react-router-dom';
 
 const TypeWriterDialog = () => {
     const [messageStrings, setMessageStrings] = useState([]);
-    const [currentMessage, setCurrentMessage] = useState('');
-    const [messageId, setMessageId] = useState(0);
-    const [loadingComplete, setLoadingComplete] = useState(true);
-    const [isMessageSkipped, setIsMessageSkipped] = useState(false);
-    const [ghostClass, setGhostClass] = useState('ghost-appear'); // Controls ghost animation
-
-    const dialogboxRef = useRef(null);
-    const timeoutsRef = useRef([]);
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+    const [displayedText, setDisplayedText] = useState('');
+    const [isTextFading, setIsTextFading] = useState(false);
+    const [isGhostVisible, setIsGhostVisible] = useState(true);
+    const [imageToShow, setImageToShow] = useState(null);
+    const [isFadingOut, setIsFadingOut] = useState(false);
+    const navigate = useNavigate();
+    const typingIntervalRef = useRef(null);
 
     useEffect(() => {
-        const messageString = `The Tortoise and the Hare|Once upon a time, in a vast and bustling forest, lived a speedy hare who boasted about how fast he could run.|Tired of hearing the hare's bragging, a slow but wise tortoise challenged him to a race.|The hare, bursting with laughter, accepted the challenge, thinking it was an easy win.|As the race began, the hare zoomed ahead, leaving the tortoise far behind.|Confident of his lead, the hare decided to rest under a tree, and soon, fell fast asleep.|Meanwhile, the tortoise continued on, steady and slow, never stopping, until he passed the sleeping hare.|Ultimately, the tortoise crossed the finish line first.|Remember: Consistent efforts can lead to success - however slow they may be.|Having a great potential is of little value if it is not cultivated.|***`;
+        const messageString = `
+            Welcome on board to TUM Spirit!|
+            I am <span style="color: #7D4EBC;">Spirit</span>, the avatar of the platform.|
+            Everything related to AI in this app is highlighted in purple, just like my name.|
+            TUM Spirit is a collaborative platform for digital university teaching.|
+            Through this platform, you can collaborate with peers and professors on various projects.|
+            Let me show you some features of the platform as we move forward.|
+            Here, you can see the collaborative board where you can work with your team.|
+            This section allows you to manage tasks and track your team's progress.|
+            Ready to get started? Let’s proceed with a quick TKI test to understand your team better!|`;
+
         setMessageStrings(messageString.split('|'));
-        setCurrentMessage(messageString.split('|')[0]);
     }, []);
 
     useEffect(() => {
-        if (messageId < messageStrings.length) {
-            // Apply the ghost disappear animation before loading the new message
-            if (!loadingComplete) {
-                setGhostClass('ghost-disappear');
-                setTimeout(() => {
-                    setGhostClass('ghost-appear');
-                    loadMessage(messageStrings[messageId].split(''));
-                }, 1000); // Matches the duration of the disappear animation
-            } else {
-                loadMessage(messageStrings[messageId].split(''));
+        if (currentMessageIndex >= messageStrings.length) return;
+
+        const message = messageStrings[currentMessageIndex];
+        let i = 0;
+        setDisplayedText('');
+
+        typingIntervalRef.current = setInterval(() => {
+            setDisplayedText(prev => prev + message.charAt(i));
+            i++;
+            if (i > message.length) {
+                clearInterval(typingIntervalRef.current);
             }
+        }, 20);
+
+        return () => clearInterval(typingIntervalRef.current);
+    }, [currentMessageIndex, messageStrings]);
+
+    useEffect(() => {
+        if (currentMessageIndex === 6) {
+            setIsGhostVisible(false);
+            setImageToShow(appScreen1);
+        } else if (currentMessageIndex === 7) {
+            setIsGhostVisible(false);
+            setImageToShow(appScreen2);
+        } else {
+            setIsGhostVisible(true);
+            setImageToShow(null);
         }
-    }, [messageId]);
-
-    const loadMessage = (dialog) => {
-        setLoadingComplete(false);
-        dialogboxRef.current.innerHTML = '';
-
-        dialog.forEach((char, index) => {
-            const timeout = setTimeout(() => {
-                dialogboxRef.current.innerHTML += char;
-                if (index === dialog.length - 1) {
-                    setLoadingComplete(true);
-                }
-            }, timer * index);
-            timeoutsRef.current.push(timeout);
-        });
-    };
+    }, [currentMessageIndex]);
 
     const nextMessage = () => {
-        if (!loadingComplete || isMessageSkipped) {
-            setIsMessageSkipped(false);
-            return;
-        }
-
-        if (messageId >= messageStrings.length) {
-            setMessageId(0);
+        if (currentMessageIndex < messageStrings.length - 1) {
+            setIsTextFading(true);
+            setTimeout(() => {
+                setCurrentMessageIndex((prev) => prev + 1);
+                setIsTextFading(false);
+            }, 500);
         } else {
-            setCurrentMessage(messageStrings[messageId]);
-            setMessageId(prev => prev + 1);
+            setIsFadingOut(true);
+            setTimeout(() => {
+                navigate('/home');
+            }, 1000);
         }
-    };
-
-    const handleClick = () => {
-        if (!loadingComplete) {
-            clearTimeouts();
-            setLoadingComplete(true);
-            dialogboxRef.current.innerHTML = currentMessage;
-        } else if (!isMessageSkipped) {
-            nextMessage();
-        } else {
-            setIsMessageSkipped(false);
-        }
-    };
-
-    const handleKeyDown = (e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && !loadingComplete && !isMessageSkipped) {
-            clearTimeouts();
-            dialogboxRef.current.innerHTML = currentMessage;
-            setLoadingComplete(true);
-            setIsMessageSkipped(true);
-        }
-    };
-
-    const handleKeyUp = (e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && loadingComplete) {
-            if (!isMessageSkipped) {
-                nextMessage();
-            }
-            setIsMessageSkipped(false);
-        }
-    };
-
-    const clearTimeouts = () => {
-        timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
-        timeoutsRef.current = [];
     };
 
     return (
-        <div style={{ backgroundColor: "#1677ff", height: "100vh" }}>
-            <div className='ghost-container'>
-                <img
-                    src={ghost}
-                    alt="Ghost"
-                    className={`ghost-image ${ghostClass} h-24`}
-                    style={{ maxWidth: '100%', padding: "0 10%" }}
-                />
+        <div style={{
+            backgroundColor: "#ffffff",
+            height: "100vh",
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'column',
+            transition: 'opacity 1s',
+            opacity: isFadingOut ? 0 : 1
+        }} className="background-animation">
+            
+            {/* Ghost or Image */}
+            <div style={{
+                position: 'relative',
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '60px',
+                height: '100px'
+            }}>
+                {isGhostVisible ? (
+                    <img
+                        src={ghost}
+                        alt="Ghost"
+                        className="ghost-image"
+                        style={{ width: '100px' }}
+                    />
+                ) : (
+                    imageToShow && (
+                        <div style={{ animation: 'fadeIn 1s forwards', opacity: isGhostVisible ? 0 : 1 }}>
+                            <img src={imageToShow} alt="App Screen" style={{ width: '300px', borderRadius: '10px', transition: 'opacity 1s', opacity: isGhostVisible ? 0 : 1 }} />
+                        </div>
+                    )
+                )}
+                {isGhostVisible && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '-10px',
+                        width: '80px',
+                        height: '10px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '50%',
+                        filter: 'blur(3px)',
+                    }} />
+                )}
             </div>
+
+            {/* Dialog Box */}
             <div
                 id="dialogbox"
                 className="dialogbox"
-                onClick={handleClick}
-                onKeyDown={handleKeyDown}
-                onKeyUp={handleKeyUp}
-                tabIndex={0} // Make div focusable for key events
-                ref={dialogboxRef}
+                onClick={nextMessage}
+                style={{
+                    backgroundColor: 'white',
+                    padding: '20px',
+                    borderRadius: '10px',
+                    width: '90%',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+                }}
             >
-                <div className="text-content">
-                    {currentMessage}
-                </div>
-                <div id="arrow" className="arrow" style={{ display: 'block' }}></div>
+                <div
+                    className="text-content"
+                    style={{
+                        opacity: isTextFading ? 0 : 1,
+                        transition: 'opacity 0.5s',
+                        fontSize: '16px'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: displayedText }}
+                ></div>
+
+                {currentMessageIndex === messageStrings.length - 1 && (
+                    <div style={{ display:'flex', justifyContent:'center', marginTop: '40px' }}>
+                        <Button
+                            type="primary"
+                            size="large"
+                            style={{ width: '230px', height: '60px' }}
+                            onClick={nextMessage}
+                        >
+                            Start Journey
+                        </Button>
+                    </div>
+                )}
+                <div id="arrow" className="arrow"></div>
             </div>
         </div>
     );

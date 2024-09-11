@@ -9,6 +9,7 @@ import Archive from "../Archive/Archive";
 import AddModal from "../Modals/AddModal";
 import Task from "../Task";
 import { useSubHeader } from '../../../layout/SubHeaderContext';
+import { useSocket } from "../../../context/SocketProvider";
 
 
 const { TabPane } = Tabs;
@@ -41,7 +42,7 @@ class Board {
     }
 }
 
-const KanbanColumn = ({ columnId, column, editModal, openModal }) => (
+const KanbanColumn = ({ columnId, column, editModal, openModal, users }) => (
     <Col xs={24} sm={24} md={12} lg={8} xl={6} className="kanban-column">
         <Droppable droppableId={columnId} key={columnId}>
             {(provided) => (
@@ -56,7 +57,7 @@ const KanbanColumn = ({ columnId, column, editModal, openModal }) => (
                     {column.items.map((task, index) => (
                         <Draggable key={task._id.toString()} draggableId={task._id.toString()} index={index}>
                             {(provided) => (
-                                <Task provided={provided} task={task} editModal={editModal} />
+                                <Task provided={provided} task={task} editModal={editModal} users={users}/>
                             )}
                         </Draggable>
                     ))}
@@ -74,6 +75,8 @@ const Home = () => {
     const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false);
     const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false);
     const [currentEvent, setCurrentEvent] = useState(null);
+    const { currentUser: socketCurrentUser } = useSocket();
+    const [users, setUsers] = useState(null);
     const [selectedTags, setSelectedTags] = useState([]);
     const [selectedMilestones, setSelectedMilestones] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -81,6 +84,39 @@ const Home = () => {
     const [activeTab, setActiveTab] = useState('board');
     const authHeader = useAuthHeader();
     const {setSubHeaderComponent} = useSubHeader();
+
+    // Map currentUser to match team members format
+    const currentUser = {
+        name: socketCurrentUser._id === socketCurrentUser.id ? "You" : socketCurrentUser.username,
+        id: socketCurrentUser._id,
+        color: socketCurrentUser.avatar_color,
+        initialen: socketCurrentUser.username.charAt(0),
+        isFirstLogin: socketCurrentUser.isFirstLogin
+    };
+
+
+
+       // Fetch team members
+    const fetchTeamMembers = async () => {
+        try {
+            const response = await axios.get('/api/get-team-members', {
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
+            // Map the backend response to the expected user structure
+            const teamMembers = response.data.map(member => ({
+                name: member._id === currentUser.id ? "You" : member.username, // Check if the member is the current user
+                id: member._id,
+                color: member.avatar_color,
+                initialen: member.username.charAt(0),
+                isFirstLogin: member._id === currentUser.id ? currentUser.isFirstLogin : false
+            }));
+            setUsers(teamMembers);
+        } catch (error) {
+            console.error('Error fetching team members:', error);
+        }
+    };
 
     const getTasks = async () => {
         try {
@@ -276,36 +312,37 @@ const Home = () => {
         return board;
     };
 
-    const updateFilteredTasks = (tasks, searchTerm, tags, milestones) => {
+    const updateFilteredTasks = (tasks, searchTerm = '', tags = [], milestones = []) => {
         let filteredTasks = tasks;
-
+    
         // Filter by search term
-        if (searchTerm) {
+        if (searchTerm.trim()) {
             const lowercasedSearchTerm = searchTerm.toLowerCase();
-            filteredTasks = filteredTasks.filter(task =>
+            filteredTasks = tasks.filter(task =>
                 task.title.toLowerCase().includes(lowercasedSearchTerm) ||
                 task.description.toLowerCase().includes(lowercasedSearchTerm)
             );
         }
-
+    
         // Filter by tags
         if (tags.length > 0) {
-            const tagTitles = new Set(tags);
-
-            filteredTasks = filteredTasks.filter(task =>
+            const tagTitles = new Set(tags.map(tag => tag));
+    
+            filteredTasks = tasks.filter(task =>
                 task.tags.some(tag => tagTitles.has(tag.title))
             );
         }
-
+    
         // Filter by milestones
         if (milestones.length > 0) {
-            filteredTasks = filteredTasks.filter(task => milestones.includes(task.milestone));
+            filteredTasks = tasks.filter(task => milestones.includes(task.milestone));
         }
-
+    
         setFilteredTasks(filteredTasks);
         const updatedBoard = createBoard(filteredTasks);
         setBoard(updatedBoard);
     };
+    
 
     const onDragEnd = async (result, board, setBoard) => {
         const { destination, source, draggableId } = result;
@@ -358,76 +395,81 @@ const Home = () => {
     };
 
     useEffect(() => {
+        fetchTeamMembers();
         getTasks();
     }, []);
 
     useEffect(() => {
         setSubHeaderComponent({
             component: (
-                <>
-          <Row align="middle" justify="space-between" gutter={[16, 16]} order={1} orderSm={0}>
-            <Col xs={24} sm={24} md={6}>
-                <Tabs defaultActiveKey={activeTab} onChange={(key) => {
-                                setActiveTab(key);
-                                if (key === 'board') {
-                                    getTasks();
-                                }
-                            }}>
-                    <TabPane tab="Board" key="board" />
-                    <TabPane tab="Archive" key="archive" />
-                </Tabs>
-            </Col>
-            <Col xs={24} sm={24} md={18}>
-                <Row gutter={[16, 16]} align="middle" justify="end">
-                    <Col xs={24} sm={12} md={8}>
-                        <Select
-                            mode="multiple"
-                            style={{ width: '100%' }}
-                            placeholder="Select tags"
-                            onChange={handleTagChange}
-                            value={selectedTags}
-                        >
-                            {tags.map((tag) => (
-                                <Option key={tag.title} value={tag.title} style={{ color: tagColorMap[tag.title] }}>
-                                    <Tag color={tag.color}>{tag.title}</Tag> {tag.title}
-                                </Option>
-                            ))}
-                        </Select>
+                <Row align="middle" justify="space-between" className="chat-row" gutter={[16, 16]}>
+                    <Col xs={24} sm={24} md={6}>
+                        <Tabs defaultActiveKey={activeTab} onChange={(key) => {
+                            setActiveTab(key);
+                            if (key === 'board') {
+                                getTasks();
+                            }
+                        }}>
+                            <TabPane tab="Board" key="board" />
+                            <TabPane tab="Archive" key="archive" />
+                        </Tabs>
                     </Col>
-
-                    <Col xs={24} sm={12} md={8}>
-                        <Select
-                            mode="multiple"
-                            style={{ width: '100%' }}
-                            placeholder="Select milestones"
-                            onChange={handleMilestonesChange}
-                            value={selectedMilestones}
-                        >
-                            {milestonesData.map((milestone) => (
-                                <Option key={milestone} value={milestone}>
-                                    {milestone}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Col>
-
-                    <Col xs={24} sm={12} md={8}>
-                        <Search
-                            placeholder="Search tasks"
-                            allowClear
-                            enterButton="Search"
-                            onSearch={handleSearch}
-                            style={{ width: '100%' }}
-                        />
+                    <Col xs={24} sm={24} md={18}>
+                        <Row gutter={[16, 16]} align="middle" justify="end">
+                            {activeTab === 'board' && (
+                                <>
+                                    <Col xs={24} sm={12} md={8}>
+                                        <Select
+                                            mode="multiple"
+                                            style={{ width: '100%' }}
+                                            placeholder="Select tags"
+                                            onChange={handleTagChange}
+                                            value={selectedTags}
+                                        >
+                                            {tags.map((tag) => (
+                                                <Option key={tag.title} value={tag.title} style={{ color: tagColorMap[tag.title] }}>
+                                                    <Tag color={tag.color}>{tag.title}</Tag>
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Col>
+    
+                                    <Col xs={24} sm={12} md={8}>
+                                        <Select
+                                            mode="multiple"
+                                            style={{ width: '100%' }}
+                                            placeholder="Select milestones"
+                                            onChange={handleMilestonesChange}
+                                            value={selectedMilestones}
+                                        >
+                                            {milestonesData.map((milestone) => (
+                                                <Option key={milestone} value={milestone}>
+                                                    {milestone}
+                                                </Option>
+                                            ))}
+                                        </Select>
+                                    </Col>
+    
+                                    <Col xs={24} sm={12} md={8}>
+                                        <Search
+                                            placeholder="Search tasks"
+                                            allowClear
+                                            enterButton="Search"
+                                            onSearch={handleSearch}
+                                            style={{ width: '100%' }}
+                                        />
+                                    </Col>
+                                </>
+                            )}
+                        </Row>
                     </Col>
                 </Row>
-            </Col>
-        </Row>
-                </>
             )
         });
+    
         return () => setSubHeaderComponent(null); // Clear subheader when unmounting
-    }, [selectedMilestones, selectedTags]);
+    }, [activeTab, selectedMilestones, selectedTags]);
+    
 
     return (
         <>
@@ -441,6 +483,7 @@ const Home = () => {
                                 column={column}
                                 editModal={editModal}
                                 openModal={openModal}
+                                users={users}
                             />
                         ))}
                     </Row>
@@ -459,6 +502,8 @@ const Home = () => {
                     handleDeleteTask={deleteTask}
                     handleArchiveTask={archiveTask}
                     initValues={currentEvent}
+                    users={users}
+                    currentUser={currentUser}
                 />
             )}
         </>

@@ -4,8 +4,11 @@ import io from 'socket.io-client';
 import { useAuthHeader, useIsAuthenticated, useSignOut } from 'react-auth-kit';
 import axios from 'axios';
 import { Spin } from 'antd';
+import TKIForm from "../components/TKI/TKIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
+import useNotificationPermission from './NotificationPermission';
+
 
 const SocketContext = createContext();
 
@@ -14,6 +17,7 @@ export const SocketProvider = ({ children }) => {
   const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages, setUnreadMessages } = useUnreadMessage();
   const [missedMessages, setMissedMessages] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
+  const [userSettings, setUserSettings] = useState(null);
   //const [currentTab, setCurrentTab] = useState(null);
   const [onlineStatus, setOnlineStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +25,9 @@ export const SocketProvider = ({ children }) => {
   const authHeader = useAuthHeader();
   const logout = useSignOut();
   const navigate = useNavigate();
+  const [isModalOpen, setModalOpen] = useState(false);
+
+  useNotificationPermission();
 
   const fetchCurrentUser = async (socketInstance) => {
     try {
@@ -45,6 +52,51 @@ export const SocketProvider = ({ children }) => {
       logout();
       navigate("/login");
       setLoading(false);
+    }
+  };
+
+  const fetchUserSettings = async () => {
+    try {
+        const response = await axios.get('/api/get-settings', {
+          headers: {
+            "Authorization": authHeader()
+          }
+        });
+        setUserSettings(response.data);
+        // If the TKI test should be triggered
+        if (response.data.is_first_login) {
+          updateFirstLogin();
+          navigate("/intro");
+        }
+          // Set the TKI test state, but don't open the modal here
+          if (!response.data.is_first_login && response.data.trigger_tki_test) {
+            setModalOpen(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+        logout();
+        navigate("/login");
+        setLoading(false);
+      }
+  };
+
+
+  const updateFirstLogin = async () => {
+    try {
+      const response = await axios.post('/api/update-settings', 
+        {
+          is_first_login: false  // Only updating the is_first_login field
+        },
+        {
+          headers: {
+            "Authorization": authHeader()
+          }
+        }
+      );
+      
+      console.log('User settings updated:', response.data);
+    } catch (error) {
+      console.error('Error updating user settings:', error);
     }
   };
 
@@ -79,11 +131,13 @@ export const SocketProvider = ({ children }) => {
   };
 
 
-
   useEffect(() => {
     if (isAuthenticated) {
       const token = authHeader().split(' ')[1]; // Extract the token from "Bearer <token>"
       const socketInstance = io('https://spirit.lfe.ed.tum.de/', {
+        auth: {
+          token: token
+        },
         transports: ['websocket'],
         autoConnect: false // Prevent auto connection
       });
@@ -94,6 +148,14 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
+        if (navigator.serviceWorker && Notification.permission === 'granted') {
+          navigator.serviceWorker.ready.then(function(registration) {
+              registration.showNotification('New Message', {
+                  body: "New Message from " + chatId, // Assuming the message object has a content field
+                  icon: '../../public/TUMLogo.png', // Replace with your app's icon
+              });
+          });
+      }
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
@@ -130,6 +192,7 @@ export const SocketProvider = ({ children }) => {
 
       pullUnreadMessages();
       fetchCurrentUser(socketInstance);
+      fetchUserSettings();
       setSocket(socketInstance);
 
       return () => {
@@ -154,8 +217,9 @@ export const SocketProvider = ({ children }) => {
   }
 
   return (
-    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, updateLastLoggedIn }}>
+    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, updateLastLoggedIn}}>
       {children}
+      <TKIForm visible={isModalOpen} />
     </SocketContext.Provider>
   );
 };

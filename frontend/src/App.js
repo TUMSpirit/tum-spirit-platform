@@ -3,6 +3,7 @@ import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, RequireAuth, useAuthUser } from "react-auth-kit";
 import { UnreadMessageProvider } from './context/UnreadMessageContext';
 import { SocketProvider } from './context/SocketProvider.js';
+import { UserSettingsProvider } from './context/UserSettingsProvider.js'; // Import the UserSettingsProvider
 import Main from "./layout/Main";
 import "antd/dist/reset.css";
 import "./assets/styles/main.css";
@@ -18,7 +19,19 @@ import Calendar from "./pages/Calendar";
 import axios from 'axios';
 import TypewriterDialog from "./pages/Intro.js";
 
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
+
+// src/index.js or src/App.js
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(registration => {
+      console.log('Service Worker registered with scope:', registration.scope);
+    })
+    .catch(error => {
+      console.log('Service Worker registration failed:', error);
+    });
+}
 
 function AuthRedirect({ children }) {
   const auth = useAuthUser();
@@ -68,7 +81,7 @@ function App() {
               }
             />
           </Routes>
-          </SocketProvider>
+        </SocketProvider>
       </UnreadMessageProvider>
     </AuthProvider >
   );
