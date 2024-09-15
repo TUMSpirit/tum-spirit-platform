@@ -67,6 +67,28 @@ async def generate(messages: MessageList):
     return response
 
 
+@router.post("/ai/generate_gpt", tags=["ai"])
+async def generate(messages: MessageList):
+
+    # Initialize OpenAI client
+    client = OpenAI(
+        base_url='http://ollama:11434/v1',
+        api_key="NO_API_KEY_NEEDED_FOR_LOCAL_SERVER",
+    )
+
+    # Prepare the request data using the provided messages
+    response = client.chat.completions.create(
+        model="llama3",
+        messages=messages.messages
+    )
+
+    # Print the generated response for debugging purposes (remove for production)
+    print(response.choices[0].message.content)
+
+    # Return the OpenAI response object
+    return response
+
+
 # Simple endpoint to return a "Hello World" message
 #@router.get("/ai/hello", tags=["ai"])
 #async def generate():

@@ -118,7 +118,7 @@ const Chatbot = ({ opened, setOpened }) => {
             style={{
               display: "flex",
               alignItems: "center",
-              background: "#1677ff",
+              background: "#7D4EBC",
               padding: 20,
               borderTopLeftRadius: 25,
               borderTopRightRadius: 25,
@@ -218,7 +218,7 @@ const Chatbot = ({ opened, setOpened }) => {
               style={{ flex: 1, marginRight: 10 }}
             />
 
-            <Button onClick={sendMessage} type="primary">
+            <Button onClick={sendMessage} style={{background:"#7D4EBC"}} type="primary">
               Send
             </Button>
           </div>

@@ -48,7 +48,8 @@ const AddEventPopup = ({
     users,
     currentUser,
     startDate,
-    endDate
+    endDate,
+    fileList
 }) => {
 
 
@@ -87,6 +88,12 @@ const AddEventPopup = ({
         }
     }
 
+    const [selectedFiles, setSelectedFiles] = useState([]); // State to track selected files
+
+    const handleFileSelection = (value) => {
+      setSelectedFiles(value);
+    };
+  
 
     const { mutateAsync: createEntry } = useCreateEntries()
     const { mutateAsync: updateEntry } = useUpdateEntries()
@@ -486,11 +493,43 @@ const AvatarDisplay = ({ selectedUsers }) => {
     </Avatar.Group>);
 };
 
-/*        <Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
+/*        
+
+           
+                          <Form.Item label="Attach Files">
+                          <Select
+                            mode="multiple"
+                            placeholder="Select files to attach"
+                            value={selectedFiles}
+                            onChange={handleFileSelection}
+                          >
+                            {fileList.map((file) => (
+                              <Select.Option key={file.file_id} value={file.file_id}>
+                                {file.filename}
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+
+
+
+                                  <Form.Item name='files'>
+                                <Upload {...uploadProps} beforeUpload={beforeUpload} onRemove={onRemoveUpload}
+                                    maxCount={10}
+                                    multiple={true}>
+                                    <Button icon={<UploadOutlined />}>Upload</Button>
+                                </Upload>
+                            </Form.Item>
+
+
+<Switch data-testid='milestoneSwitch' checked={formData.isMilestone} checkedChildren={'Milestone'} unCheckedChildren={'Regular'}
                                     onChange={(e) => {
                                         setFormData((prevFormData) => ({
                                             ...prevFormData, isMilestone: e
                                         }))
                                     }} />
                                     ALTERNATIVER SWITCH
+
+
+                                    
                                     */

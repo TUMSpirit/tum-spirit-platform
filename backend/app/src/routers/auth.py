@@ -9,7 +9,7 @@ from pymongo import MongoClient, ReturnDocument
 from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJsonSchema
 from datetime import datetime, timedelta
 from bson import ObjectId
-from bson.errors import InvalidId
+from bson.errors import InvalidId  # Import the create_user_settings function
 from app.config import SECRET_KEY,MONGO_DB,MONGO_URI
 
 # Create a router
@@ -42,6 +42,7 @@ db = client[MONGO_DB]
 user_collection = db['users']
 team_collection = db["teams"]
 message_collection = db["chat"]
+settings_collection = db["user_settings"]
 
 
 def validate_object_id(v: Any) -> ObjectId:
@@ -82,14 +83,18 @@ class ChatUsername(BaseModel):
 class User(BaseModel):
     username: str
     role: str
-    team_id: PyObjectId
+    #project_id: Optional[PyObjectId] = None
+    team_id: Optional[PyObjectId] = None
 
     class Config:
         populate_by_name = True
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
 
-
+class CreateUser(User):
+    password: str
+    avatar_color: str
+    
 class UserInDB(User):
     password: str
     
@@ -97,7 +102,8 @@ class TeamUser(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     role: str
-    team_id: PyObjectId
+    #project_id: Optional[PyObjectId] = None
+    team_id: Optional[PyObjectId] = None
     avatar_color: Optional[str] = None
     last_active: Optional[datetime] = datetime.now()
     missed_messages: Optional[int] = 0
@@ -112,7 +118,8 @@ class TeamUserClean(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     role: str
-    team_id: PyObjectId
+    #project_id: Optional[PyObjectId] = None
+    team_id: Optional[PyObjectId] = None
     avatar_color: Optional[str] = None
     last_active: Optional[datetime] = datetime.now()
     missed_messages: Optional[int] = 0
@@ -215,14 +222,39 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         raise credentials_exception
     return user
 
+def get_distinct_team_ids() -> List[str]:
+    """
+    Fetch all distinct teamIds from the users collection.
+    """
+    try:
+        # Query the users collection and get all distinct teamIds
+        team_ids = user_collection.distinct("team_id")
+        if not team_ids:
+            raise HTTPException(status_code=404, detail="No teams found")
+        return team_ids
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving team IDs: {str(e)}")
 
 async def check_role(
     current_user: Annotated[User, Depends(get_current_user)], role: str
 ):
-    if current_user.role != role:
+    if current_user["role"] != role:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return current_user
+
+async def is_admin(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Ensures the current user is an admin.
+    Raises HTTPException if the user is not an admin.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
@@ -245,13 +277,32 @@ def get_users():
     return {"users": [str(user['username']) for user in users]}
 
 
+
+def create_user_settings(user_id: ObjectId):
+    default_settings = {
+        "user_id": ObjectId(user_id),
+        "is_first_login": True,
+        "test_success": False,
+        "trigger_tki_test": False
+    }
+
+    # Insert the default settings into the user_settings collection
+    result = settings_collection.insert_one(default_settings)
+
+    # Return success or error message based on the insertion
+    if result.inserted_id:
+        return {"message": "User settings created successfully"}
+    else:
+        return {"message": "Failed to create user settings"}
+
+
 @router.post("/create-users")
-async def create_users(user_data: List[UserInDB], current_user: User = Depends(get_current_user)):
+async def create_users(user_data: List[CreateUser], current_user: User = Depends(get_current_user)):
     """
-    Creates users with hashed passwords.
+    Creates users with hashed passwords and initializes their settings.
 
     Args:
-        user_data (List[UserInDB]): A list of UserInDB instances containing user details and passwords.
+        user_data (List[CreateUser]): A list of CreateUser instances containing user details and passwords.
         current_user (User): The currently authenticated user.
 
     Returns:
@@ -261,7 +312,7 @@ async def create_users(user_data: List[UserInDB], current_user: User = Depends(g
         HTTPException: If the current user is not an admin.
     """
     # Check if the current user is an admin
-    if current_user.role != "admin":
+    if current_user["role"] != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action"
@@ -276,16 +327,23 @@ async def create_users(user_data: List[UserInDB], current_user: User = Depends(g
                 "username": user.username,
                 "password": hashed_password,
                 "role": user.role,
-                "team_id": user.team_id
+                "project_id": ObjectId(user.team_id),
+                "team_id": ObjectId(user.team_id),
+                "avatar_color": user.avatar_color,
             })
 
         # Insert users into the database
-        user_collection.insert_many(user_docs)
-        
+        result = user_collection.insert_many(user_docs)
+
+        # Create user settings for each inserted user
+        for inserted_id in result.inserted_ids:
+            create_user_settings(ObjectId(inserted_id))
+
         return {"message": "Users created successfully"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/me", response_model=TeamUser)
@@ -348,29 +406,33 @@ async def get_team_members(current_user: User = Depends(get_current_user)):
 @router.post("/update-last-active")
 async def update_last_active(chat_data: ChatUsername, current_user: User = Depends(get_current_user)):
     try:
-        # Extract the 2D array from the request
+        # Extract the username from the request (assuming chatData is the username string)
         username = chat_data.chatData
         
+        if not username:
+            raise HTTPException(status_code=400, detail="Username is required")
+
         # Fetch the current state of the missed_messages_chat array
         user_doc = user_collection.find_one({"_id": ObjectId(current_user["_id"])})
         
         if user_doc is None:
             raise HTTPException(status_code=404, detail="User not found")
 
-        # Get the existing array and replace it
+        # Get the existing array, or default to an empty list if it doesn't exist
         existing_data = user_doc.get("missed_messages_chat", [])
 
         # Create a dictionary to map usernames to their entries
-        existing_data_dict = {entry[0]: entry for entry in existing_data}
+        existing_data_dict = {entry[0]: entry for entry in existing_data if len(entry) == 2}
 
         # Process the new data
-            # Update the existing entry if username is present
         if username in existing_data_dict:
-            existing_data_dict[username][1] = datetime.now().isoformat()  # Update the second element (timestamp)
+            # Update the existing entry's timestamp (second element)
+            existing_data_dict[username][1] = datetime.now().isoformat()
         else:
-            existing_data_dict[username] = datetime.now().isoformat()  # Add new entry
+            # Add a new entry with username and timestamp
+            existing_data_dict[username] = [username, datetime.now().isoformat()]
 
-        # Convert the dictionary back to a list
+        # Convert the dictionary back to a list (2D array)
         updated_data_array = list(existing_data_dict.values())
         
         # Update the user document in the database
@@ -389,7 +451,6 @@ async def update_last_active(chat_data: ChatUsername, current_user: User = Depen
         raise HTTPException(status_code=500, detail=str(e))
 
     
-    
 @router.get("/missed-chats")
 async def get_missed_chats(current_user: User = Depends(get_current_user)):
     # Extract missed messages timestamps and privateChatIDs
@@ -397,28 +458,31 @@ async def get_missed_chats(current_user: User = Depends(get_current_user)):
 
     if not missed_messages_chat:
         # If missed_messages_chat is empty, fetch all team members
-            
+        
         team_members = user_collection.find(
             {"team_id": ObjectId(current_user["team_id"]), "_id": {"$ne": ObjectId(current_user["_id"])}},
             {"username": 1}
         )
-        missed_chats_by_timestamp = []
-        current_timestamp = datetime.now(timezone.utc).isoformat()  # Current timestamp in ISO format
-        missed_messages_chat.append(['Team', current_timestamp])
+        
+        # Use a more meaningful timestamp, such as the user's registration time or last active time
+        # For demonstration, using UNIX epoch time to capture all previous messages
+        first_login_timestamp = current_user.get("created_at", "2010-09-10T13:00:00.000000")
+        
+        # Initialize missed messages with team chat and individual members
+        missed_messages_chat.append(['Team', first_login_timestamp])
         
         for member in team_members:
             username = member.get("username")
             if username:
-                missed_messages_chat.append([username, current_timestamp])
+                missed_messages_chat.append([username, first_login_timestamp])
         
         user_collection.find_one_and_update(
-        {"_id": ObjectId(current_user["_id"])},
-        {"$set": {"missed_messages_chat": missed_messages_chat}},
-        return_document=ReturnDocument.AFTER
+            {"_id": ObjectId(current_user["_id"])},
+            {"$set": {"missed_messages_chat": missed_messages_chat}},
+            return_document=ReturnDocument.AFTER
         )
     
-    
-    # If missed_messages_chat is not empty, process as usual
+    # Process missed messages chat normally
     missed_chats_by_timestamp = []
 
     for missed_message in missed_messages_chat:
@@ -428,13 +492,10 @@ async def get_missed_chats(current_user: User = Depends(get_current_user)):
             private_chat_id = None
             search_key = "Team"
         else:
-                   # Create a list of the two items to be sorted
-            items = [current_user["username"],missed_message[0]]
-            # Sort the items alphabetically
+            # Sort usernames alphabetically to create a unique private chat ID
+            items = [current_user["username"], missed_message[0]]
             sorted_items = sorted(items)
-            # Join the sorted items with a hyphen
             private_chat_id = "-".join(sorted_items)
-            #private_chat_id = current_user["username"] + "-" + missed_message[0]
             search_key = private_chat_id
 
         if timestamp:
@@ -442,10 +503,10 @@ async def get_missed_chats(current_user: User = Depends(get_current_user)):
             messages = message_collection.count_documents({
                 "privateChatId": private_chat_id,
                 "timestamp": {"$gte": timestamp},
-                "teamId": current_user["team_id"]  # Ensure the messages belong to the same team
+                "teamId": current_user["team_id"]
             })
 
-            # Calculate missed messages count
+            # Append missed messages count
             missed_chats_by_timestamp.append([search_key, messages])
 
     return missed_chats_by_timestamp

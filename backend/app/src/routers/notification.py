@@ -101,7 +101,7 @@ def getBoard(current_user: Annotated[User, Depends(get_current_user)],
         # Create a record with a random ID (ObjectId) and a timestamp
         # Inserting the record into the database
         query = {"team_id":current_user["team_id"]}
-        entries = collection.find()
+        entries = collection.find(query)
         return entries
           # Print the results
         #output = list(result)

@@ -64,6 +64,7 @@ class FileEntry(BaseModel):
     contentType: str
     timestamp: datetime
     size: int
+    uploaded_by: str
     
     class Config:
             populate_by_name = True
@@ -279,6 +280,7 @@ async def upload_file(files: List[UploadFile], current_user: User = Depends(get_
             "contentType": file.content_type,
             "fileData": file_data,
             "size": file_size,  # Store file size
+            "uploaded_by": current_user["username"],
             "timestamp": datetime.now()
         }
 
@@ -315,17 +317,15 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
         content_type = file_record.get("contentType")
         filename = file_record.get("filename")
 
-        # Check if required fields are present
         if file_data is None or content_type is None or filename is None:
             raise HTTPException(status_code=500, detail="File metadata missing")
 
         # Return the file as a streaming response
         return StreamingResponse(
-            io.BytesIO(file_data),
+            io.BytesIO(file_data),  # Streaming the file data
             media_type=content_type,
             headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     except Exception as e:
-        # Enhanced logging
         print(f"Error downloading file {file_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

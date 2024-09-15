@@ -4,7 +4,8 @@ import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutli
 import Search from 'antd/es/input/Search';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
-import { useSubHeader } from '../../layout/SubHeaderContext'; 
+import { useSubHeader } from '../../layout/SubHeaderContext';
+import spirit from '../../assets/images/ghost.png'
 
 
 
@@ -393,6 +394,7 @@ const scrollToMessage = (index) => {
                     return null;
                 }
                 const isSender = message.senderId === currentUser?.username;
+                const isAvatar = message.senderId === "Spirit";
                 const messageStyle = getMessageStyle(message.content);
                 const messageMarginTop = index === 0 ? "mt-6" : "";
                 const messageMarginBottom = "mb-6";
@@ -456,13 +458,17 @@ const scrollToMessage = (index) => {
                                 <div className="relative mt-2 mr-2">
                                     <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
                                         style={{ backgroundColor: avatarColor }}
+                                        src={isAvatar ?spirit:null }
                                     >
                                         {message.senderId[0]}
                                     </Avatar>
                                     <div className="text-center text-sm mt-1">{message.senderId}</div>
                                 </div>
                                 <div
-                                    className={`bg-chat-messages-received shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
+                                    className={` ${isAvatar
+                                    ? "bg-[#7D4EBC] text-sm-white" // Light purple for AI messages
+                                    : "bg-chat-messages-received"}
+                                    shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
                                     style={{ wordBreak: 'break-word', hyphens: 'auto' }}
                                 >
                                     <div>
@@ -486,7 +492,7 @@ const scrollToMessage = (index) => {
                                         </div>
                                     </div>
                                     <span
-                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
+                                        className={`self-end ${isAvatar? "text-sm-white": "text-sm" }text-gray-500`}>{formatTimestamp(message.timestamp)}</span>
                                 </div>
                                 <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft"
                                     className="p-2">

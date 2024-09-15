@@ -3,7 +3,7 @@ import { Table, Avatar, Tag, Typography } from 'antd';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
 import { useSocket } from '../../context/SocketProvider'; // Adjust the import path accordingly
-import logo from '../../assets/images/ghost.png'
+
 const { Title } = Typography;
 
 const columns = [
@@ -11,21 +11,11 @@ const columns = [
     title: 'Profilbild',
     dataIndex: 'avatarColor',
     key: 'avatarColor',
-    render: (color, record) => {
-      if (record.username === 'Spirit') {
-        return (
-          <Avatar
-            src={logo} // Adjust the path according to where your image is stored
-            size="large" // Optional: Adjust size if necessary
-          />
-        );
-      }
-      return (
-        <Avatar style={{ backgroundColor: record.avatar_color }}>
-          {record.username[0]}
-        </Avatar>
-      );
-    },
+    render: (color, record) => (
+      <Avatar style={{ backgroundColor: record.avatar_color }}>
+        {record.username[0]}
+      </Avatar>
+    ),
   },
   {
     title: 'Name',
@@ -42,9 +32,7 @@ const columns = [
     dataIndex: 'status',
     key: 'status',
     render: (status) => (
-      <Tag color={status === 'online' ? 'green' : 'red'}>
-        {status === 'online' ? 'Online' : 'Offline'}
-      </Tag>
+      <Tag color={status === 'online' ? 'green' : 'red'}>{status === 'online' ? 'Online' : 'Offline'}</Tag>
     ),
   },
 ];
@@ -59,8 +47,8 @@ const TeamMembers = () => {
       try {
         const response = await axios.get('/api/get-team-members', {
           headers: {
-            Authorization: authHeader(),
-          },
+            "Authorization": authHeader()
+          }
         });
 
         // Add static member 'Spirit' to the team members
@@ -76,7 +64,7 @@ const TeamMembers = () => {
         ];
 
         // Merge online status with team members data
-        const teamMembersWithStatus = updatedTeamMembers.map((member) => {
+        const teamMembersWithStatus = updatedTeamMembers.map(member => {
           // Always set Spirit to online
           if (member.username === 'Spirit') {
             return {
@@ -87,7 +75,7 @@ const TeamMembers = () => {
 
           return {
             ...member,
-            status: onlineStatus[member.username] || 'offline',
+            status: onlineStatus[member.username] || 'offline'
           };
         });
 
@@ -101,22 +89,18 @@ const TeamMembers = () => {
   }, [onlineStatus]); // Re-run the effect if onlineStatus changes
 
   // Separate real team members from AI members
-  const realTeamMembers = teamMembers.filter(
-    (member) => member.username !== 'Spirit'
-  );
-  const aiTeamMembers = teamMembers.filter(
-    (member) => member.username === 'Spirit'
-  );
+  const realTeamMembers = teamMembers.filter(member => member.username !== 'Spirit');
+  const aiTeamMembers = teamMembers.filter(member => member.username === 'Spirit');
 
   return (
-    <div style={{ margin: '20px' }}>
+    <div style={{ margin: "20px" }}>
       <Title level={4}>Team Members</Title>
       <Table
         dataSource={realTeamMembers}
         columns={columns}
         rowKey="_id"
         pagination={false}
-        style={{ marginBottom: '20px' }}
+        style={{ marginBottom: "20px" }}
       />
       {aiTeamMembers.length > 0 && (
         <>

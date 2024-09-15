@@ -6,9 +6,14 @@ from app.config import SECRET_KEY
 from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
 # import routers
 from .src.routers import auth
+from .src.routers import settings
+from .src.routers import project
+from .src.routers import milestone
 from .src.routers import team
+from .src.routers import tki
 
 from .src.routers import ai
+from .src.routers import avatar
 from .src.routers import calendar
 from .src.routers import kanban
 from .src.routers import language
@@ -37,9 +42,14 @@ def application_setup() -> FastAPI:
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
  #   application.include_router(celery.router, prefix="/api")
+    application.include_router(settings.router, prefix="/api")
+    application.include_router(project.router, prefix="/api")
+    application.include_router(milestone.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
+    application.include_router(tki.router, prefix="/api")
 
     application.include_router(chat.router, prefix="/api")
+    application.include_router(avatar.router, prefix="/api")
     application.include_router(ai.router, prefix="/api")
     application.include_router(calendar.router, prefix="/api")
     application.include_router(kanban.router, prefix="/api")

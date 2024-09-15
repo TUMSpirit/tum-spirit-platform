@@ -167,13 +167,16 @@ const Chat = () => {
         };
 
         const handleTyping = (data) => {
-            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
+            if (data.privateChatId && data.privateChatId === privateChatId) {
                 setTypingUser(data);
-            }
+              } else if (data.teamId && data.teamId === currentUser.team_id && !privateChatId) {
+                setTypingUser(data);
+              }
         };
 
         const handleStopTyping = (data) => {
-            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
+            if ((data.privateChatId && data.privateChatId === privateChatId) || 
+            (data.teamId && data.teamId === currentUser.team_id && !privateChatId)) {
                 setTypingUser(null);
             }
         };
@@ -230,7 +233,7 @@ const Chat = () => {
     const handleTabChange = async (key) => {
         const currTab = currentTab;
         if (key !== '1') {
-        updateLastLoggedIn(teamMembers[key-2].username);
+        updateLastLoggedIn(teamMembers[parseInt(key)-2].username);
         } else {
         updateLastLoggedIn("Team");
         }
@@ -240,7 +243,7 @@ const Chat = () => {
             const memberUsername = teamMembers[parseInt(key) - 2].username;
             const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
             markAsRead(newPrivateChatId);
-            updateLastLoggedIn(memberUsername);
+            //updateLastLoggedIn(memberUsername);
             setPrivateChatId(newPrivateChatId);
             console.log(newPrivateChatId);
             socket.emit('joinPrivateChat', newPrivateChatId);
