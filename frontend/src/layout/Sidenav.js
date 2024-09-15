@@ -6,6 +6,7 @@ import { AimOutlined, CalendarFilled, LineChartOutlined, RobotFilled, HomeOutlin
 import { Typography } from 'antd';
 import Chatbot from "../components/AiChat/chat-bubble";
 import { useUnreadMessage } from '../context/UnreadMessageContext'; // Import the custom hook
+import { useSocket } from '../context/SocketProvider'; // Import the useSocket hook
 
 
 
@@ -16,8 +17,7 @@ function Sidenav({ color }) {
   const [opened, setOpened] = useState(false);
   const { unreadMessages } = useUnreadMessage();
   const [totalCount, setTotalCount] = useState(0);
-
-  
+  const { projectInformation } = useSocket(); // Access projectInformation from the socket context
 
   const calendar = [
     <svg
@@ -179,7 +179,7 @@ function Sidenav({ color }) {
 
   useEffect(() => {
     setTotalCount(unreadMessages.reduce((total, [_, count]) => total + count, 0));
-}, [unreadMessages]);
+  }, [unreadMessages]);
 
   const openAiChat = () => {
     setOpened(true);
@@ -187,14 +187,46 @@ function Sidenav({ color }) {
 
   return (
     <>
-      <div className="brand">
+      <div className="brand" style={{ position: 'relative', display: 'flex', alignItems: 'flex-end' }}>
         <img src={logo} alt="" />
+          
+  {/* Version Tag */}
+  <span style={{
+    fontSize: '9px', 
+    backgroundColor: '#f5f5f5',  // Neutral background
+    color: '#666',  // Muted text color
+    padding: '1px 4px',
+    borderRadius: '4px',
+    marginLeft: '4px',  // Space between the logo and the version tag
+    border: '1px solid #e0e0e0',
+    fontWeight: '500'
+  }}>
+    v2.1
+  </span>
       </div>
-      <hr />
-      <Title strong style={{
-        marginTop: 30, marginBottom: 15,
-        paddingLeft: 20
-      }} level={4}>TUMuchToManage</Title>
+  
+      <hr/>
+      {projectInformation && (
+        <div     style={{
+          padding: '0px 5px', 
+          position: 'relative',
+          marginTop: '25px',
+          marginBottom:'15px'
+        }}>
+          <Text type="secondary" style={{ paddingLeft: 20, fontSize: '14px', fontWeight:'bold' }}>
+            {projectInformation.name || "Project Name"}
+          </Text>
+          <Title level={4} style={{
+            color: '#2576CA',
+            paddingLeft: 20,
+            paddingTop: 0,
+            marginTop:5
+          }}>
+            {projectInformation.team_name || "Team Name"}
+          </Title>
+        </div>
+      )}
+      <hr/>
       <Menu theme="light" mode="inline" defaultSelectedKeys={[page]}>
 
         <Menu.Item key="home">
@@ -293,7 +325,14 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
       </Menu>
-      <div className="aside-footer">
+    </>
+  );
+}
+
+export default Sidenav;
+/*
+
+  <div className="aside-footer">
         <div
           className="footer-box"
           style={{
@@ -311,12 +350,10 @@ function Sidenav({ color }) {
         </div>
       </div>
       <Chatbot opened={opened} setOpened={setOpened}></Chatbot>
-    </>
-  );
-}
 
-export default Sidenav;
-/*
+
+
+
       <Menu.Item key="7">
           <NavLink to="/timeline">
             <span
@@ -388,4 +425,32 @@ export default Sidenav;
             <span className="label">Sign Up</span>
           </NavLink>
         </Menu.Item>
+
+        {projectInformation && (
+  <div style={{
+    padding: '10px 15px', 
+    background: '#f5f5f5',  // Flat, neutral background
+    marginTop: '25px',
+    marginBottom: '25px',
+    textAlign: 'left',
+    border: '1px solid #e0e0e0',  // Subtle, light border
+  }}>
+    <Text style={{ 
+      fontSize: '13px', 
+      fontWeight: '700', 
+      color: '#666',  // Subtle, muted color for the project name
+    }}>
+      {projectInformation.name || "Project Name"}
+    </Text>
+    <Title level={4} style={{
+      color: color,  // Use your primary color for emphasis
+      fontSize: '18px',
+      marginTop: '4px',
+      fontWeight: '600',  // Bolder for emphasis  // Adds a minimalist bold feel
+      letterSpacing: '0.5px'
+    }}>
+      {projectInformation.team_name || "Team Name"}
+    </Title>
+  </div>
+)}
  */

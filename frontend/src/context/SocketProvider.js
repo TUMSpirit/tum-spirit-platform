@@ -18,6 +18,7 @@ export const SocketProvider = ({ children }) => {
   const [missedMessages, setMissedMessages] = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
   const [userSettings, setUserSettings] = useState(null);
+  const [projectInformation, setProjectInformation] = useState([]);
   //const [currentTab, setCurrentTab] = useState(null);
   const [onlineStatus, setOnlineStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,35 +58,59 @@ export const SocketProvider = ({ children }) => {
 
   const fetchUserSettings = async () => {
     try {
-        const response = await axios.get('/api/get-settings', {
-          headers: {
-            "Authorization": authHeader()
-          }
-        });
-        setUserSettings(response.data);
-        // If the TKI test should be triggered
-        if (response.data.is_first_login) {
-          updateFirstLogin();
-          navigate("/intro");
+      const response = await axios.get('/api/get-settings', {
+        headers: {
+          "Authorization": authHeader()
         }
-          // Set the TKI test state, but don't open the modal here
-          if (!response.data.is_first_login && response.data.trigger_tki_test) {
-            setModalOpen(true);
-        }
-      } catch (error) {
-        console.error('Failed to fetch current user:', error);
-        logout();
-        navigate("/login");
-        setLoading(false);
+      });
+      setUserSettings(response.data);
+      // If the TKI test should be triggered
+      if (response.data.is_first_login) {
+        updateSettings('is_first_login', false);
+        navigate("/intro");
       }
+      // Set the TKI test state, but don't open the modal here
+      if (!response.data.is_first_login && response.data.trigger_tki_test) {
+        setModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current user:', error);
+      logout();
+      navigate("/login");
+      setLoading(false);
+    }
+  };
+
+  const fetchProject = async () => {
+    try {
+      const response = await axios.get(`/api/get-project-by-teamid`, {
+        headers: {
+          "Authorization": authHeader()
+        }
+      });
+      setProjectInformation(response.data);
+      /*
+      const { milestones: fetchedMilestones, start_date } = response.data;
+     
+      setStartDate(start_date); // Set start date
+      const updatedMilestones = calculateProgress(fetchedMilestones, start_date);
+      setMilestones(updatedMilestones);
+      setLoading(false); // End loading
+      updateCurrentMilestoneProgress(updatedMilestones); // Update the current milestone and progress*/
+    } catch (error) {
+      console.error('milestones:', error);
+      logout();
+      navigate("/login");
+      setLoading(false);
+    }
   };
 
 
-  const updateFirstLogin = async () => {
+  const updateSettings = async (field, value) => {
     try {
-      const response = await axios.post('/api/update-settings', 
+      const response = await axios.post('/api/update-settings',
         {
-          is_first_login: false  // Only updating the is_first_login field
+          [field]: value  // Dynamically setting the field and its value
         },
         {
           headers: {
@@ -93,12 +118,13 @@ export const SocketProvider = ({ children }) => {
           }
         }
       );
-      
-      console.log('User settings updated:', response.data);
+
+      console.log(`User settings updated: ${field} set to`, response.data);
     } catch (error) {
       console.error('Error updating user settings:', error);
     }
   };
+
 
   const updateLastLoggedIn = async (lastActiveChat) => {
     console.log(lastActiveChat);
@@ -119,10 +145,10 @@ export const SocketProvider = ({ children }) => {
     try {
       const response = await axios.get(
         "/api/missed-chats", {
-          headers: {
-            "Authorization": authHeader()
-          }
+        headers: {
+          "Authorization": authHeader()
         }
+      }
       );
       setUnreadMessages(response.data);
     } catch (error) {
@@ -130,6 +156,10 @@ export const SocketProvider = ({ children }) => {
     }
   };
 
+
+  const closeModal = async () => {
+    setModalOpen(false);
+  }
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -142,25 +172,25 @@ export const SocketProvider = ({ children }) => {
         autoConnect: false // Prevent auto connection
       });
 
-      socketInstance.on('newMessageMetadata', ( data ) => {
+      socketInstance.on('newMessageMetadata', (data) => {
 
         //console.log('Message received:', data);
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
         if (navigator.serviceWorker && Notification.permission === 'granted') {
-          navigator.serviceWorker.ready.then(function(registration) {
-              registration.showNotification('New Message', {
-                  body: "New Message from " + chatId, // Assuming the message object has a content field
-                  icon: '../../public/TUMLogo.png', // Replace with your app's icon
-              });
+          navigator.serviceWorker.ready.then(function (registration) {
+            registration.showNotification('New Message', {
+              body: "New Message from " + chatId, // Assuming the message object has a content field
+              icon: '../../public/TUMLogo.png', // Replace with your app's icon
+            });
           });
-      }
+        }
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
         console.log(currentTab);
-
+  
         // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
         if (currentUser === chatId || (parseInt(currentTab) === 1 && chatId === 'Team')) {
           // markAsRead(privateChatId);
@@ -193,6 +223,7 @@ export const SocketProvider = ({ children }) => {
       pullUnreadMessages();
       fetchCurrentUser(socketInstance);
       fetchUserSettings();
+      fetchProject();
       setSocket(socketInstance);
 
       return () => {
@@ -217,9 +248,9 @@ export const SocketProvider = ({ children }) => {
   }
 
   return (
-    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, updateLastLoggedIn}}>
+    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, projectInformation, updateLastLoggedIn, updateSettings }}>
       {children}
-      <TKIForm visible={isModalOpen} />
+      <TKIForm visible={isModalOpen} onClose={closeModal} />
     </SocketContext.Provider>
   );
 };

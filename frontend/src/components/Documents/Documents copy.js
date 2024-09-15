@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Spin, Avatar, Table, Button, Input, Space, Tag, Col, Row, Modal, message, Upload } from 'antd';
+import { Table, Button, Input, Space, Tag, Col, Row, Modal, message, Upload } from 'antd';
 import moment from 'moment';
 import {
     FileOutlined,
@@ -18,7 +18,6 @@ import {
 import { useAuthHeader } from 'react-auth-kit';
 import { SubHeader } from '../../layout/SubHeader';
 import { useSubHeader } from '../../layout/SubHeaderContext';
-import ghost from "../../assets/images/ghost.png";
 
 const { Search } = Input;
 
@@ -30,7 +29,6 @@ const FileTable = () => {
     const [fileListUpload, setFileListUpload] = useState([]);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [fileToDelete, setFileToDelete] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
     const authHeader = useAuthHeader();
     const { setSubHeaderComponent } = useSubHeader();
 
@@ -51,9 +49,7 @@ const FileTable = () => {
         fetchFiles();
     }, []);
 
-    
     const downloadFile = async (fileId) => {
-        setIsLoading(true);
         try {
             const response = await axios.get(`/api/files/download/${fileId}`, {
                 responseType: 'blob',
@@ -78,11 +74,9 @@ const FileTable = () => {
 
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            setIsLoading(false);
         } catch (error) {
             console.error('Error downloading file:', error);
             message.error('Error downloading file');
-            setIsLoading(false);
         }
     };
 
@@ -184,23 +178,10 @@ const FileTable = () => {
             dataIndex: 'filename',
             key: 'filename',
             sorter: (a, b) => a.filename.localeCompare(b.filename),
-            render: (text, record) => (
-                <Space
-                style={{
-                    backgroundColor: record.uploaded_by === 'Spirit' ? '#7D4EBC' : 'transparent',
-                    color: record.uploaded_by === 'Spirit' ? 'white' : 'black',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    width: '100%',
-                }}
-            >
-                {record.uploaded_by === 'Spirit' ? (
-                    <Avatar src={ghost} size="small" /> // Display ghost avatar
-                ) : 
-                    getFileIcon(text)
-                }
-                <span style={{ color: record.uploaded_by === 'Spirit' ? 'white' : 'black' }}>{text}</span>
-            </Space>
+            render: (text) => (
+                <Space>
+                    {getFileIcon(text)}{text}
+                </Space>
             ),
         },
         {
@@ -223,7 +204,7 @@ const FileTable = () => {
             key: 'action',
             render: (text, record) => (
                 <Space>
-                    <Button onClick={() => downloadFile(record._id)} icon={isLoading ? <Spin /> : <DownloadOutlined />} disabled={isLoading ? true : false}/>
+                    <Button onClick={() => downloadFile(record._id)} icon={<DownloadOutlined />} />
                     <Button onClick={() => {
                         setFileToDelete(record._id);
                         setIsDeleteModalVisible(true);

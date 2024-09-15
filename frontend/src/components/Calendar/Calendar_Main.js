@@ -33,6 +33,8 @@ const Calendar_Main = () => {
     const [isUploadImportPopupOpen, setIsUploadImportPopupOpen] = useState(false)
     const [isTimelineOpen, setIsTimelineOpen] = useState(false)
     const [currentEvent, setCurrentEvent] = useState(null)
+
+    const [fileList, setFileList] = useState([]);
     //const [isFirstLogin, setIsFirstLogin] = useState(currentUser.isFirstLogin)
     const [startDate, setStartDate] = useState(null)
     const [endDate, setEndDate] = useState(null)
@@ -111,6 +113,20 @@ const Calendar_Main = () => {
         //event: props => (<CustomEvent {...props} color={'#0047ab'}/>)
     }
 
+    const fetchFiles = async () => {
+        try {
+            const response = await axios.get('/api/files/get-files', {
+                headers: {
+                    Authorization: authHeader(),
+                },
+            });
+            setFileList(response.data); // Store the file list
+        } catch (error) {
+            console.error('Error fetching files:', error);
+        }
+    };
+
+
     // Fetch team members
     const fetchTeamMembers = async () => {
         try {
@@ -135,6 +151,7 @@ const Calendar_Main = () => {
 
     useEffect(() => {
         //fetchEntries();
+        //fetchFiles();
         fetchTeamMembers();
     }, []);
 
@@ -143,7 +160,7 @@ const Calendar_Main = () => {
             {(isUpdateEventPopupOpen || isCreateEventPopupOpen) && <AddEventPopup isUpdateEventOpen={isUpdateEventPopupOpen} isCreateEventOpen={isCreateEventPopupOpen}
                 setIsCreateEventOpen={setIsCreateEventPopupOpen} setIsUpdateEventOpen={setIsUpdateEventPopupOpen}
                 event={currentEvent}
-                users={users} currentUser={currentUser} startDate={startDate} endDate={endDate} />}
+                users={users} currentUser={currentUser} startDate={startDate} endDate={endDate} fileList={fileList} />}
             {isUploadImportPopupOpen && <UploadImportPopup user={currentUser} isUploadImportPopupOpen={isUploadImportPopupOpen} onCancel={onCancelUploadImport} setIsUploadImportPopupOpen={setIsUploadImportPopupOpen} />}
             <div style={{ height: "80vh" }} className="kachel">
                 <Calendar

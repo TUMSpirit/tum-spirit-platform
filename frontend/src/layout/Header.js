@@ -304,21 +304,6 @@ function Header({
 
  // const { subHeader } = useSubHeaderContext();
 
-
-  const updateLastLoggedIn = async (unreadMessages) => {
-    console.log(unreadMessages);
-    try {
-      const response = await axios.post('/api/update-last-active', {"chatData":unreadMessages}, {
-        headers: {
-          "Authorization": authHeader()
-        }
-      });
-      console.log(response.data);
-    } catch (error) {
-      console.error('Failed to update last log in', error);
-    }
-  };
-
   const handleLogout = () => {
     // Aufruf der logout-Funktion, um den Benutzer abzumelden
     //updateLastLoggedIn();
@@ -333,6 +318,7 @@ function Header({
   };
 
   const showImprint = () => {
+    console.log('test');
     setImprintVisible(true);
   };
   const handleOpenChange = (nextOpen, info) => {
@@ -394,8 +380,6 @@ function Header({
         </Badge>*/
   return (
     <>
-      <ImprintModal open={imprintVisible} setVisible={setImprintVisible}></ImprintModal>
-      <TutorialPopup open={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
       <div className="flex items-end justify-end">
         <div className="mr-auto header-control">
           <Button
@@ -440,6 +424,8 @@ function Header({
                     {subHeaderComponent.component}
                 </div>
             )}
+            <ImprintModal isVisible={imprintVisible} setIsVisible={setImprintVisible}></ImprintModal>
+      <TutorialPopup open={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
     </>
   );
 }

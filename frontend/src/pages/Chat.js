@@ -167,13 +167,16 @@ const Chat = () => {
         };
 
         const handleTyping = (data) => {
-            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
+            if (data.privateChatId && data.privateChatId === privateChatId) {
                 setTypingUser(data);
-            }
+              } else if (data.teamId && data.teamId === currentUser.team_id && !privateChatId) {
+                setTypingUser(data);
+              }
         };
 
         const handleStopTyping = (data) => {
-            if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
+            if ((data.privateChatId && data.privateChatId === privateChatId) || 
+            (data.teamId && data.teamId === currentUser.team_id && !privateChatId)) {
                 setTypingUser(null);
             }
         };

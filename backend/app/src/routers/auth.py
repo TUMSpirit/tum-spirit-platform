@@ -83,7 +83,8 @@ class ChatUsername(BaseModel):
 class User(BaseModel):
     username: str
     role: str
-    team_id: PyObjectId
+    #project_id: Optional[PyObjectId] = None
+    team_id: Optional[PyObjectId] = None
 
     class Config:
         populate_by_name = True
@@ -101,7 +102,8 @@ class TeamUser(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     role: str
-    team_id: PyObjectId
+    #project_id: Optional[PyObjectId] = None
+    team_id: Optional[PyObjectId] = None
     avatar_color: Optional[str] = None
     last_active: Optional[datetime] = datetime.now()
     missed_messages: Optional[int] = 0
@@ -116,7 +118,8 @@ class TeamUserClean(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str
     role: str
-    team_id: PyObjectId
+    #project_id: Optional[PyObjectId] = None
+    team_id: Optional[PyObjectId] = None
     avatar_color: Optional[str] = None
     last_active: Optional[datetime] = datetime.now()
     missed_messages: Optional[int] = 0
@@ -235,10 +238,23 @@ def get_distinct_team_ids() -> List[str]:
 async def check_role(
     current_user: Annotated[User, Depends(get_current_user)], role: str
 ):
-    if current_user.role != role:
+    if current_user["role"] != role:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return current_user
+
+async def is_admin(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Ensures the current user is an admin.
+    Raises HTTPException if the user is not an admin.
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
@@ -311,6 +327,7 @@ async def create_users(user_data: List[CreateUser], current_user: User = Depends
                 "username": user.username,
                 "password": hashed_password,
                 "role": user.role,
+                "project_id": ObjectId(user.team_id),
                 "team_id": ObjectId(user.team_id),
                 "avatar_color": user.avatar_color,
             })
@@ -433,8 +450,6 @@ async def update_last_active(chat_data: ChatUsername, current_user: User = Depen
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-    
     
 @router.get("/missed-chats")
 async def get_missed_chats(current_user: User = Depends(get_current_user)):

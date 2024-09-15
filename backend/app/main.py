@@ -7,6 +7,8 @@ from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
 # import routers
 from .src.routers import auth
 from .src.routers import settings
+from .src.routers import project
+from .src.routers import milestone
 from .src.routers import team
 from .src.routers import tki
 
@@ -41,6 +43,8 @@ def application_setup() -> FastAPI:
     application.include_router(auth.router, prefix="/api")
  #   application.include_router(celery.router, prefix="/api")
     application.include_router(settings.router, prefix="/api")
+    application.include_router(project.router, prefix="/api")
+    application.include_router(milestone.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
     application.include_router(tki.router, prefix="/api")
 

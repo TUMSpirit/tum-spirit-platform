@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from "react";
-import { Modal, Typography, Form, Input, Button, Radio, message, Steps } from "antd";
+import React, { useMemo, useState, useEffect } from "react";
+import { Modal, Typography, Form, Input, Button, Radio, message, Steps, Col, Row } from "antd";
 import axios from "axios";
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAuthHeader } from "react-auth-kit";
+import { useSocket } from "../../context/SocketProvider";
+import ghost from "../../assets/images/ghost.png";
 import { UserOutlined } from '@ant-design/icons';
 
 
@@ -24,30 +26,112 @@ const StartTestButton = styled(Button)`
   margin-top: 20px;
 `;
 
-// Animation variants
-const fadeVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1 },
-  exit: { opacity: 0 }
-};
+const QuestionLabel = styled.div`
+  font-weight: 800; // Bold questions
+`;
 
-const modalVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1 },
+const AnswerText = styled.span`
+  font-size: 12px; // Smaller font size for answers
+`;
+
+const LegendWrapper = styled.div`
+  background-color: #f0f2f5; /* Light gray background */
+  border: 1px solid #d9d9d9; /* Border for the legend */
+  border-radius: 5px;
+  padding: 16px; /* Spacing inside the legend */
+  margin-bottom: 24px;
+  text-align: center;
+`;
+
+const LegendText = styled.div`
+  font-size: 14px;
+  font-weight: bold;
+`;
+
+const renderLegend = (part) => {
+  switch (part) {
+    case 1:
+      return (
+        <LegendWrapper className="space-y-4 sm:space-y-0 sm:flex sm:justify-around">
+          <div className="sm:inline-block">
+            <LegendText>1 - Trifft gar nicht zu</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>2 - Trifft wenig zu</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>3 - Mittelmäßig</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>4 - Trifft überwiegend zu</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>5 - Trifft völlig zu</LegendText>
+          </div>
+        </LegendWrapper>
+      );
+    case 2:
+      return (
+        <LegendWrapper className="space-y-4 sm:space-y-0 sm:flex sm:justify-around">
+          <div className="sm:inline-block">
+            <LegendText>1 - Gar nicht</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>2 - Ein wenig</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>3 - Mittelmäßig</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>4 - Erheblich</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>5 - Völlig</LegendText>
+          </div>
+        </LegendWrapper>
+      );
+    case 3:
+      return (
+        <LegendWrapper className="space-y-4 sm:space-y-0 sm:flex sm:justify-around">
+          <div className="sm:inline-block">
+            <LegendText>1 - In sehr geringem Umfang</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>2 - In geringem Umfang</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>3 - In mittelmäßigem Umfang</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>4 - In großem Umfang</LegendText>
+          </div>
+          <div className="sm:inline-block">
+            <LegendText>5 - In sehr großem Umfang</LegendText>
+          </div>
+        </LegendWrapper>
+      );
+    default:
+      return null;
+  }
 };
 
 const PreFormPage = ({ onStart, onSkip }) => (
   <div
-    style={{ textAlign: 'center', padding: '20px'}}
+    style={{ textAlign: 'center', padding: '20px' }}
   >
     <AvatarWrapper>
-      <UserOutlined style={{ fontSize: '100px', color: '#7D4EBC' }} />
+      <img
+        src={ghost}
+        alt="ghost"
+        className="h-24"
+        style={{ maxWidth: '100%', padding: "0 10%" }}
+      />
     </AvatarWrapper>
     <Title level={3}>Bist du bereit für einen kleinen Test?</Title>
     <Text type="secondary">
       Dieser Test hilft uns, deine Teamdynamik besser zu verstehen und dich optimal zu unterstützen.
     </Text>
-    <div style={{ marginTop: '20px' }}> 
+    <div style={{ marginTop: '20px' }}>
       <StartTestButton type="primary" onClick={onStart}>
         Test starten
       </StartTestButton>
@@ -62,9 +146,15 @@ const TKIForm = ({ visible, onClose }) => {
   const [form] = Form.useForm();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showPreForm, setShowPreForm] = useState(true);
+  const [isPreModalVisible, setPreModalVisible] = useState(visible); // Pre-modal visibility
+  const [isModalVisible, setModalVisible] = useState(false);
   const authHeader = useAuthHeader();
+  const { updateSettings } = useSocket();
 
+  // Store form values in a state variable to persist across steps and re-render dynamically
+  const [formValues, setFormValues] = useState({});
+  const [stepAnswers, setStepAnswers] = useState({}); // Store answers for each step
+  const [answeredQuestions, setAnsweredQuestions] = useState(0);
 
   const questions = [
     // Part 1: Communication and Innovation (1-26)
@@ -118,31 +208,90 @@ const TKIForm = ({ visible, onClose }) => {
     { id: 44, part: 3, question: "Gibt es im Team klare Kriterien, die von den Mitgliedern angestrebt werden, um als gesamtes Team das Optimale zu erreichen?" }
   ];
 
+  const dimensionMapping = {
+    1: ['partizipative_sicherheit', 'informationsverteilung'],    // Example question 1 maps to synergy and informationSharing
+    2: ['unterstuetzung_fuer_innovation', 'normen_der_bereitschaft'],  // Example question 2 maps to synergy and supportForInnovation
+    3: ['partizipative_sicherheit', 'einfluss'],
+    4: ['soziale_erwuenschtheit', 'aufgaben_aspekte'],
+    5: ['partizipative_sicherheit', 'kontaktpflege'],
+    6: ['unterstuetzung_fuer_innovation', 'normen_der_umsetzung'],
+    7: ['partizipative_sicherheit', 'sicherheit'],
+    8: ['partizipative_sicherheit', 'einfluss'],
+    9: ['soziale_erwuenschtheit', 'soziale_aspekte'],
+    10: ['unterstuetzung_fuer_innovation', 'normen_der_bereitschaft'],
+    11: ['unterstuetzung_fuer_innovation', 'normen_der_umsetzung'],
+    12: ['soziale_erwuenschtheit', 'soziale_aspekte'],
+    13: ['partizipative_sicherheit', 'sicherheit'],
+    14: ['partizipative_sicherheit', 'kontaktpflege'],
+    15: ['soziale_erwuenschtheit', 'aufgaben_aspekte'],
+    16: ['partizipative_sicherheit', 'informationsverteilung'],
+    17: ['unterstuetzung_fuer_innovation', 'normen_der_umsetzung'],
+    18: ['soziale_erwuenschtheit', 'soziale_aspekte'],
+    19: ['partizipative_sicherheit', 'einfluss'],
+    20: ['partizipative_sicherheit', 'kontaktpflege'],
+    21: ['unterstuetzung_fuer_innovation', 'normen_der_bereitschaft'],
+    22: ['soziale_erwuenschtheit', 'aufgaben_aspekte'],
+    23: ['partizipative_sicherheit', 'informationsverteilung'],
+    24: ['unterstuetzung_fuer_innovation', 'normen_der_bereitschaft'],
+    25: ['unterstuetzung_fuer_innovation', 'normen_der_umsetzung'],
+    26: ['partizipative_sicherheit', 'kontaktpflege'],
+
+    // Part 2: Goals (27-37)
+    27: ['vision', 'klarheit'],
+    28: ['vision', 'wertschaetzung'],
+    29: ['vision', 'einigkeit'],
+    30: ['vision', 'einigkeit'],
+    31: ['vision', 'klarheit'],
+    32: ['vision', 'erreichbarkeit'],
+    33: ['vision', 'wertschaetzung'],
+    34: ['vision', 'wertschaetzung'],
+    35: ['vision', 'wertschaetzung'],
+    36: ['vision', 'erreichbarkeit'],
+    37: ['vision', 'einigkeit'],
+
+    // Part 3: Task Style (38-44)
+    38: ['aufgabenorientierung', 'synergie'],
+    39: ['aufgabenorientierung', 'reflexion'],
+    40: ['aufgabenorientierung', 'reflexion'],
+    41: ['aufgabenorientierung', 'reflexion'],
+    42: ['aufgabenorientierung', 'synergie'],
+    43: ['aufgabenorientierung', 'hohe_standards'],
+    44: ['aufgabenorientierung', 'hohe_standards']
+  };
+
+  const stanineBoundaries = {
+    klarheit: [6.9, 7.3, 7.7, 7.9, 8.2, 8.6, 9.0, 9.3],  // Boundaries for Stanine 2 to 9
+    wertschaetzung: [10.3, 12.9, 13.8, 14.6, 15.3, 16.1, 16.8, 17.9],
+    einigkeit: [8.9, 10.4, 11.0, 11.3, 11.7, 12.2, 12.7, 14.1],
+    erreichbarkeit: [5.9, 6.7, 7.2, 7.6, 8.0, 8.4, 8.7, 8.9],
+    vision: [32.9, 38.8, 40.5, 41.7, 42.4, 44.3, 46.7, 49.8],
+    hohe_standards: [4.3, 6.0, 6.5, 7.0, 7.3, 7.8, 8.6, 9.0],
+    reflexion: [7.6, 9.0, 10.2, 10.8, 11.5, 12.0, 12.7, 13.2],
+    synergie: [5.2, 6.5, 7.0, 7.4, 7.9, 8.3, 8.7, 9.0],
+    aufgabenorientierung: [17.1, 22.4, 23.5, 25.0, 26.8, 27.9, 29.3, 30.6],
+    informationsverteilung: [9.7, 10.2, 11.0, 11.7, 12.3, 12.7, 13.3, 13.8],
+    sicherheit: [6.0, 6.3, 7.0, 7.2, 7.8, 8.0, 8.8, 9.2],
+    einfluss: [9.3, 10.1, 10.8, 11.6, 12.0, 12.3, 13.0, 13.9],
+    kontaktpflege: [12.8, 13.3, 14.3, 14.9, 15.9, 16.6, 17.5, 18.5],
+    partizipative_sicherheit: [38.0, 41.6, 43.3, 45.7, 47.9, 49.1, 51.4, 54.8],
+    normen_der_bereitschaft: [11.1, 12.3, 13.5, 14.0, 15.2, 15.8, 16.4, 17.8],
+    normen_der_umsetzung: [9.5, 11.9, 12.9, 14.2, 15.1, 15.6, 16.0, 17.0],
+    unterstuetzung_fuer_innovation: [20.6, 24.2, 26.3, 28.4, 30.0, 31.3, 32.4, 34.8]
+  };
+
+
   const parts = [
     { part: 1, title: "Kommunikation", totalQuestions: 26 },
     { part: 2, title: "Ziele", totalQuestions: 11 },
     { part: 3, title: "Aufgabenstil", totalQuestions: 7 }
   ];
 
-  const questionsByPart = useMemo(() => {
-    return parts.reduce((acc, part) => {
-      acc[part.part] = questions.filter(q => q.part === part.part);
-      return acc;
-    }, {});
-  }, [questions, parts]);
-
-  const answeredQuestionsCount = useMemo(() => {
-    return Object.keys(form.getFieldsValue()).length;
-  }, [form]);
-
-  const handleNext = () => setCurrentStep(currentStep + 1);
-  const handlePrevious = () => setCurrentStep(currentStep - 1);
-  const handlePartChange = (part) => setCurrentStep(part - 1);
 
   const onFinish = async (values) => {
     setLoading(true);
-    const results = calculateResults(values);
-  
+    //const allValues = { ...formValues, ...values };
+    const results = calculateResults(formValues);
+
     try {
       const response = await axios.post("/api/tki/save", results, {
         headers: {
@@ -150,17 +299,20 @@ const TKIForm = ({ visible, onClose }) => {
           'Content-Type': 'application/json', // Ensure JSON content type
         },
       });
-  
+
       // If the request succeeds
       message.success("TKI erfolgreich abgesendet!");
       form.resetFields(); // Reset the form after successful submission
+      updateSettings('trigger_tki_test', false);
+      setModalVisible(false);
+
       //onClose(); // Close the modal after submission
-  
+
     } catch (error) {
       // Handle error responses
       if (error.response) {
         // Server responded with a status other than 2xx
-        message.error(`Fehler beim Absenden des TKI: ${error.response.data?.detail || error.message}`);
+        message.error("Fehler beim Absenden des TKI: ${error.response.data?.detail || error.message}");
       } else {
         // Network or other errors
         message.error("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
@@ -169,167 +321,245 @@ const TKIForm = ({ visible, onClose }) => {
       setLoading(false); // Always remove the loading state at the end
     }
   };
-  
+
 
   const calculateResults = (values) => {
+    // Initialize the score object
     let scores = {
+      klarheit: 0,
+      wertschaetzung: 0,
+      einigkeit: 0,
+      erreichbarkeit: 0,
       vision: 0,
-      taskOrientation: 0,
-      synergy: 0,
-      appreciation: 0,
-      participativeSafety: 0,
-      reflection: 0,
-      highStandards: 0,
-      informationSharing: 0,
-      security: 0,
-      influence: 0,
-      contact: 0,
-      supportForInnovation: 0,
+      hohe_standards: 0,
+      reflexion: 0,
+      synergie: 0,
+      aufgabenorientierung: 0,
+      informationsverteilung: 0,
+      sicherheit: 0,
+      einfluss: 0,
+      kontaktpflege: 0,
+      partizipative_sicherheit: 0,
+      normen_der_bereitschaft: 0,
+      normen_der_umsetzung: 0,
+      unterstuetzung_fuer_innovation: 0,
+      aufgaben_aspekte: 0,
+      soziale_aspekte: 0,
+      soziale_erwuenschtheit: 0  // Track but exclude from stanine normalization
     };
 
+    // Loop over all values (answers) in the form
     Object.keys(values).forEach((key) => {
-      const questionId = parseInt(key.split("_")[1], 10);
-      const answer = values[key];
+      const questionId = parseInt(key.split("_")[1], 10); // Extract question id from the name (e.g., question_1)
+      const answer = values[key];  // This will be a value from 1 to 5
 
-      if (questionId <= 26) {
-        scores.synergy += answer;
-        scores.participativeSafety += answer;
-      } else if (questionId >= 27 && questionId <= 37) {
-        scores.vision += answer;
-      } else if (questionId >= 38 && questionId <= 44) {
-        scores.taskOrientation += answer;
-        scores.reflection += answer;
-        scores.highStandards += answer;
+      // Check if the questionId maps to any dimensions
+      if (dimensionMapping[questionId]) {
+        // Loop through the dimensions that this question contributes to
+        dimensionMapping[questionId].forEach((dimension) => {
+          scores[dimension] += answer;  // Add the answer to the corresponding dimension score
+        });
       }
+
+      // Special case: Add score to soziale_erwuenschtheit if it's one of the relevant questions
+      /* const sozialeErwuenschtheitQuestions = [4, 9, 12, 15, 22];  // List of question IDs related to soziale_erwuenschtheit
+       if (sozialeErwuenschtheitQuestions.includes(questionId)) {
+         scores.soziale_erwuenschtheit += answer;
+       }*/
     });
 
-    return normalizeToStanine(scores);
+    // Now, we calculate the stanine scores for each dimension except 'soziale_erwuenschtheit'
+    const soziale_erwuenschtheit = scores.soziale_erwuenschtheit;
+    const soziale_aspekte = scores.soziale_aspekte;
+    const aufgaben_aspekte = scores.aufgaben_aspekte; // Store 'soziale_erwuenschtheit' separately
+    delete scores.soziale_erwuenschtheit;
+    delete scores.aufgaben_aspekte;
+    delete scores.soziale_aspekte;   // Remove from scores before normalization
+
+    // Normalize the remaining scores to stanine
+    const stanineScores = normalizeToStanine(scores);
+
+    // Return the result with stanine scores and soziale_erwuenschtheit appended
+    return { ...stanineScores, aufgaben_aspekte, soziale_aspekte, soziale_erwuenschtheit };
   };
 
+
+  // Function to normalize the raw scores to Stanine scores based on boundaries
   const normalizeToStanine = (rawScores) => {
     let stanineScores = {};
 
+    // Loop through each dimension and normalize based on its boundaries
     Object.keys(rawScores).forEach((dimension) => {
-      const rawScore = rawScores[dimension];
-      if (rawScore >= 26) stanineScores[dimension] = 9;
-      else if (rawScore >= 21) stanineScores[dimension] = 8;
-      else if (rawScore >= 16) stanineScores[dimension] = 7;
-      else if (rawScore >= 11) stanineScores[dimension] = 5;
-      else if (rawScore >= 6) stanineScores[dimension] = 3;
-      else stanineScores[dimension] = 1;
+      const rawScore = rawScores[dimension];  // Get the raw score for the current dimension
+      const boundaries = stanineBoundaries[dimension];  // Get the stanine boundaries for this dimension
+
+      if (!boundaries) {
+        // If no boundaries are found for the current dimension, log an error and skip normalization
+        console.error(`Boundaries not defined for dimension: ${dimension}`);
+        stanineScores[dimension] = null;  // Handle missing boundary gracefully
+        return;
+      }
+
+      // Check if the raw score is below the first boundary
+      if (rawScore < boundaries[0]) {
+        stanineScores[dimension] = 1;  // Assign Stanine 1 if below the first boundary
+      } else {
+        // Iterate through the boundaries to find the correct stanine value
+        for (let i = 0; i < boundaries.length; i++) {
+          if (rawScore < boundaries[i]) {
+            stanineScores[dimension] = i + 1;  // Stanine scores start at 1
+            break;
+          }
+        }
+
+        // If no boundary matched, assign the maximum stanine score
+        if (!stanineScores[dimension]) {
+          stanineScores[dimension] = boundaries.length + 1;
+        }
+      }
     });
 
     return stanineScores;
   };
 
+
+
+
+
+  // Calculate answered questions count
+  const calculateAnsweredQuestions = (allValues) => {
+    let count = 0;
+    questions.forEach(q => {
+      if (allValues[`question_${q.id}`] !== undefined) {
+        count++;
+      }
+    });
+    setAnsweredQuestions(count);
+  };
+
+  // Save answers when user moves between steps
+  const saveStepAnswers = () => {
+    const currentValues = form.getFieldsValue(); // Get the current form values
+    const updatedValues = { ...formValues, ...currentValues }; // Merge new values with existing values
+    setFormValues(updatedValues); // Update state
+    calculateAnsweredQuestions(updatedValues); // Update the answered count
+  };
+  // When moving to the next step, save current step answers
+  const handleNext = () => {
+    form.validateFields()
+      .then(() => {
+        saveStepAnswers(); // Save current step's answers
+        setCurrentStep(currentStep + 1); // Move to next step
+      })
+      .catch(() => {
+        message.info('Bitte füllen Sie alle erforderlichen Felder aus, bevor Sie fortfahren.');
+      });
+  };
+
+  const handlePrevious = () => {
+    saveStepAnswers(); // Save current step's answers
+    setCurrentStep(currentStep - 1); // Move to previous step
+  };
+
+  const handlePartChange = (part) => {
+    form.validateFields()
+      .then(() => {
+        saveStepAnswers(); // Save current step's answers before changing part
+        setCurrentStep(part - 1); // Move to selected step
+      })
+      .catch(() => {
+        message.info('Bitte füllen Sie alle erforderlichen Felder aus, bevor Sie fortfahren.');
+      });
+  };
+
+  // Handle value changes without overwriting previous answers
+  const handleValuesChange = (changedValues) => {
+    const updatedValues = { ...formValues, ...changedValues }; // Merge new values with existing values
+    setFormValues(updatedValues); // Update form values
+    calculateAnsweredQuestions(updatedValues); // Recalculate the answered count
+  };
+
   const renderQuestions = (part) => {
-    return questions
-      .filter((q) => q.part === part)
-      .map((item) => (
-        <Form.Item
-          key={item.id}
-          label={item.question}
-          name={`question_${item.id}`}
-        >
-          <Radio.Group>
-            {item.part === 1 ? (
-              <>
-                <Radio value={1}>Trifft gar nicht zu</Radio>
-                <Radio value={2}>Trifft wenig zu</Radio>
-                <Radio value={3}>Trifft mittelmäßig zu</Radio>
-                <Radio value={4}>Trifft überwiegend zu</Radio>
-                <Radio value={5}>Trifft völlig zu</Radio>
-              </>
-            ) : item.part === 2 ? (
-              <>
-                <Radio value={1}>Gar nicht</Radio>
-                <Radio value={2}>Ein wenig</Radio>
-                <Radio value={3}>Mittelmäßig</Radio>
-                <Radio value={4}>Erheblich</Radio>
-                <Radio value={5}>Völlig</Radio>
-              </>
-            ) : (
-              <>
-                <Radio value={1}>In sehr geringem Umfang</Radio>
-                <Radio value={2}>In geringem Umfang</Radio>
-                <Radio value={3}>In mittelmäßigem Umfang</Radio>
-                <Radio value={4}>In großem Umfang</Radio>
-                <Radio value={5}>In sehr großem Umfang</Radio>
-              </>
-            )}
-          </Radio.Group>
-        </Form.Item>
-      ));
-  };
-
-  const closeModal = () => {
-    setShowPreForm(false);
-    // Optionally, reset the trigger on the server
-  };
-
-  if (showPreForm) {
     return (
-      <Modal
-        open={visible}
-        footer={null}
-        width={600}
-        closable={false}
-        centered
-      >
-        <PreFormPage
-          onStart={() => setShowPreForm(false)}
-          //onSkip={onClosePre}
-        />
+      <>
+        {renderLegend(part)} {/* Display the legend based on the current part */}
+        {questions
+          .filter((q) => q.part === part)
+          .map((item) => (
+            <Form.Item
+              key={item.id}
+              label={<QuestionLabel>{item.question}</QuestionLabel>}
+              name={`question_${item.id}`}
+              rules={[{ required: true, message: 'Bitte wählen Sie eine Antwort.' }]}
+              className="mb-4"
+            >
+              <Radio.Group className="w-full flex flex-col sm:flex-row gap-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <Radio key={value} value={value}>
+                    {value}
+                  </Radio>
+                ))}
+              </Radio.Group>
+            </Form.Item>
+          ))}
+      </>
+    );
+  };
+
+  useEffect(() => {
+    form.setFieldsValue(formValues); // Restore saved form values
+    calculateAnsweredQuestions(formValues); // Recalculate answered questions count
+  }, [currentStep, formValues, form]);
+
+  const startTest = () => {
+    setPreModalVisible(false);
+    setModalVisible(true); // Open the main modal
+  };
+
+  if (isPreModalVisible) {
+    return (
+      <Modal open={isPreModalVisible} footer={null} width={600} closable={false} centered>
+        <PreFormPage onStart={startTest} onSkip={() => setPreModalVisible(false)} />
       </Modal>
     );
   }
 
   return (
-      <Modal
-        open={!showPreForm}
-        onCancel={closeModal}
-        footer={null}
-        width={800}
-        centered
-        style={{animation:"fadeIn 1s", opacity:"1"}}
-      >
-        <Title level={3} style={{ textAlign: "center", marginBottom: "20px" }}>TKI Questionnaire</Title>
+    <Modal open={isModalVisible} footer={null} width={800} centered onCancel={() => setModalVisible(false)}>
+      <Title level={3} className="text-center mb-5">TKI Questionnaire</Title>
 
-        <Steps current={currentStep} type="navigation" size="small" style={{ marginBottom: "20px" }}>
-          {parts.map((p) => (
-            <Step
-              key={p.part}
-              title={p.title}
-              onClick={() => handlePartChange(p.part)}
-              description={`${questionsByPart[p.part].filter(q => form.getFieldValue(`question_${q.id}`) !== undefined).length} / ${p.totalQuestions} answered`}
-            />
-          ))}
-        </Steps>
+      {/* Steps without navigation type but clickable */}
+      <Steps current={currentStep} size="small" className="mb-5">
+        {parts.map((p) => (
+          <Step
+            key={p.part}
+            title={p.title}
+            onClick={() => handlePartChange(p.part)}
+            description={`${questions.filter(q => q.part === p.part && formValues[`question_${q.id}`] !== undefined).length} / ${p.totalQuestions} beantwortet`}
+          />
+        ))}
+      </Steps>
 
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          {renderQuestions(parts[currentStep].part)}
-          {currentStep === parts.length - 1 && (
-            <Form.Item label="Anmerkungen (optional)" name="comments">
-              <Input.TextArea rows={4} placeholder="Anmerkungen zur Umfrage" />
-            </Form.Item>
+      <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
+        {renderQuestions(parts[currentStep].part)}
+
+        <div className="flex justify-between" style={{ display: 'flex', justifyContent: currentStep > 0 ? 'space-between' : 'flex-end' }}>
+          {currentStep > 0 && (
+            <Button onClick={handlePrevious}>Zurück</Button>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            {currentStep > 0 && (
-              <Button onClick={handlePrevious}>Zurück</Button>
-            )}
-            {currentStep < parts.length - 1 && (
-              <Button type="primary" onClick={handleNext}>
-                Weiter
-              </Button>
-            )}
-            {currentStep === parts.length - 1 && (
-              <Button type="primary" htmlType="submit" loading={loading}>
-                Absenden
-              </Button>
-            )}
-          </div>
-        </Form>
-      </Modal>
+          {currentStep < parts.length - 1 && (
+            <Button type="primary" onClick={handleNext}>
+              Weiter
+            </Button>
+          )}
+          {currentStep === parts.length - 1 && (
+            <Button type="primary" htmlType="submit" loading={loading} onClick={onFinish}>
+              Absenden
+            </Button>
+          )}
+        </div>
+      </Form>
+    </Modal>
   );
 };
 

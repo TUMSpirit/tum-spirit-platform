@@ -37,18 +37,27 @@ PyObjectId = Annotated[
 
 # TKI Result Schema
 class TKIResult(BaseModel):
-    appreciation: int
-    contact: int
-    highStandards: int
-    influence: int
-    informationSharing: int
-    participativeSafety: int
-    reflection: int
-    security: int
-    supportForInnovation: int
-    synergy: int
-    taskOrientation: int
+    klarheit: int
+    wertschaetzung: int
+    einigkeit: int
+    erreichbarkeit: int
     vision: int
+    hohe_standards: int
+    reflexion: int
+    synergie: int
+    aufgabenorientierung: int
+    informationsverteilung: int
+    sicherheit: int
+    einfluss: int
+    kontaktpflege: int
+    partizipative_sicherheit: int
+    normen_der_bereitschaft: int
+    normen_der_umsetzung: int
+    unterstuetzung_fuer_innovation: int
+    aufgaben_aspekte: Optional[int] = None 
+    soziale_aspekte: Optional[int] = None 
+    soziale_erwuenschtheit: Optional[int] = None  # Optional, as this might be added separately
+    
 
 @router.post("/tki/save", tags=["tki"])
 async def save_tki_result(result: TKIResult, current_user: Annotated[User, Depends(get_current_user)]):
@@ -56,6 +65,7 @@ async def save_tki_result(result: TKIResult, current_user: Annotated[User, Depen
         # Add user_id and timestamp to the result
         result_data = result.model_dump()  # Using model_dump instead of dict()
         result_data['user_id'] = current_user["_id"]
+       # result_data['team_id'] = current_user["team_id"]
         result_data['submittedAt'] = datetime.now()
 
         # Save the result to MongoDB

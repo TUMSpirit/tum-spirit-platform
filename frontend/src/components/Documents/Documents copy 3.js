@@ -1,36 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Spin, Avatar, Table, Button, Input, Space, Tag, Col, Row, Modal, message, Upload } from 'antd';
+import { Table, Button, Input, Modal, Upload, message, Select, Space, Progress, Tag, Tabs, Col, Row } from 'antd';
+import { UploadOutlined, PlusOutlined, DeleteOutlined, DownloadOutlined, FileImageOutlined, FilePdfOutlined, FileWordOutlined, FileExcelOutlined, FileZipOutlined, FileOutlined, SearchOutlined } from '@ant-design/icons';
 import moment from 'moment';
-import {
-    FileOutlined,
-    FileImageOutlined,
-    FilePdfOutlined,
-    FileWordOutlined,
-    FileExcelOutlined,
-    FileZipOutlined,
-    DownloadOutlined,
-    SearchOutlined,
-    UploadOutlined,
-    PlusOutlined,
-    DeleteOutlined
-} from '@ant-design/icons';
 import { useAuthHeader } from 'react-auth-kit';
-import { SubHeader } from '../../layout/SubHeader';
 import { useSubHeader } from '../../layout/SubHeaderContext';
-import ghost from "../../assets/images/ghost.png";
 
 const { Search } = Input;
+const { Option } = Select;
+const { TabPane } = Tabs;
 
 const FileTable = () => {
     const [fileList, setFileList] = useState([]);
     const [filteredList, setFilteredList] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
+    const [milestones, setMilestones] = useState([]);
+    const [selectedMilestone, setSelectedMilestone] = useState(null);
     const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
+    const [isMilestoneSubmission, setIsMilestoneSubmission] = useState(false); // New state for mode
     const [fileListUpload, setFileListUpload] = useState([]);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [fileToDelete, setFileToDelete] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
     const authHeader = useAuthHeader();
     const { setSubHeaderComponent } = useSubHeader();
 
@@ -51,9 +42,23 @@ const FileTable = () => {
         fetchFiles();
     }, []);
 
-    
+    useEffect(() => {
+        const fetchMilestones = async () => {
+            try {
+                const response = await axios.get('/api/milestones', {
+                    headers: {
+                        "Authorization": authHeader()
+                    }
+                });
+                setMilestones(response.data);
+            } catch (error) {
+                console.error('Error fetching milestones:', error);
+            }
+        };
+        fetchMilestones();
+    }, []);
+
     const downloadFile = async (fileId) => {
-        setIsLoading(true);
         try {
             const response = await axios.get(`/api/files/download/${fileId}`, {
                 responseType: 'blob',
@@ -62,31 +67,26 @@ const FileTable = () => {
                 }
             });
 
-            const contentType = response.headers['content-type'];
             const contentDisposition = response.headers['content-disposition'];
-
             const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
             const filename = filenameMatch ? filenameMatch[1] : 'downloaded-file';
 
-            const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+            const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', filename);
 
             document.body.appendChild(link);
             link.click();
-
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            setIsLoading(false);
         } catch (error) {
             console.error('Error downloading file:', error);
             message.error('Error downloading file');
-            setIsLoading(false);
         }
     };
 
-    const deleteFile = async (file_id) => {
+    const deleteFile = async () => {
         try {
             await axios.delete(`/api/files/delete/${fileToDelete}`, {
                 headers: {
@@ -96,7 +96,6 @@ const FileTable = () => {
             message.success('File deleted successfully');
             setIsDeleteModalVisible(false);
             setFileToDelete(null);
-            // Refresh file list
             const response = await axios.get('/api/files/get-files', {
                 headers: {
                     "Authorization": authHeader()
@@ -107,31 +106,6 @@ const FileTable = () => {
         } catch (error) {
             console.error('Error deleting file:', error);
             message.error('Error deleting file');
-        }
-    };
-
-    const getFileIcon = (filename) => {
-        const extension = filename.split('.').pop().toLowerCase();
-        switch (extension) {
-            case 'jpg':
-            case 'jpeg':
-            case 'png':
-            case 'gif':
-                return <FileImageOutlined />;
-            case 'pdf':
-                return <FilePdfOutlined />;
-            case 'doc':
-            case 'docx':
-                return <FileWordOutlined />;
-            case 'xls':
-            case 'xlsx':
-                return <FileExcelOutlined />;
-            case 'zip':
-            case 'rar':
-            case '7z':
-                return <FileZipOutlined />;
-            default:
-                return <FileOutlined />;
         }
     };
 
@@ -153,6 +127,30 @@ const FileTable = () => {
                 return 'excel';
             default:
                 return 'other';
+        }
+    };
+    
+    const getFileIcon = (filename) => {
+        const extension = filename.split('.').pop().toLowerCase();
+        switch (extension) {
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+                return <FileImageOutlined />;
+            case 'pdf':
+                return <FilePdfOutlined />;
+            case 'doc':
+            case 'docx':
+                return <FileWordOutlined />;
+            case 'xls':
+            case 'xlsx':
+                return <FileExcelOutlined />;
+            case 'zip':
+            case 'rar':
+                return <FileZipOutlined />;
+            default:
+                return <FileOutlined />;
         }
     };
 
@@ -185,22 +183,9 @@ const FileTable = () => {
             key: 'filename',
             sorter: (a, b) => a.filename.localeCompare(b.filename),
             render: (text, record) => (
-                <Space
-                style={{
-                    backgroundColor: record.uploaded_by === 'Spirit' ? '#7D4EBC' : 'transparent',
-                    color: record.uploaded_by === 'Spirit' ? 'white' : 'black',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    width: '100%',
-                }}
-            >
-                {record.uploaded_by === 'Spirit' ? (
-                    <Avatar src={ghost} size="small" /> // Display ghost avatar
-                ) : 
-                    getFileIcon(text)
-                }
-                <span style={{ color: record.uploaded_by === 'Spirit' ? 'white' : 'black' }}>{text}</span>
-            </Space>
+                <Space>
+                    {getFileIcon(text)} {text} {record.isMilestone ? <Tag color="blue">Milestone</Tag> : null}
+                </Space>
             ),
         },
         {
@@ -216,14 +201,13 @@ const FileTable = () => {
             key: 'timestamp',
             sorter: (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
             render: (text) => moment(text).format('DD.MM.YYYY HH:mm'),
-            defaultSortOrder: 'ascend', // Default sort by date descending
         },
         {
             title: 'Action',
             key: 'action',
             render: (text, record) => (
                 <Space>
-                    <Button onClick={() => downloadFile(record._id)} icon={isLoading ? <Spin /> : <DownloadOutlined />} disabled={isLoading ? true : false}/>
+                    <Button onClick={() => downloadFile(record._id)} icon={<DownloadOutlined />} />
                     <Button onClick={() => {
                         setFileToDelete(record._id);
                         setIsDeleteModalVisible(true);
@@ -233,7 +217,8 @@ const FileTable = () => {
         },
     ];
 
-    const showUploadModal = () => {
+    const showUploadModal = (milestone = false) => {
+        setIsMilestoneSubmission(milestone); // Set mode based on user selection
         setIsUploadModalVisible(true);
     };
 
@@ -244,17 +229,25 @@ const FileTable = () => {
                 formData.append('files', file.originFileObj);
             }
         });
+        if (isMilestoneSubmission && selectedMilestone) {
+            formData.append('milestone_id', selectedMilestone);
+        }
 
         try {
             await axios.post('/api/files/upload', formData, {
                 headers: {
                     Authorization: authHeader(),
                     'Content-Type': 'multipart/form-data'
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
                 }
             });
             message.success('Files uploaded successfully');
             setIsUploadModalVisible(false);
             setFileListUpload([]);
+            setUploadProgress(0);
             const response = await axios.get('/api/files/get-files', {
                 headers: {
                     "Authorization": authHeader()
@@ -271,6 +264,7 @@ const FileTable = () => {
     const handleUploadModalCancel = () => {
         setIsUploadModalVisible(false);
         setFileListUpload([]);
+        setUploadProgress(0);
     };
 
     const handleFileChange = ({ fileList }) => {
@@ -316,10 +310,17 @@ const FileTable = () => {
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
-                                onClick={showUploadModal}
-                                style={{ float: 'right' }}
+                                onClick={() => showUploadModal(false)}
+                                style={{ marginRight: '10px' }}
                             >
-                                Upload File
+                                Upload General File
+                            </Button>
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => showUploadModal(true)}
+                            >
+                                Upload File for Milestone
                             </Button>
                         </Col>
                     </Row>
@@ -332,16 +333,29 @@ const FileTable = () => {
 
     return (
         <div>
-            <Table
-                className='documents-table'
-                columns={columns}
-                dataSource={filteredList.map(file => ({ ...file, key: file.file_id }))}
-                pagination={{ pageSize: 10 }}
-                style={{ margin: "10px", minHeight: "52vh" }}
-                scroll={{ x: true }}
-            />
+            <Tabs defaultActiveKey="1">
+                <TabPane tab="General Uploads" key="1">
+                    <Table
+                        columns={columns.filter(col => col.dataIndex !== 'milestone_id')} // Don't show milestone for general uploads
+                        dataSource={filteredList.filter(file => !file.milestone_id).map(file => ({ ...file, key: file.file_id }))}
+                        pagination={{ pageSize: 10 }}
+                        style={{ margin: "10px", minHeight: "52vh" }}
+                        scroll={{ x: true }}
+                    />
+                </TabPane>
+                <TabPane tab="Milestone Submissions" key="2">
+                    <Table
+                        columns={columns}
+                        dataSource={filteredList.filter(file => file.milestone_id).map(file => ({ ...file, key: file.file_id }))}
+                        pagination={{ pageSize: 10 }}
+                        style={{ margin: "10px", minHeight: "52vh" }}
+                        scroll={{ x: true }}
+                    />
+                </TabPane>
+            </Tabs>
+
             <Modal
-                title="Upload Document"
+                title={isMilestoneSubmission ? "Upload File for Milestone" : "Upload General File"}
                 open={isUploadModalVisible}
                 onOk={handleUploadModalOk}
                 onCancel={handleUploadModalCancel}
@@ -354,14 +368,30 @@ const FileTable = () => {
                     </Button>,
                 ]}
             >
+                {isMilestoneSubmission && (
+                    <Select
+                        placeholder="Select Milestone"
+                        onChange={(value) => setSelectedMilestone(value)}
+                        style={{ width: '100%', marginBottom: 20 }}
+                    >
+                        {milestones.map(milestone => (
+                            <Option key={milestone.id} value={milestone.id}>
+                                {milestone.name} (Due: {milestone.due_date})
+                            </Option>
+                        ))}
+                    </Select>
+                )}
                 <Upload
                     fileList={fileListUpload}
                     beforeUpload={() => false}
                     onChange={handleFileChange}
+                    multiple
                 >
                     <Button icon={<UploadOutlined />}>Select File</Button>
                 </Upload>
+                <Progress percent={uploadProgress} />
             </Modal>
+
             <Modal
                 title="Confirm Deletion"
                 open={isDeleteModalVisible}

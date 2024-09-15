@@ -5,7 +5,7 @@ from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJson
 from pymongo import MongoClient
 from bson import ObjectId, json_util
 from datetime import datetime, timedelta, timezone
-from app.src.routers.auth import get_current_user, User
+from app.src.routers.auth import is_admin, User
 from fastapi.responses import StreamingResponse
 from app.src.routers.auth import get_distinct_team_ids
 from app.src.routers.notification import add_notification
@@ -27,6 +27,8 @@ db = client[MONGO_DB]
 chat_collection= db['chat']
 calendar_collection = db['calendar']
 kanban_collection = db['kanban']
+file_collection = db['files']
+
 
 def validate_object_id(v: Any) -> ObjectId:
     if isinstance(v, ObjectId):
@@ -59,10 +61,11 @@ class Message(BaseModel):
         json_encoders = {ObjectId: str}
             
 @router.post("/avatar/broadcast-message", tags=["avatar"])
-def broadcast_message(content: str, current_user: User = Depends(get_current_user)):
+def broadcast_message(content: str, current_user: User = Depends(is_admin)):
     try:
         teams = get_distinct_team_ids()  # Assuming you have a teams collection
         messages = []
+        
         
         for teamId in teams:
             message = {
@@ -71,8 +74,8 @@ def broadcast_message(content: str, current_user: User = Depends(get_current_use
                 "senderId": 'Spirit',
                 "timestamp": datetime.now(timezone.utc),
                 "replyingTo": None,
-                "reactions": None,
-                "isGif": None,
+                "reactions": {},  # Set reactions to an empty object
+                "isGif": False,  # Set isGif to boolean false
                 "privateChatId": None
             }
             result = chat_collection.insert_one(message)
@@ -83,14 +86,14 @@ def broadcast_message(content: str, current_user: User = Depends(get_current_use
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/avatar/create-calendar-entry", tags=["avatar"])
-def create_calendar_entry(title: str, date: datetime = Body(...), current_user: User = Depends(get_current_user)):
-    try:
-        teams = get_distinct_team_ids()  # Assuming you have a teams collection
-        events = []
+#@router.post("/avatar/create-calendar-entry", tags=["avatar"])
+#def create_calendar_entry(title: str, date: datetime = Body(...), current_user: User = Depends(is_admin)):
+ #   try:
+  #      teams = get_distinct_team_ids()  # Assuming you have a teams collection
+   ##     events = []
         
-        for teamId in teams:
-            event = {
+     #   for teamId in teams:
+      #      event = {
               #  'title': title,
                # 'startDate': startDate,
                 #'endDate': endDate,
@@ -103,14 +106,14 @@ def create_calendar_entry(title: str, date: datetime = Body(...), current_user: 
                 #'isMilestone': calendar_entry.isMilestone,
                 #'files': calendar_entry.files,
                 #'users': calendar_entry.users,  # Convert ObjectId to str
-                'timestamp': datetime.now()
-            }
-            result = chat_collection.insert_one(event)
-            events.append(result.inserted_id)
+       #         'timestamp': datetime.now()
+        #    }
+         #   result = chat_collection.insert_one(event)
+          #  events.append(result.inserted_id)
         
-        return {"message": "Calendar entry created", "message_ids": [str(m) for m in events]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        #return {"message": "Calendar entry created", "message_ids": [str(m) for m in events]}
+    #except Exception as e:
+     #   raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/avatar/create-kanban-card", tags=["avatar"])
@@ -119,9 +122,8 @@ def create_kanban_card(
     description: str,
     priority: str = "",
     deadline: int = 0,
-    tags: List = [],
     milestone: str = "",
-    current_user: User = Depends(get_current_user)):
+    current_user: User = Depends(is_admin)):
     
     try:
         teams = get_distinct_team_ids()  # Assuming you have a teams collection
@@ -134,10 +136,10 @@ def create_kanban_card(
                 'description': description,
                 'priority': priority,
                 'deadline': deadline,
-                'tags': tags,
+                'tags': [],
                 'milestone': milestone,
-                'shadredUsers': [],
-                'createdBy': 'Spirit',
+                'sharedUsers': [],
+                'created_by': 'Spirit',
                 'timestamp': datetime.now()  # Associate the card with the provided board ID
                  # Track which user created the card
             }
@@ -145,5 +147,40 @@ def create_kanban_card(
             cards.append(result.inserted_id)
         
         return {"message": "Kanban card created", "message_ids": [str(m) for m in cards]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/avatar/upload-document-avatar", tags=["avatar"])
+async def upload_document_for_teams(
+    files: List[UploadFile], 
+    current_user: User = Depends(is_admin)
+):
+    if not files:
+        raise HTTPException(status_code=400, detail="File is required")
+
+    try:
+        file = files[0]
+        file_data = await file.read()
+        file_size = len(file_data)  # Calculate file size in bytes
+
+        teams = get_distinct_team_ids()  # Assuming this function fetches all team IDs
+        uploaded_files = []
+
+        for team_id in teams:
+            file_record = {
+                "team_id": team_id,
+                "filename": file.filename,
+                "contentType": file.content_type,
+                "fileData": file_data,
+                "size": file_size,  # Store file size
+                "uploaded_by": 'Spirit',  # Avatar name as uploader
+                "timestamp": datetime.now(timezone.utc)
+            }
+
+            result = file_collection.insert_one(file_record)
+            uploaded_files.append(str(result.inserted_id))
+
+        return {"message": "Files uploaded for all teams", "file_ids": uploaded_files}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

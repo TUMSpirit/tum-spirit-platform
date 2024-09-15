@@ -16,7 +16,7 @@ router = APIRouter()
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
-collection = db['team']
+collection = db['teams']
 
 
 def validate_object_id(v: Any) -> ObjectId:
@@ -33,12 +33,10 @@ PyObjectId = Annotated[
     WithJsonSchema({"type": "string"}, mode="serialization"),
 ]
 
-
 class TeamModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    project: str
     name: str
-    members: List[PyObjectId]
+    project_id: PyObjectId
     
     class Config:
             populate_by_name = True
@@ -46,9 +44,8 @@ class TeamModel(BaseModel):
             json_encoders = {ObjectId: str}
 
 class TeamCreate(BaseModel):
-    project: str
     name: str
-    members: List[PyObjectId]
+    project_id: PyObjectId
     
     class Config:
             populate_by_name = True
@@ -70,9 +67,8 @@ def create_team_entry(team_entry: TeamCreate, current_user: Annotated[User, Depe
     try:
         # Create a record with a random ID (ObjectId) and a timestamp
         record = {
-            'project': team_entry.project,
             'name': team_entry.name,
-            'members': team_entry.members,
+            'project_id': ObjectId(team_entry.project_id),
             'timestamp': datetime.now()
         }
         # Inserting the record into the database

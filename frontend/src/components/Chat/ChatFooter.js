@@ -153,7 +153,7 @@ const ChatFooter = ({
     const handleChange = (e) => {
         const value = e.target.value;
         setMessage(value);
-
+    
         if (value.startsWith("/")) {
             const search = value.toLowerCase();
             const filteredCommands = commands.filter(command =>
@@ -163,17 +163,22 @@ const ChatFooter = ({
         } else {
             setShowCommands(false);
         }
-
+    
         if (!isTyping) {
             setIsTyping(true);
-            socket.emit('typing', { user: currentUser.username, teamId: currentUser.team_id });
+    
+            // Emit the typing event only for the appropriate chat (private or team)
+            const typingContext = privateChatId ? { user: currentUser.username, privateChatId } : { user: currentUser.username, teamId: currentUser.team_id };
+            socket.emit('typing', typingContext);
         }
-
+    
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
-            socket.emit('stop typing', { user: currentUser.username, teamId: currentUser.team_id });
+            // Emit stop typing event only for the appropriate chat
+            const stopTypingContext = privateChatId ? { user: currentUser.username, privateChatId } : { user: currentUser.username, teamId: currentUser.team_id };
+            socket.emit('stop typing', stopTypingContext);
             setIsTyping(false);
-        }, 3000);
+        }, 700);
     };
 
     const getPlaceholderText = () => {
