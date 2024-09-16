@@ -89,7 +89,6 @@ const Chat = () => {
             console.log('Fetched messages response:', response.data); // Debugging response data
 
             setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
-            console.log('Messages after setting:', reset ? response.data : [...prevMessages, ...response.data]);
 
             if (response.data.length === 0) {
                 setHasMoreMessages(false);
