@@ -181,10 +181,6 @@ export const SocketProvider = ({ children }) => {
         const notificationOptions = {
           body: "This is your notification content!",
           vibrate: [200, 100, 200],  // Optional vibration pattern
-          actions: [ // Optional actions, can add buttons to interact with the notification
-            { action: "confirm", title: "Confirm" },
-            { action: "cancel", title: "Cancel" }
-          ],
           tag: "custom-notification-tag" // Optional tag to avoid notification duplication
         };
         if (Notification.permission === 'granted') {
