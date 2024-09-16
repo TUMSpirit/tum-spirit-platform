@@ -7,6 +7,7 @@ import { Spin } from 'antd';
 import TKIForm from "../components/TKI/TKIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
+import Push from 'push.js';
 import useNotificationPermission from './NotificationPermission';
 
 
@@ -190,16 +191,36 @@ export const SocketProvider = ({ children }) => {
         incrementNotifications(chatId);
 
         // Simple notification script
-        if (Notification.permission === "granted") {
-          new Notification("Test Notification", { body: "This is a test notification." });
-        } else if (Notification.permission !== "denied") {
-          Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-              new Notification("Test Notification", { body: "This is a test notification." });
-            }
-          });
+        /* if (Notification.permission === "granted") {
+           new Notification("Test Notification", { body: "This is a test notification." });
+         } else if (Notification.permission !== "denied") {
+           Notification.requestPermission().then(permission => {
+             if (permission === "granted") {
+               new Notification("Test Notification", { body: "This is a test notification." });
+             }
+           });
+         }
+ */
+
+        // Request permission to show notifications
+        Push.Permission.request(onGranted, onDenied);
+
+        function onGranted() {
+          console.log('Permission granted');
+          showNotification();
         }
 
+        function onDenied() {
+          console.log('Permission denied');
+        }
+
+        // Function to show notification
+        function showNotification() {
+          Push.create('New Message!', {
+            body: 'You have received a new message!',
+            timeout: 4000,  // Auto close after 4 seconds
+          });
+        }
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
