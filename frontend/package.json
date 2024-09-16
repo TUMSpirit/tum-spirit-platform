@@ -35,6 +35,7 @@
     "plotly.js-dist": "^2.30.1",
     "polished": "^4.2.2",
     "prop-types": "^15.8.1",
+    "push.js": "^1.0.12",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.0",
     "react-auth-kit": "^2.1.1",
