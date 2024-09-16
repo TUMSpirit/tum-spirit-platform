@@ -44,7 +44,6 @@ function App() {
       authType={'cookie'}
       authName={'_auth'}
       cookieDomain={window.location.hostname}
-      cookieSecure={true}
     >
       <UnreadMessageProvider>
         <SocketProvider>
