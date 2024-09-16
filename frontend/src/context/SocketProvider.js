@@ -189,7 +189,6 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
-
         // Simple notification script
         /* if (Notification.permission === "granted") {
            new Notification("Test Notification", { body: "This is a test notification." });
@@ -213,7 +212,6 @@ export const SocketProvider = ({ children }) => {
         function onDenied() {
           console.log('Permission denied');
         }
-
         // Function to show notification
         function showNotification() {
           Push.create('New Message!', {

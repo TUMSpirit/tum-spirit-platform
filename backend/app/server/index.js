@@ -9,10 +9,8 @@ const SECRET_KEY = process.env.SECRET_KEY;
 
 const socketIO = require('socket.io')(http, {
     cors: {
-        origin: "https://spirit.lfe.ed.tum.de",
-        methods: ["GET", "POST"]
-    },
-    perMessageDeflate: false 
+        origin: "https://spirit.lfe.ed.tum.de"
+    }
 });
 
 // Middleware to verify token on connection
