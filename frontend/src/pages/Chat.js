@@ -83,25 +83,13 @@ const Chat = () => {
                     method: 'GET',
                     headers: headers,
                 });
-            console.log('Fetching messages with headers:', headers); // Debugging headers
 
-            const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
-                headers: {
-                    ...headers,
-                    'Cache-Control': 'no-cache', // Disable caching
-                },
-            });
-
-            console.log('Fetched messages response:', response.data); // Debugging response data
-
-            setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
-
-            if (response.data.length === 0) {
-                setHasMoreMessages(false);
-                console.log('No more messages to load.');
-            }
-        } catch (error) {
-            console.error('Failed to fetch messages:', error);
+                setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
+                if (response.data.length === 0) {
+                    setHasMoreMessages(false);
+                }
+            } catch (error) {
+                console.error('Failed to fetch messages:', error);
             }
             finally {
                 setLoading(false);  // Stop loading when fetch is complete
