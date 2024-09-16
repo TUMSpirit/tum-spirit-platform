@@ -1,25 +1,21 @@
 {
   "short_name": "TUMSpirit",
   "name": "TUMSpirit",
+  "description": "An interactive collaboration platform",
   "icons": [
     {
-      "src": "favicon.png",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "/path/to/icon192.png",
+      "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "favicon.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "favicon.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/path/to/icon512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#2576CA",
   "background_color": "#ffffff"
 }

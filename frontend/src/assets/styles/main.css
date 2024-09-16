@@ -1233,14 +1233,6 @@ img {
   margin-bottom: 1.5rem !important;
 }
 
-.gradent {
-  background: url("../images/info-card-2.jpg") no-repeat center top;
-  background-size: cover;
-  padding: 15px;
-  border-radius: 15px;
-  color: #fff;
-}
-
 .gradent h5 {
   color: #fff;
 }
@@ -1830,18 +1822,6 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.left-nav li.ant-menu-it
   display: none;
 }
 
-.sign-up-header {
-  height: 550px;
-  margin-top: -62.8px;
-  padding-top: 137.8px;
-  border-radius: 12px;
-  box-shadow: 0 20px 27px rgb(0 0 0 / 5%);
-  background-size: cover;
-  background-position: 50%;
-  text-align: center;
-  background: url("../images/bg-signup.jpg") no-repeat center top;
-}
-
 .header-col.header-brand {
   white-space: nowrap;
 }
@@ -2257,13 +2237,6 @@ section.ant-layout.layout-content .ant-layout-content.content-ant {
 .layout-dashboard .ant-card {
   /*border-radius: 12px;*/
   box-shadow: 0 20px 27px rgb(0 0 0 / 5%);
-}
-
-.card-credit {
-  background-image: url("../images/info-card-3.jpg");
-  background-position: 50%;
-  background-size: cover;
-  border: none;
 }
 
 .card-credit * {

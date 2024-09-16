@@ -1,38 +1,13 @@
-import React,{useEffect} from 'react';
+import React from 'react';
 import {
-  Row,
-  Col,
-  Card,
-  Radio,
-  Table,
-  Upload,
-  message,
-  Progress,
-  Button,
-  Avatar,
-  Typography,
+  Typography
 } from "antd";
 
-import { ToTopOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-
-// Images
-import ava1 from "../assets/images/logo-shopify.svg";
-import ava2 from "../assets/images/logo-atlassian.svg";
-import ava3 from "../assets/images/logo-slack.svg";
-import ava5 from "../assets/images/logo-jira.svg";
-import ava6 from "../assets/images/logo-invision.svg";
-import doctype from "../assets/images/doc-type.png";
-import filetype from "../assets/images/file-type.png";
-import pencil from "../assets/images/pencil.svg";
 import FileList from '../components/Documents/Documents';
-import { useSubHeader } from "../layout/SubHeaderContext";
 
 const { Title } = Typography;
 
 function Documents() {
-  const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-
   return (
     <>
              <FileList></FileList>
