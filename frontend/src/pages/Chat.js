@@ -86,7 +86,7 @@ const Chat = () => {
                 },
             });
 
-            console.log('Fetched messages response:', response.data); // Debugging response data
+            alert('Fetched messages response:', response.data); // Debugging response data
 
             setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
 
@@ -259,7 +259,7 @@ const Chat = () => {
         if (key !== '1') {
             const memberUsername = teamMembers[parseInt(key) - 2].username;
             const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
-            console.log('New Private Chat ID:', newPrivateChatId);
+            alert('New Private Chat ID:', newPrivateChatId);
             markAsRead(newPrivateChatId);
             setPrivateChatId(newPrivateChatId);
             socket.emit('joinPrivateChat', newPrivateChatId);
