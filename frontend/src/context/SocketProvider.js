@@ -188,7 +188,6 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
-
         // Simple notification script
         if (Notification.permission === "granted") {
           new Notification("Test Notification", { body: "This is a test notification." });
@@ -199,7 +198,6 @@ export const SocketProvider = ({ children }) => {
             }
           });
         }
-
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
