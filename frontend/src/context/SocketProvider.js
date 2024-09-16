@@ -172,6 +172,15 @@ export const SocketProvider = ({ children }) => {
         autoConnect: false // Prevent auto connection
       });
 
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          // Reconnect the socket when the app becomes visible
+          window.location.reload(true);
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
 
       socketInstance.on('newMessageMetadata', (data) => {
 
@@ -180,7 +189,7 @@ export const SocketProvider = ({ children }) => {
         // Increment notifications
         incrementNotifications(chatId);
         // Simple notification script
-        /*if (Notification.permission === "granted") {
+        if (Notification.permission === "granted") {
           new Notification("Test Notification", { body: "This is a test notification." });
         } else if (Notification.permission !== "denied") {
           Notification.requestPermission().then(permission => {
@@ -188,7 +197,7 @@ export const SocketProvider = ({ children }) => {
               new Notification("Test Notification", { body: "This is a test notification." });
             }
           });
-        }*/
+        }
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
