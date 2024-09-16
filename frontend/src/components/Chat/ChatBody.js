@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Row, Col, Tabs, Dropdown, Menu, Avatar, Badge} from 'antd';
+import {Spin, Row, Col, Tabs, Dropdown, Menu, Avatar, Badge } from 'antd';
 import { EditOutlined, DeleteOutlined, SmileOutlined, MessageOutlined, MoreOutlined } from '@ant-design/icons';
 import Search from 'antd/es/input/Search';
 import axios from 'axios';
@@ -27,7 +27,8 @@ const ChatBody = ({
     privateChatId,
     currentUserAvatarColor,
     onlineStatus,
-    getUnreadMessages // Add onlineStatus prop
+    getUnreadMessages,
+    loading // Add onlineStatus prop
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -82,7 +83,7 @@ const ChatBody = ({
         });
         // Return the combined tabs array with the team tab first
         return [teamTab, ...memberTabs];
-    }, [teamMembers, getUnreadMessages, onlineStatus, currentUser.username]);
+    }, [teamMembers, getUnreadMessages, onlineStatus, currentUser.username, currentTab]);
 
 
     const getAvatarColor = (username) => {
@@ -167,7 +168,7 @@ const ChatBody = ({
         } else {
             const lowerCaseTerm = value.toLowerCase();
             const foundIndexes = messages
-                .map((message, index) => ({text: message.content.toLowerCase(), index}))
+                .map((message, index) => ({ text: message.content.toLowerCase(), index }))
                 .filter(message => message.text.includes(lowerCaseTerm))
                 .map(message => message.index)
                 .reverse();
@@ -190,30 +191,30 @@ const ChatBody = ({
         }
     };
 
-const scrollToMessage = (index) => {
-    // Ensure index is within the bounds of the messages array
-    if (index < 0 || index >= messages.length) {
-        console.warn(`Invalid index: ${index}`);
-        return;
-    }
+    const scrollToMessage = (index) => {
+        // Ensure index is within the bounds of the messages array
+        if (index < 0 || index >= messages.length) {
+            console.warn(`Invalid index: ${index}`);
+            return;
+        }
 
-    // Get the message ID and corresponding element
-    const messageId = messages[index]?.id;
-    const messageElement = document.getElementById(`message-${messageId}`);
-    const containerElement = chatContainerRef.current;
+        // Get the message ID and corresponding element
+        const messageId = messages[index]?.id;
+        const messageElement = document.getElementById(`message-${messageId}`);
+        const containerElement = chatContainerRef.current;
 
-    if (messageElement && containerElement) {
-        // Get the offsetTop of the message element
-        const messageTop = messageElement.offsetTop;
-        // Scroll to the message element's position within the container
-        containerElement.scrollTo({
-            top: messageTop - containerElement.clientHeight / 2 + messageElement.clientHeight / 2,
-            behavior: 'smooth'
-        });
-    } else {
-        console.warn(`No element found with ID: ${messageId}`);
-    }
-};
+        if (messageElement && containerElement) {
+            // Get the offsetTop of the message element
+            const messageTop = messageElement.offsetTop;
+            // Scroll to the message element's position within the container
+            containerElement.scrollTo({
+                top: messageTop - containerElement.clientHeight / 2 + messageElement.clientHeight / 2,
+                behavior: 'smooth'
+            });
+        } else {
+            console.warn(`No element found with ID: ${messageId}`);
+        }
+    };
 
     const highlightText = (text) => {
         const parts = !searchTerm ? [text] : text.split(new RegExp(`(${searchTerm})`, 'gi'));
@@ -341,36 +342,36 @@ const scrollToMessage = (index) => {
 
     useEffect(() => {
         setSubHeaderComponent({
-            component:(<Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{ marginTop: "-2px" }}>
-            <Col xs={24} md={12} className="mt-2 w-full">
-                <Tabs
-                    className="w-full m-0"
-                    activeKey={currentTab}
-                    onChange={key => setCurrentTab(key)}
-                    items={tabsItems}
-                />
-            </Col>
-            <Col xs={24} md={12} className="flex flex-col md:flex-row justify-end">
-                <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0 items-center">
-                    <Search
-                        className="md:w-42 md:mb-0"
-                        placeholder="Search messages"
-                        value={searchTerm}
-                        onChange={e => handleSearch(e.target.value)}
-                        onSearch={navigateNextResult}
-                        onPressEnter={navigateNextResult}
+            component: (<Row gutter={16} align="middle" justify="space-between" className="chat-row" style={{ marginTop: "-2px" }}>
+                <Col xs={24} md={12} className="mt-2 w-full">
+                    <Tabs
+                        className="w-full m-0"
+                        activeKey={currentTab}
+                        onChange={key => setCurrentTab(key)}
+                        items={tabsItems}
                     />
+                </Col>
+                <Col xs={24} md={12} className="flex flex-col md:flex-row justify-end">
+                    <div className="flex flex-row w-full md:w-auto mt-2 md:mt-0 items-center">
+                        <Search
+                            className="md:w-42 md:mb-0"
+                            placeholder="Search messages"
+                            value={searchTerm}
+                            onChange={e => handleSearch(e.target.value)}
+                            onSearch={navigateNextResult}
+                            onPressEnter={navigateNextResult}
+                        />
                         {searchResults.length > 0 && (
-                        <div className="ml-4 w-14 text-sm font-medium text-gray-600">
-                            {currentResultIndex + 1} / {searchResults.length}
-                        </div>
-                    )}
-                </div>
-            </Col>
-        </Row>
-        )
+                            <div className="ml-4 w-14 text-sm font-medium text-gray-600">
+                                {currentResultIndex + 1} / {searchResults.length}
+                            </div>
+                        )}
+                    </div>
+                </Col>
+            </Row>
+            )
         });
-  
+
         return () => setSubHeaderComponent(null); // Clear subheader when unmounting
     }, [currentTab, tabsItems, setSubHeaderComponent, searchTerm]);
 
@@ -389,89 +390,45 @@ const scrollToMessage = (index) => {
             ref={chatContainerRef}
             className="flex-grow overflow-y-auto w-full px-4 chat-container-component pb-5 bg-chat-background border-t-2 border-chat-grid relative"
             style={{ borderColor: "rgb(229, 231, 235)", height: "100px" }}>
-            {filteredMessages.map((message, index) => {
-                if (message.deleted) {
-                    return null;
-                }
-                const isSender = message.senderId === currentUser?.username;
-                const isAvatar = message.senderId === "Spirit";
-                const messageStyle = getMessageStyle(message.content);
-                const messageMarginTop = index === 0 ? "mt-6" : "";
-                const messageMarginBottom = "mb-6";
-                const isReplyingTo = filteredMessages.find(m => m.id === message.replyingTo);
-                const reactions = message.reactions ? Object.values(message.reactions) : [];
-                const avatarColor = getAvatarColor(message.senderId);
+            {loading ? (
+                <div className="flex justify-center items-center h-full">
+                    <Spin size="large" />  {/* Spinner shown while loading */}
+                </div>
+            ) : (
+                filteredMessages.map((message, index) => {
+                    if (message.deleted) {
+                        return null;
+                    }
+                    const isSender = message.senderId === currentUser?.username;
+                    const isAvatar = message.senderId === "Spirit";
+                    const messageStyle = getMessageStyle(message.content);
+                    const messageMarginTop = index === 0 ? "mt-6" : "";
+                    const messageMarginBottom = "mb-6";
+                    const isReplyingTo = filteredMessages.find(m => m.id === message.replyingTo);
+                    const reactions = message.reactions ? Object.values(message.reactions) : [];
+                    const avatarColor = getAvatarColor(message.senderId);
 
-                return (
-                    <div
-                        key={message.id}
-                        id={`message-${message.id}`}
-                        className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}
-                    >
-                        {isSender && canEditOrDelete(message.timestamp) && (
-                            <div className="flex justify-end items-center">
-                                <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
-                                    className="p-2">
-                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
-                                </Dropdown>
-                            </div>
-                        )}
+                    return (
+                        <div
+                            key={message.id}
+                            id={`message-${message.id}`}
+                            className={`${messageMarginBottom} ${messageMarginTop} flex ${isSender ? "justify-end" : "justify-start"} items-center w-full`}
+                        >
+                            {isSender && canEditOrDelete(message.timestamp) && (
+                                <div className="flex justify-end items-center">
+                                    <Dropdown overlay={menu(message.id)} trigger={['click']} placement="bottomRight"
+                                        className="p-2">
+                                        <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    </Dropdown>
+                                </div>
+                            )}
 
-                        {isSender ? (
-                            <>
-                                <div
-                                    className={`bg-chat-messages-send shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
-                                    style={{ wordBreak: 'break-word', hyphens: 'auto' }}
-                                >
-                                    {isReplyingTo && (
-                                        <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
-                                            <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
-                                        </div>
-                                    )}
-                                    {message.isGif ? (
-                                        <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
-                                    ) : (
-                                        <span>{highlightText(message.content)}</span>
-                                    )}
-                                    <div className="flex items-center">
-                                        {reactions.map((reaction, idx) => (
-                                            <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
-                                                onClick={() => onEmojiClick(message.id, reaction)}>
-                                                {reaction}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <span
-                                        className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
-                                </div>
-                                <div className="relative mt-2 ml-2">
-                                    <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
-                                        style={{ backgroundColor: avatarColor }}
+                            {isSender ? (
+                                <>
+                                    <div
+                                        className={`bg-chat-messages-send shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
+                                        style={{ wordBreak: 'break-word', hyphens: 'auto' }}
                                     >
-                                        {message.senderId[0]}
-                                    </Avatar>
-                                    <div className="text-center text-sm mt-1">{message.senderId}</div>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="relative mt-2 mr-2">
-                                    <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
-                                        style={{ backgroundColor: avatarColor }}
-                                        src={isAvatar ?spirit:null }
-                                    >
-                                        {message.senderId[0]}
-                                    </Avatar>
-                                    <div className="text-center text-sm mt-1">{message.senderId}</div>
-                                </div>
-                                <div
-                                    className={` ${isAvatar
-                                    ? "bg-[#7D4EBC] text-sm-white" // Light purple for AI messages
-                                    : "bg-chat-messages-received"}
-                                    shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
-                                    style={{ wordBreak: 'break-word', hyphens: 'auto' }}
-                                >
-                                    <div>
                                         {isReplyingTo && (
                                             <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
                                                 <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
@@ -490,19 +447,69 @@ const scrollToMessage = (index) => {
                                                 </span>
                                             ))}
                                         </div>
+                                        <span
+                                            className="text-sm text-gray-500 self-end">{formatTimestamp(message.timestamp)}</span>
                                     </div>
-                                    <span
-                                        className={`self-end ${isAvatar? "text-sm-white": "text-sm" }text-gray-500`}>{formatTimestamp(message.timestamp)}</span>
-                                </div>
-                                <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft"
-                                    className="p-2">
-                                    <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
-                                </Dropdown>
-                            </>
-                        )}
-                    </div>
-                );
-            })}
+                                    <div className="relative mt-2 ml-2">
+                                        <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
+                                            style={{ backgroundColor: avatarColor }}
+                                        >
+                                            {message.senderId[0]}
+                                        </Avatar>
+                                        <div className="text-center text-sm mt-1">{message.senderId}</div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="relative mt-2 mr-2">
+                                        <Avatar className="w-7 h-7 md:w-8 md:h-8 ml-4 md:ml-10 mr-4 md:mr-8"
+                                            style={{ backgroundColor: avatarColor }}
+                                            src={isAvatar ? spirit : null}
+                                        >
+                                            {message.senderId[0]}
+                                        </Avatar>
+                                        <div className="text-center text-sm mt-1">{message.senderId}</div>
+                                    </div>
+                                    <div
+                                        className={` ${isAvatar
+                                            ? "bg-[#7D4EBC] text-sm-white" // Light purple for AI messages
+                                            : "bg-chat-messages-received"}
+                                    shadow-md rounded-lg max-w-[80%] md:max-w-[50%] flex flex-col justify-between ${messageStyle} min-w-24`}
+                                        style={{ wordBreak: 'break-word', hyphens: 'auto' }}
+                                    >
+                                        <div>
+                                            {isReplyingTo && (
+                                                <div className="bg-blue-200 text-sm mb-4 p-1 rounded">
+                                                    <span className="font-semibold">{truncateText(isReplyingTo.content)}</span>
+                                                </div>
+                                            )}
+                                            {message.isGif ? (
+                                                <img src={message.content} alt="GIF" style={{ maxWidth: '100%' }} />
+                                            ) : (
+                                                <span>{highlightText(message.content)}</span>
+                                            )}
+                                            <div className="flex items-center">
+                                                {reactions.map((reaction, idx) => (
+                                                    <span key={idx} className="ml-2 text-lg md:text-xl lg:text-2xl"
+                                                        onClick={() => onEmojiClick(message.id, reaction)}>
+                                                        {reaction}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <span
+                                            className={`self-end ${isAvatar ? "text-sm-white" : "text-sm"}text-gray-500`}>{formatTimestamp(message.timestamp)}</span>
+                                    </div>
+                                    <Dropdown overlay={menuRe(message.id)} trigger={['click']} placement="bottomLeft"
+                                        className="p-2">
+                                        <MoreOutlined style={{ fontSize: '20px', color: '#1890ff' }} />
+                                    </Dropdown>
+                                </>
+                            )}
+                        </div>
+                    );
+                })
+            )}
             <div ref={lastMessageRef} />
             <div className="absolute left-0 right-0 px-4 pb-4 flex justify-center">
                 {typingUser && (typingUser.teamId === currentUser.team_id || typingUser.privateChatId === privateChatId) && (

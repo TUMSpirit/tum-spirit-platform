@@ -172,11 +172,6 @@ export const SocketProvider = ({ children }) => {
         autoConnect: false // Prevent auto connection
       });
 
-      window.addEventListener('focus', () => {
-        if (!socketInstance.connected && isAuthenticated) {
-          socketInstance.connect();  // Reconnect only if the socket is disconnected
-        }
-      });
 
       socketInstance.on('newMessageMetadata', (data) => {
 
@@ -186,7 +181,7 @@ export const SocketProvider = ({ children }) => {
         incrementNotifications(chatId);
 
         // Simple notification script
-        if (Notification.permission === "granted") {
+        /*if (Notification.permission === "granted") {
           new Notification("Test Notification", { body: "This is a test notification." });
         } else if (Notification.permission !== "denied") {
           Notification.requestPermission().then(permission => {
@@ -194,7 +189,7 @@ export const SocketProvider = ({ children }) => {
               new Notification("Test Notification", { body: "This is a test notification." });
             }
           });
-        }
+        }*/
 
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;

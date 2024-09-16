@@ -30,6 +30,8 @@ const Chat = () => {
     const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
     const [messagePage, setMessagePage] = useState(1);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [loading, setLoading] = useState(false);
+
     //const [onlineStatus, setOnlineStatus] = useState({}); // New state for online status
 
     /*const fetchCurrentUser = async () => {
@@ -71,6 +73,7 @@ const Chat = () => {
 
     const fetchMessages = async (reset = false) => {
         if (currentUser && hasMoreMessages) {
+            setLoading(true);
             try {
                 const headers = { 'Authorization': authHeader() };
                 if (privateChatId) {
@@ -87,6 +90,9 @@ const Chat = () => {
                 }
             } catch (error) {
                 console.error('Failed to fetch messages:', error);
+            }
+            finally {
+                setLoading(false);  // Stop loading when fetch is complete
             }
         }
     };
@@ -283,6 +289,7 @@ const Chat = () => {
                 currentUserAvatarColor={currentUserAvatarColor}
                 onlineStatus={onlineStatus}
                 getUnreadMessages={getUnreadMessages}// Pass online status to ChatBody
+                loading={loading}
             />
             <ChatFooter
                 socket={socket}
