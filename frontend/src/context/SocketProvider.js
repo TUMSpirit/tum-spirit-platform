@@ -178,14 +178,28 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
-        const notificationOptions = {
+
+
+
+// Simple notification script
+if (Notification.permission === "granted") {
+  new Notification("Test Notification", { body: "This is a test notification." });
+} else if (Notification.permission !== "denied") {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      new Notification("Test Notification", { body: "This is a test notification." });
+    }
+  });
+}
+        
+        /*const notificationOptions = {
           body: "This is your notification content!",
           vibrate: [200, 100, 200],  // Optional vibration pattern
           tag: "custom-notification-tag" // Optional tag to avoid notification duplication
         };
         if (Notification.permission === 'granted') {
           const notification = new Notification("Hello, World!", notificationOptions);
-        }
+        }*/
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
