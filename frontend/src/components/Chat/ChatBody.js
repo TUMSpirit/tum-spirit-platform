@@ -82,7 +82,7 @@ const ChatBody = ({
         });
         // Return the combined tabs array with the team tab first
         return [teamTab, ...memberTabs];
-    }, [teamMembers, getUnreadMessages, onlineStatus, currentUser.username]);
+    }, [teamMembers, getUnreadMessages, onlineStatus, currentUser.username, messages]);
 
 
     const getAvatarColor = (username) => {
