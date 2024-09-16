@@ -178,13 +178,17 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
-        if (navigator.serviceWorker && Notification.permission === 'granted') {
-          navigator.serviceWorker.ready.then(function (registration) {
-            registration.showNotification('New Message', {
-              body: "New Message from " + chatId, // Assuming the message object has a content field
-              icon: '../../public/TUMLogo.png', // Replace with your app's icon
-            });
-          });
+        const notificationOptions = {
+          body: "This is your notification content!",
+          vibrate: [200, 100, 200],  // Optional vibration pattern
+          actions: [ // Optional actions, can add buttons to interact with the notification
+            { action: "confirm", title: "Confirm" },
+            { action: "cancel", title: "Cancel" }
+          ],
+          tag: "custom-notification-tag" // Optional tag to avoid notification duplication
+        };
+        if (Notification.permission === 'granted') {
+          const notification = new Notification("Hello, World!", notificationOptions);
         }
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
