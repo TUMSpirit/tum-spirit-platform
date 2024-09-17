@@ -20,10 +20,11 @@ const vapidKeys = {
     publicKey: 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4',   // Replace with your public VAPID key
     privateKey: process.env.NOTIFICATION_SECRET// Replace with your private VAPID key
 };
-
+console.log(vapidKeys.privateKey);
 // Configure web-push
+
 webPush.setVapidDetails(
-    process.env.NOTIFICATION_MAIL, // Your contact email
+    'https://spirit.lfe.ed.tum.de', // Your contact email
     vapidKeys.publicKey,
     vapidKeys.privateKey
 );
