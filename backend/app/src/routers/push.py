@@ -18,7 +18,7 @@ router = APIRouter()
 # VAPID Keys from environment
 VAPID_PUBLIC_KEY = os.getenv("NOTIFICATION_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("NOTIFICATION_PRIVATE_KEY")
-VAPID_CLAIMS = {"sub": "https://spirit.lfe.ed.tum.de"}
+VAPID_CLAIMS = {"sub": "mailto:"+os.getenv("NOTIFICATION_MAIL")}
 
 # Store subscriptions (use a database in production)
 subscriptions = []
@@ -37,21 +37,13 @@ async def subscribe(subscription: PushSubscription):
 
 @router.post("/send-notification")
 async def send_notification():
-     payload = {
+    payload = {
         "title": "New Notification",
         "body": "You have a new message!"
     }
 
     for subscription in subscriptions:
         try:
-            # Dynamically set the 'aud' claim based on the push service
-            if "googleapis" in subscription["endpoint"]:
-                VAPID_CLAIMS["aud"] = FCM_AUDIENCE
-            elif "mozilla" in subscription["endpoint"]:
-                VAPID_CLAIMS["aud"] = MOZILLA_AUDIENCE
-            else:
-                raise HTTPException(status_code=400, detail="Unsupported push service")
-
             webpush(
                 subscription_info=subscription,
                 data=str(payload),
@@ -62,4 +54,4 @@ async def send_notification():
             print(f"Failed to send notification: {ex}")
             return {"message": f"Error sending notification: {str(ex)}"}
 
-    return {"message": "Notification sent"}
+    return {"message": "Notification sent to all subscribers"}
