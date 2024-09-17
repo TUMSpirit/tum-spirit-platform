@@ -1,16 +1,59 @@
 const express = require("express");
 const app = express();
+require('dotenv').config();
 const cors = require("cors");
 const http = require('http').Server(app);
 const PORT = 4000;
 const axios = require('axios');
+const webPush = require('web-push');
+const bodyParser = require('body-parser');
 const SECRET_KEY = process.env.SECRET_KEY;
-
 
 const socketIO = require('socket.io')(http, {
     cors: {
         origin: "https://spirit.lfe.ed.tum.de"
     }
+});
+
+// VAPID keys for push notifications
+const vapidKeys = {
+    publicKey: 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4',   // Replace with your public VAPID key
+    privateKey: process.env.NOTIFICATION_SECRET// Replace with your private VAPID key
+};
+
+// Configure web-push
+webPush.setVapidDetails(
+    process.env.NOTIFICATION_MAIL, // Your contact email
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+);
+
+// Store subscriptions in memory for simplicity (you can store them in a database)
+const subscriptions = [];
+
+app.use(bodyParser.json());
+
+app.post('/subscribe', (req, res) => {
+    const subscription = req.body;
+    subscriptions.push(subscription);  // Store the subscription
+    res.status(201).json({ message: 'Subscription stored.' });
+});
+
+// Send notification to all subscribed clients
+app.post('/send-notification', (req, res) => {
+    const payload = JSON.stringify({
+        title: 'New Notification',
+        body: 'You have a new message!',
+        icon: '/icons/icon-192x192.png',
+    });
+
+    subscriptions.forEach(subscription => {
+        webPush.sendNotification(subscription, payload)
+            .then(response => console.log('Notification sent:', response))
+            .catch(error => console.error('Notification error:', error));
+    });
+
+    res.status(200).json({ message: 'Notifications sent.' });
 });
 
 // Middleware to verify token on connection
@@ -29,7 +72,6 @@ const socketIO = require('socket.io')(http, {
         return next(new Error('Authentication error'));
     }
 });*/
-
 
 
 app.use(cors());
