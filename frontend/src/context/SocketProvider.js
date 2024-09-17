@@ -186,14 +186,13 @@ const subscribeToPushNotifications = () => {
           console.log("Service Worker is ready for push notifications");
 
           // Convert VAPID key to Uint8Array
-          const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+          const convertedVapidKey = publicVapidKey;
 
           // Subscribe to push notifications
           registration.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: convertedVapidKey
           }).then(function(subscription) {
-              console.log('User is subscribed:', subscription);
 
               // Send the subscription to the backend
               subscribeUser(subscription);
@@ -266,6 +265,16 @@ function urlBase64ToUint8Array(base64String) {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
+
+
+        axios.post('api/send-notification')
+            .then(response => {
+                alert(response.data.message);  // Should say "Notification sent"
+            })
+            .catch(error => {
+                console.error('Error triggering notification:', error);
+            });
+        
         //showNotification();
 
         // Simple notification script
