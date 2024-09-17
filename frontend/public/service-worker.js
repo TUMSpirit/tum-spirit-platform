@@ -6,9 +6,9 @@ self.addEventListener('push', function(event) {
 
     const options = {
         body: data.body || 'You have a new notification!',
-        icon: '/icons/icon-192x192.png',  // Optional: notification icon
-        vibrate: [200, 100, 200],  // Optional: vibration pattern
-        badge: '/icons/badge.png',  // Optional: badge for notifications
+        //icon: '/icons/icon-192x192.png',  // Optional: notification icon
+        //vibrate: [200, 100, 200],  // Optional: vibration pattern
+        //badge: '/icons/badge.png',  // Optional: badge for notifications
     };
 
     event.waitUntil(
