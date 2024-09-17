@@ -8,6 +8,7 @@ import TKIForm from "../components/TKI/TKIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
 import useNotificationPermission from './NotificationPermission';
+import { Icon } from 'baseui/icon/index.js';
 
 
 const SocketContext = createContext();
@@ -268,6 +269,13 @@ function urlBase64ToUint8Array(base64String) {
         incrementNotifications(chatId);
         //showNotification();
 
+        const title = "New Message!";
+        const options = {
+          body: data.senderId+" sent a message in the chat"
+        };
+        navigator.serviceWorker.ready.then(async function (serviceWorker) {
+          await serviceWorker.showNotification(title, options);
+        });
         // Simple notification script
         /* if (Notification.permission === "granted") {
            new Notification("Test Notification", { body: "This is a test notification." });
