@@ -207,7 +207,6 @@ export const SocketProvider = ({ children }) => {
         // Increment notifications
         incrementNotifications(chatId);
         showNotification();
-
         // Simple notification script
         /* if (Notification.permission === "granted") {
            new Notification("Test Notification", { body: "This is a test notification." });
@@ -219,7 +218,6 @@ export const SocketProvider = ({ children }) => {
            });
          }
  */
-
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);

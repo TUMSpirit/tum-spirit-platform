@@ -98,6 +98,7 @@ const Chat = () => {
     };
 
 
+
     const markReadWithTeam = () => {
         markAsRead("Team");
     }
@@ -236,34 +237,43 @@ const Chat = () => {
         };
     }, [socket, incrementNotifications]);*/
 
-    const handleTabChange = async (key) => {
+     const handleTabChange = async (key) => {
+        console.log('Current Tab:', currentTab);
+        console.log('Selected Tab:', key);
+    
         const currTab = currentTab;
+    
         if (key !== '1') {
-        updateLastLoggedIn(teamMembers[parseInt(key)-2].username);
+            console.log('Switching to Private Chat:', teamMembers[parseInt(key) - 2].username);
+            await updateLastLoggedIn(teamMembers[parseInt(key) - 2].username);
         } else {
-        updateLastLoggedIn("Team");
+            console.log('Switching to Team Chat');
+            await updateLastLoggedIn("Team");
         }
-        //setLastVisited(privateChatId);
+    
         setCurrentTab(key);
+    
         if (key !== '1') {
             const memberUsername = teamMembers[parseInt(key) - 2].username;
             const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
+            console.log('New Private Chat ID:', newPrivateChatId);
             markAsRead(newPrivateChatId);
-            //updateLastLoggedIn(memberUsername);
             setPrivateChatId(newPrivateChatId);
-            console.log(newPrivateChatId);
             socket.emit('joinPrivateChat', newPrivateChatId);
         } else {
+            console.log('Joining Team Chat');
             setPrivateChatId(null);
-            updateLastLoggedIn("Team");
-            //setLastVisited(null);
             markAsRead("Team");
             socket.emit('joinTeam', currentUser.team_id);
         }
+    
         setMessagePage(1);
         setHasMoreMessages(true);
-        fetchMessages(true);
+        console.log('Fetching messages...');
+        await fetchMessages(true);
+        console.log('Messages fetched');
     };
+
 
     const getPrivateChatId = (user1, user2) => [user1, user2].sort().join('-');
 
