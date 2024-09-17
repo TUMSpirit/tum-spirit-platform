@@ -31,7 +31,7 @@ class PushSubscription(BaseModel):
     keys: dict
 
 
-@app.post("/subscribe")
+@router.post("/subscribe")
 async def subscribe(subscription: PushSubscription):
     """Save the subscription to the MongoDB collection."""
     try:
@@ -46,7 +46,7 @@ async def subscribe(subscription: PushSubscription):
         raise HTTPException(status_code=500, detail=f"Error storing subscription: {str(e)}")
 
 
-@app.post("/send-notification")
+@router.post("/send-notification")
 async def send_notification():
     """Send web push notification to all subscribed clients."""
     try:
