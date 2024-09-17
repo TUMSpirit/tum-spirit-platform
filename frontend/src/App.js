@@ -23,16 +23,6 @@ axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
 
 // src/index.js or src/App.js
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(registration => {
-      console.log('Service Worker registered with scope:', registration.scope);
-    })
-    .catch(error => {
-      console.log('Service Worker registration failed:', error);
-    });
-}
-
 function AuthRedirect({ children }) {
   const auth = useAuthUser();
   return auth() ? <Navigate to="/home" replace /> : children;

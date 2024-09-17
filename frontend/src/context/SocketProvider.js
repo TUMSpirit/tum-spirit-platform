@@ -161,6 +161,47 @@ export const SocketProvider = ({ children }) => {
     setModalOpen(false);
   }
 
+  const subscribeToPushNotifications = () => {
+    const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Replace with your actual public VAPID key
+
+    navigator.serviceWorker.ready.then(function(registration) {
+        // Convert VAPID key to Uint8Array
+        const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+
+        // Subscribe the user
+        registration.pushManager.subscribe({
+            userVisibleOnly: true,  // Ensure notifications are always visible
+            applicationServerKey: convertedVapidKey
+        }).then(function(subscription) {
+            // Send the subscription to your backend
+            fetch('https://spirit.lfe.ed.tum.de/subscribe', {
+                method: 'POST',
+                body: JSON.stringify(subscription),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(() => {
+                console.log('User subscribed to push notifications.');
+            });
+        }).catch(err => {
+            console.error('Failed to subscribe user:', err);
+        });
+    });
+};
+
+// Helper function to convert VAPID key from base64 to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+
   useEffect(() => {
     if (isAuthenticated) {
       const token = authHeader().split(' ')[1]; // Extract the token from "Bearer <token>"
@@ -178,6 +219,8 @@ export const SocketProvider = ({ children }) => {
           window.location.reload(true);
         }
       };
+
+      subscribeToPushNotifications();
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -206,7 +249,8 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
-        showNotification();
+        //showNotification();
+
         // Simple notification script
         /* if (Notification.permission === "granted") {
            new Notification("Test Notification", { body: "This is a test notification." });
@@ -218,6 +262,7 @@ export const SocketProvider = ({ children }) => {
            });
          }
  */
+
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
