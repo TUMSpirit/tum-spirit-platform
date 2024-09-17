@@ -186,7 +186,7 @@ const subscribeToPushNotifications = () => {
           console.log("Service Worker is ready for push notifications");
 
           // Convert VAPID key to Uint8Array
-          const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+          const convertedVapidKey = publicVapidKey;
 
           // Subscribe to push notifications
           registration.pushManager.subscribe({
