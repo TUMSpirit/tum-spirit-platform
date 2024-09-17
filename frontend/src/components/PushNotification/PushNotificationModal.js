@@ -83,11 +83,10 @@ const PushNotificationModal = () => {
     console.log('Active subscription:', subscription);
   };
 
-  const testSend = () => {
+  /*const testSend = () => {
     const title = "Push title";
     const options = {
       body: "Additional text with some description",
-      icon: "https://andreinwald.github.io/webpush-ios-example/images/push_icon.jpg",
       image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Orange_tabby_cat_sitting_on_fallen_leaves-Hisashi-01A.jpg/1920px-Orange_tabby_cat_sitting_on_fallen_leaves-Hisashi-01A.jpg",
       data: {
         url: "https://andreinwald.github.io/webpush-ios-example/?page=success",
@@ -97,7 +96,7 @@ const PushNotificationModal = () => {
     navigator.serviceWorker.ready.then(async function (serviceWorker) {
       await serviceWorker.showNotification(title, options);
     });
-  };
+  };*/
 
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -114,13 +113,10 @@ const PushNotificationModal = () => {
       >
         <h2>Subscribe to Notifications</h2>
           <Button onClick={subscribeToPush}>Subscribe to notifications</Button>
-
           <div>
             <p><strong>Active Subscription:</strong></p>
             <pre>{JSON.stringify(subscription?.toJSON(), null, 2)}</pre>
-            <Button onClick={testSend}>Send Test Notification</Button>
           </div>
-        <Button onClick={closeModal}>Close</Button>
       </Modal>
     </div>
   );
