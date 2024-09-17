@@ -76,15 +76,6 @@ socketIO.on('connection', (socket) => {
                 socketIO.to(data.teamId).emit("messageResponse", response.data);
             }
             
-            // Trigger a push notification for each subscription
-            axios.post('https://spirit.lfe.ed.tum.de/api/send-notification')
-            .then(response => {
-                console.log(response.data.message);  // Should say "Notification sent"
-            })
-            .catch(error => {
-                console.error('Error triggering notification:', error);
-            });
-            
         } catch (err) {
             console.error(err);
         }
