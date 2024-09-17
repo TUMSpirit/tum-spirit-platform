@@ -2,7 +2,7 @@
 
 // Listen for 'push' events from the backend
 self.addEventListener('push', function(event) {
-    const data = event.data ? event.data.json() : {};
+    const data = event.data.text() ? JSON.parse(event.data.text()) : {};
 
     const options = {
         body: data.body || 'You have a new notification!',
