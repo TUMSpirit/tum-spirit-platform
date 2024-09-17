@@ -27,57 +27,17 @@ const Centered = styled("div", {
   width: "100%",
 });
 
-export async function initServiceWorker() {
-    let swRegistration = await navigator.serviceWorker.register('/service-worker.js');
-    let pushManager = swRegistration.pushManager;
-
-    if (!pushManager) {
-        console.error('PushManager is not active');
-        return;
-    }
-
-    // Automatically subscribe without prompting or displaying additional info
-    subscribeToPush();
-}
-
-export async function subscribeToPush() {
-    const VAPID_PUBLIC_KEY = 'BAwUJxIa7mJZMqu78Tfy2Sb1BWnYiAatFCe1cxpnM-hxNtXjAwaNKz1QKLU8IYYhjUASOFzSvSnMgC00vfsU0IM';
-
-    let swRegistration = await navigator.serviceWorker.getRegistration();
-    let pushManager = swRegistration.pushManager;
-    if (!pushManager) {
-        console.error('PushManager is not available');
-        return;
-    }
-
-    let subscriptionOptions = {
-        userVisibleOnly: true,
-        applicationServerKey: VAPID_PUBLIC_KEY
-    };
-
-    try {
-        let subscription = await pushManager.subscribe(subscriptionOptions);
-        await axios.post('api/subscribe', subscription);
-        console.log('User subscribed to push notifications');
-    } catch (error) {
-        console.error('Error during subscription', error);
-    }
-}
-
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-if ('serviceWorker' in navigator && 'PushManager' in window) {
-    initServiceWorker();
-}
+/*if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+        .then((registration) => {
+            console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch((error) => {
+            console.error('Service Worker registration failed:', error);
+        });
+    });
+}*/
 
 
 const root = ReactDOM.createRoot(
