@@ -42,7 +42,7 @@ def application_setup() -> FastAPI:
 
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
-    application.include_router(celery.router, prefix="/api")
+    #application.include_router(celery.router, prefix="/api")
     application.include_router(settings.router, prefix="/api")
     application.include_router(push.router, prefix="/api")
     application.include_router(project.router, prefix="/api")
