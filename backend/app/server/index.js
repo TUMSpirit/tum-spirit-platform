@@ -118,6 +118,18 @@ socketIO.on('connection', (socket) => {
                 socketIO.to(data.teamId).emit('newMessageMetadata', response.data);
                 socketIO.to(data.teamId).emit("messageResponse", response.data);
             }
+                  // Trigger a push notification for each subscription
+            const payload = JSON.stringify({
+                title: 'New Message',
+                body: `${data.senderId}: ${data.content}`,
+                icon: '/icons/icon-192x192.png',
+            });
+
+            subscriptions.forEach(subscription => {
+                webPush.sendNotification(subscription, payload)
+                    .then(response => console.log('Notification sent:', response))
+                    .catch(error => console.error('Notification error:', error));
+            });
         } catch (err) {
             console.error(err);
         }
