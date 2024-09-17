@@ -193,7 +193,7 @@ const subscribeToPushNotifications = () => {
               userVisibleOnly: true,
               applicationServerKey: convertedVapidKey
           }).then(function(subscription) {
-              console.log('User is subscribed:', subscription);
+              alert('User is subscribed:', subscription);
 
               // Send the subscription to the backend
               subscribeUser(subscription);
@@ -241,16 +241,6 @@ function urlBase64ToUint8Array(base64String) {
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
-      if ('Notification' in window && Notification.permission !== 'granted') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            console.log('Notification permission granted');
-          } else {
-            console.log('Notification permission denied');
-          }
-        });
-      }
-
       function showNotification() {
         if (Notification.permission === 'granted') {
           new Notification('New Message', {
@@ -266,6 +256,16 @@ function urlBase64ToUint8Array(base64String) {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
+
+
+        axios.post('api/send-notification')
+            .then(response => {
+                alert(response.data.message);  // Should say "Notification sent"
+            })
+            .catch(error => {
+                console.error('Error triggering notification:', error);
+            });
+        
         //showNotification();
 
         // Simple notification script
