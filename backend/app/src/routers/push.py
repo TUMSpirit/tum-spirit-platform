@@ -46,7 +46,7 @@ async def send_notification():
         try:
             webpush(
                 subscription_info=subscription,
-                data=str(payload),
+                data=json.dumps(payload),
                 vapid_private_key=VAPID_PRIVATE_KEY,
                 vapid_claims=VAPID_CLAIMS
             )
