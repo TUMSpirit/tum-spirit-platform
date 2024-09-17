@@ -177,23 +177,33 @@ const subscribeUser = (subscription) => {
   });
 };
 
-  const subscribeToPushNotifications = () => {
-    const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Replace with your actual public VAPID key
+const subscribeToPushNotifications = () => {
+  const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Your public VAPID key
 
-    navigator.serviceWorker.ready.then(function(registration) {
-        // Convert VAPID key to Uint8Array
-        const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+      // Ensure the service worker is ready
+      navigator.serviceWorker.ready.then(function(registration) {
+          console.log("Service Worker is ready for push notifications");
 
-        registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: convertedVapidKey
-      }).then(function(subscription) {
-          // Send the subscription to the FastAPI backend
-          subscribeUser(subscription);
-      }).catch(function(error) {
-          console.error('Failed to subscribe the user', error);
+          // Convert VAPID key to Uint8Array
+          const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+
+          // Subscribe to push notifications
+          registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: convertedVapidKey
+          }).then(function(subscription) {
+              console.log('User is subscribed:', subscription);
+
+              // Send the subscription to the backend
+              subscribeUser(subscription);
+          }).catch(function(error) {
+              console.error('Failed to subscribe the user', error);
+          });
       });
-    });
+  } else {
+      console.error('Service Worker or Push Notifications not supported in this browser');
+  }
 };
 
 // Helper function to convert VAPID key from base64 to Uint8Array
