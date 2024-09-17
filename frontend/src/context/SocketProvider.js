@@ -8,7 +8,7 @@ import TKIForm from "../components/TKI/TKIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
 import useNotificationPermission from './NotificationPermission';
-import { Icon } from 'baseui/icon/index.js';
+import ghost from '../assets/images/ios_180x180.png';
 
 
 const SocketContext = createContext();
@@ -164,61 +164,61 @@ export const SocketProvider = ({ children }) => {
 
 
 
-const subscribeUser = (subscription) => {
-  axios.post('api/subscribe', subscription, {
+  /*const subscribeUser = (subscription) => {
+    axios.post('api/subscribe', subscription, {
       headers: {
-          'Content-Type': 'application/json'
+        'Content-Type': 'application/json'
       }
-  })
-  .then(response => {
-      console.log('User subscribed to push notifications:', response.data.message);
-  })
-  .catch(error => {
-      console.error('Error subscribing user:', error);
-  });
-};
-
-const subscribeToPushNotifications = () => {
-  const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Your public VAPID key
-
-  if ('serviceWorker' in navigator && 'PushManager' in window) {
-      // Ensure the service worker is ready
-      navigator.serviceWorker.ready.then(function(registration) {
-          console.log("Service Worker is ready for push notifications");
-
-          // Convert VAPID key to Uint8Array
-          const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
-
-          // Subscribe to push notifications
-          registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: convertedVapidKey
-          }).then(function(subscription) {
-              console.log('User is subscribed:', subscription);
-
-              // Send the subscription to the backend
-              subscribeUser(subscription);
-          }).catch(function(error) {
-              console.error('Failed to subscribe the user', error);
-          });
+    })
+      .then(response => {
+        console.log('User subscribed to push notifications:', response.data.message);
+      })
+      .catch(error => {
+        console.error('Error subscribing user:', error);
       });
-  } else {
-      console.error('Service Worker or Push Notifications not supported in this browser');
-  }
-};
+  };
 
-// Helper function to convert VAPID key from base64 to Uint8Array
-function urlBase64ToUint8Array(base64String) {
+  const subscribeToPushNotifications = () => {
+    const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Your public VAPID key
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      // Ensure the service worker is ready
+      navigator.serviceWorker.ready.then(function (registration) {
+        console.log("Service Worker is ready for push notifications");
+
+        // Convert VAPID key to Uint8Array
+        const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
+
+        // Subscribe to push notifications
+        registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey
+        }).then(function (subscription) {
+          console.log('User is subscribed:', subscription);
+
+          // Send the subscription to the backend
+          subscribeUser(subscription);
+        }).catch(function (error) {
+          console.error('Failed to subscribe the user', error);
+        });
+      });
+    } else {
+      console.error('Service Worker or Push Notifications not supported in this browser');
+    }
+  };
+
+  // Helper function to convert VAPID key from base64 to Uint8Array
+  function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
     for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
+      outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
-}
-
+  }
+*/
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -260,7 +260,7 @@ function urlBase64ToUint8Array(base64String) {
         }
       }
 
-  
+
       socketInstance.on('newMessageMetadata', (data) => {
 
         //console.log('Message received:', data);
@@ -269,13 +269,17 @@ function urlBase64ToUint8Array(base64String) {
         incrementNotifications(chatId);
         //showNotification();
 
-        const title = "New Message!";
-        const options = {
-          body: data.senderId+" sent a message in the chat"
-        };
-        navigator.serviceWorker.ready.then(async function (serviceWorker) {
-          await serviceWorker.showNotification(title, options);
-        });
+        if (data.senderId !== currentUser.username) {
+          const title = "New Message!";
+          const options = {
+            body: data.senderId + " sent a message in the chat",
+            icon: ghost,
+            vibrate: [300, 100, 400]
+          };
+          navigator.serviceWorker.ready.then(async function (serviceWorker) {
+            await serviceWorker.showNotification(title, options);
+          });
+        }
         // Simple notification script
         /* if (Notification.permission === "granted") {
            new Notification("Test Notification", { body: "This is a test notification." });

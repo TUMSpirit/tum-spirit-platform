@@ -27,6 +27,7 @@ import { useAuthHeader } from 'react-auth-kit';
 import { useSocket } from '../context/SocketProvider';
 import { useUnreadMessage } from '../context/UnreadMessageContext';
 import { useSubHeader } from "./SubHeaderContext";
+import PushNotificationModal from '../components/PushNotification/PushNotificationModal';
 
 
 function Header({
@@ -40,8 +41,8 @@ function Header({
 }) {
 
   const authHeader = useAuthHeader();
-  const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages} = useUnreadMessage();
-  const {socket} = useSocket();
+  const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages } = useUnreadMessage();
+  const { socket } = useSocket();
   const [sidenavType, setSidenavType] = useState("transparent");
   const [visible, setVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -51,6 +52,7 @@ function Header({
   const [me, setMe] = useState();
   const logout = useSignOut();
   const navigate = useNavigate();
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const { subHeaderComponent } = useSubHeader();
 
 
@@ -60,11 +62,11 @@ function Header({
     const fetchCurrentUser = async () => {
       try {
         const response = await axios.get('/api/me',
-        {
-          headers: {
-            "Authorization": authHeader()
-          }
-        });
+          {
+            headers: {
+              "Authorization": authHeader()
+            }
+          });
         setMe(response.data);
       } catch (error) {
         console.error('Failed to fetch current user:', error);
@@ -76,7 +78,7 @@ function Header({
   const showDrawer = () => setVisible(true);
   const hideDrawer = () => setVisible(false);
 
- // const { subHeader } = useSubHeaderContext();
+  // const { subHeader } = useSubHeaderContext();
 
   const handleLogout = () => {
     // Aufruf der logout-Funktion, um den Benutzer abzumelden
@@ -92,9 +94,13 @@ function Header({
   };
 
   const showImprint = () => {
-    console.log('test');
     setImprintVisible(true);
   };
+
+  const showSettings = () => {
+    setModalIsOpen(true);
+  };
+
   const handleOpenChange = (nextOpen, info) => {
     if (info.source === 'trigger' || nextOpen) {
       setOpen(nextOpen);
@@ -121,6 +127,7 @@ function Header({
     {
       label: <div>Settings</div>,
       icon: <SettingOutlined />,
+      onClick: showSettings,
       key: '1',
     },
     {
@@ -143,15 +150,15 @@ function Header({
     },
   ];
 
-/*SHOPP AND COINS
-   <Button
-          type="primary"
-          icon={<ShoppingCartOutlined />}
-          style={{ marginRight: "10px" }}
-        />
-        <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight: "20px" }}>
-          <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight: "20px" }} />
-        </Badge>*/
+  /*SHOPP AND COINS
+     <Button
+            type="primary"
+            icon={<ShoppingCartOutlined />}
+            style={{ marginRight: "10px" }}
+          />
+          <Badge count={coins} showZero overflowCount={999} style={{ backgroundColor: '#52c41a', marginRight: "20px" }}>
+            <TrophyTwoTone twoToneColor="#fadb14" style={{ fontSize: '32px', marginRight: "20px" }} />
+          </Badge>*/
   return (
     <>
       <div className="flex items-end justify-end">
@@ -194,11 +201,12 @@ function Header({
         </Col>
       </Row>
       {subHeaderComponent && (
-                <div className="header-subheader">
-                    {subHeaderComponent.component}
-                </div>
-            )}
-            <ImprintModal isVisible={imprintVisible} setIsVisible={setImprintVisible}></ImprintModal>
+        <div className="header-subheader">
+          {subHeaderComponent.component}
+        </div>
+      )}
+      <PushNotificationModal isModalOpen={modalIsOpen} setModalIsOpen={setModalIsOpen}></PushNotificationModal>
+      <ImprintModal isVisible={imprintVisible} setIsVisible={setImprintVisible}></ImprintModal>
       <TutorialPopup open={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
     </>
   );

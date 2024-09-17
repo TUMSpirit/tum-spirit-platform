@@ -1,11 +1,11 @@
 import { triggerFocus } from 'antd/es/input/Input';
 import React, { useState, useEffect } from 'react';
-import { Modal, Button} from "antd";
+import { Modal, Button, Typography } from "antd";
 
-const PushNotificationModal = () => {
-  const [modalIsOpen, setModalIsOpen] = useState(true);
+const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
   const [subscription, setSubscription] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
+  const { Title, Text } = Typography;
 
   useEffect(() => {
     if (navigator.serviceWorker) {
@@ -13,34 +13,32 @@ const PushNotificationModal = () => {
     }
   }, []);
 
-  const openModal = () => {
-    setModalIsOpen(true);
-  };
-
   const closeModal = () => {
     setModalIsOpen(false);
   };
 
   const initServiceWorker = async () => {
-    let swRegistration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
-    let pushManager = swRegistration.pushManager;
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      let swRegistration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+      let pushManager = swRegistration.pushManager;
 
-    if (!isPushManagerActive(pushManager)) {
-      return;
-    }
+      if (!isPushManagerActive(pushManager)) {
+        return;
+      }
 
-    let permissionState = await pushManager.permissionState({ userVisibleOnly: true });
-    switch (permissionState) {
-      case 'prompt':
-        setSubscribed(false);
-        break;
-      case 'granted':
-        setSubscribed(true);
-        displaySubscriptionInfo(await pushManager.getSubscription());
-        break;
-      case 'denied':
-        setSubscribed(false);
-        alert('User denied push permission');
+      let permissionState = await pushManager.permissionState({ userVisibleOnly: true });
+      switch (permissionState) {
+        case 'prompt':
+          setSubscribed(false);
+          break;
+        case 'granted':
+          setSubscribed(true);
+          displaySubscriptionInfo(await pushManager.getSubscription());
+          break;
+        case 'denied':
+          setSubscribed(false);
+          alert('User denied push permission');
+      }
     }
   };
 
@@ -109,14 +107,19 @@ const PushNotificationModal = () => {
     <div>
       <Modal
         open={modalIsOpen}
-        onCancel={closeModal}
+        title={"Settings"}
+        closable={false} // Remove the X button
+        footer={[
+          <Button key="ok" type="primary" onClick={closeModal}>
+            OK
+          </Button>
+        ]}
       >
-        <h2>Subscribe to Notifications</h2>
-          <Button onClick={subscribeToPush}>Subscribe to notifications</Button>
-          <div>
-            <p><strong>Active Subscription:</strong></p>
-            <pre>{JSON.stringify(subscription?.toJSON(), null, 2)}</pre>
-          </div>
+        <Button onClick={subscribeToPush}>Subscribe to notifications</Button>
+        <div>
+          <Title level={5} style={{ marginTop: "15px" }}><strong>Active Subscription:</strong></Title>
+          <pre>{JSON.stringify(subscription?.toJSON(), null, 2)}</pre>
+        </div>
       </Modal>
     </div>
   );
