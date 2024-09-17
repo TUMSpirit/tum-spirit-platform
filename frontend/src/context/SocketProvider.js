@@ -182,7 +182,25 @@ export const SocketProvider = ({ children }) => {
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            console.log('Notification permission granted');
+          } else {
+            console.log('Notification permission denied');
+          }
+        });
+      }
 
+      function showNotification() {
+        if (Notification.permission === 'granted') {
+          new Notification('New Message', {
+            body: 'You have a new message!'
+          });
+        }
+      }
+
+      showNotification();
       socketInstance.on('newMessageMetadata', (data) => {
 
         //console.log('Message received:', data);
