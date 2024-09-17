@@ -1,11 +1,11 @@
 const express = require("express");
 const app = express();
+require('dotenv').config();
 const cors = require("cors");
 const http = require('http').Server(app);
 const PORT = 4000;
 const axios = require('axios');
 const SECRET_KEY = process.env.SECRET_KEY;
-
 
 const socketIO = require('socket.io')(http, {
     cors: {
@@ -29,7 +29,6 @@ const socketIO = require('socket.io')(http, {
         return next(new Error('Authentication error'));
     }
 });*/
-
 
 
 app.use(cors());
@@ -76,6 +75,7 @@ socketIO.on('connection', (socket) => {
                 socketIO.to(data.teamId).emit('newMessageMetadata', response.data);
                 socketIO.to(data.teamId).emit("messageResponse", response.data);
             }
+            
         } catch (err) {
             console.error(err);
         }

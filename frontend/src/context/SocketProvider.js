@@ -267,6 +267,16 @@ export const SocketProvider = ({ children }) => {
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
+
+
+        axios.post('api/send-notification')
+            .then(response => {
+                alert(response.data.message);  // Should say "Notification sent"
+            })
+            .catch(error => {
+                console.error('Error triggering notification:', error);
+            });
+        
         //showNotification();
 
         if (data.senderId !== currentUser.username) {
