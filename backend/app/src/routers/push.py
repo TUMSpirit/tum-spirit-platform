@@ -15,14 +15,15 @@ router = APIRouter()
 
 # Allow CORS for local development
 
+# Connect to MongoDB
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DB]
+subscriptions_collection = db['subscriptions']
 
 # VAPID Keys from environment
 VAPID_PUBLIC_KEY = os.getenv("NOTIFICATION_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("NOTIFICATION_PRIVATE_KEY")
 VAPID_CLAIMS = {"sub": "mailto:"+os.getenv("NOTIFICATION_MAIL")}
-
-# Store subscriptions (use a database in production)
-subscriptions = []
 
 # Model for the subscription
 class PushSubscription(BaseModel):
@@ -30,29 +31,51 @@ class PushSubscription(BaseModel):
     keys: dict
 
 
-@router.post("/subscribe")
+@app.post("/subscribe")
 async def subscribe(subscription: PushSubscription):
-    subscriptions.append(subscription.model_dump())
-    return {"message": "Subscription successful"}
+    """Save the subscription to the MongoDB collection."""
+    try:
+        # Check if subscription already exists
+        existing_subscription = subscriptions_collection.find_one({"endpoint": subscription.endpoint})
+        if not existing_subscription:
+            subscriptions_collection.insert_one(subscription.dict())
+            return {"message": "Subscription added."}
+        else:
+            return {"message": "Subscription already exists."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error storing subscription: {str(e)}")
 
 
-@router.post("/send-notification")
+@app.post("/send-notification")
 async def send_notification():
-    payload = {
-        "title": "New Notification",
-        "body": "You have a new message!"
-    }
+    """Send web push notification to all subscribed clients."""
+    try:
+        payload = {
+            "title": "Push Notification",
+            "body": "This is a notification from your PWA!",
+            "icon": "/icon.png",  # Adjust to your icon path
+            "data": {
+                "url": "https://your-pwa-url.com/success"  # Change to your PWA URL
+            }
+        }
+        
+        # Retrieve all subscriptions from MongoDB
+        subscriptions = subscriptions_collection.find()
 
-    for subscription in subscriptions:
-        try:
-            webpush(
-                subscription_info=subscription,
-                data=json.dumps(payload),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims=VAPID_CLAIMS
-            )
-        except WebPushException as ex:
-            print(f"Failed to send notification: {ex}")
-            return {"message": f"Error sending notification: {str(ex)}"}
+        # Loop over each subscription and send the notification
+        for subscription in subscriptions:
+            try:
+                webpush(
+                    subscription_info=subscription,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+            except WebPushException as ex:
+                print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
 
-    return {"message": "Notification sent to all subscribers"}
+        return {"message": "Notification sent to all subscribers."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
+
