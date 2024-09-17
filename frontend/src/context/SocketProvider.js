@@ -237,7 +237,7 @@ function urlBase64ToUint8Array(base64String) {
         }
       };
 
-      subscribeToPushNotifications();
+      //subscribeToPushNotifications();
 
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
