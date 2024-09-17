@@ -1,21 +1,25 @@
-// public/service-worker.js
+// Service Worker for handling push notifications
 
-self.addEventListener('push', function (event) {
-    const data = event.data.json();
-    const title = data.title || 'New Message';
+// Listen for 'push' events from the backend
+self.addEventListener('push', function(event) {
+    const data = event.data ? event.data.json() : {};
+
     const options = {
-        body: data.body,
-        icon: data.icon || '/favicon.png',
+        body: data.body || 'You have a new notification!',
+        icon: '/icons/icon-192x192.png',  // Optional: notification icon
+        vibrate: [200, 100, 200],  // Optional: vibration pattern
+        badge: '/icons/badge.png',  // Optional: badge for notifications
     };
 
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        self.registration.showNotification(data.title || 'Notification', options)
     );
 });
 
-self.addEventListener('notificationclick', function (event) {
+// Handle notification click event
+self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('/')
+        clients.openWindow('/')  // Redirect to your app on click
     );
 });

@@ -7,7 +7,6 @@ import { Spin } from 'antd';
 import TKIForm from "../components/TKI/TKIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
-import Push from 'push.js';
 import useNotificationPermission from './NotificationPermission';
 
 
@@ -200,13 +199,14 @@ export const SocketProvider = ({ children }) => {
         }
       }
 
-      showNotification();
+  
       socketInstance.on('newMessageMetadata', (data) => {
 
         //console.log('Message received:', data);
         const chatId = data.privateChatId ? data.privateChatId : 'Team';
         // Increment notifications
         incrementNotifications(chatId);
+        showNotification();
         // Simple notification script
         /* if (Notification.permission === "granted") {
            new Notification("Test Notification", { body: "This is a test notification." });
@@ -218,25 +218,6 @@ export const SocketProvider = ({ children }) => {
            });
          }
  */
-
-        // Request permission to show notifications
-        Push.Permission.request(onGranted, onDenied);
-
-        function onGranted() {
-          console.log('Permission granted');
-          showNotification();
-        }
-
-        function onDenied() {
-          console.log('Permission denied');
-        }
-        // Function to show notification
-        function showNotification() {
-          Push.create('New Message!', {
-            body: 'You have received a new message!',
-            timeout: 4000,  // Auto close after 4 seconds
-          });
-        }
         // Get the current username based on currentTab
         /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
         console.log(currentUser);
