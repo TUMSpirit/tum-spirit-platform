@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Typography
 } from "antd";
-import PushNotificationModal from '../components/PushNotification/PushNotificationModal';
 import FileList from '../components/Documents/Documents';
 
 const { Title } = Typography;
@@ -10,7 +9,6 @@ const { Title } = Typography;
 function Documents() {
   return (
     <>
-            <PushNotificationModal></PushNotificationModal>
              <FileList></FileList>
     </>
   );
