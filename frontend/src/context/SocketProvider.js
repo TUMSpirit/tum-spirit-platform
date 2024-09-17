@@ -1,4 +1,3 @@
-// context/SocketProvider.js
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import { useAuthHeader, useIsAuthenticated, useSignOut } from 'react-auth-kit';
@@ -7,21 +6,14 @@ import { Spin } from 'antd';
 import TKIForm from "../components/TKI/TKIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
-import useNotificationPermission from './NotificationPermission';
 import ghost from '../assets/images/ios_180x180.png';
-
 
 const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
-  const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages, setUnreadMessages } = useUnreadMessage();
-  const [missedMessages, setMissedMessages] = useState(0);
+  const { getUnreadMessages, incrementNotifications, setUnreadMessages } = useUnreadMessage();
   const [currentUser, setCurrentUser] = useState(null);
-  const [userSettings, setUserSettings] = useState(null);
-  const [projectInformation, setProjectInformation] = useState([]);
-  //const [currentTab, setCurrentTab] = useState(null);
-  const [onlineStatus, setOnlineStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const isAuthenticated = useIsAuthenticated();
   const authHeader = useAuthHeader();
@@ -29,26 +21,15 @@ export const SocketProvider = ({ children }) => {
   const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
 
-  //useNotificationPermission();
-
-  const fetchCurrentUser = async (socketInstance) => {
+  const fetchCurrentUser = async () => {
     try {
       const response = await axios.get('/api/me', {
         headers: {
           "Authorization": authHeader()
         }
       });
-      const { team_id, username, missed_messages_chat } = response.data;
-      console.log(response.data);
       setCurrentUser(response.data);
-      //console.log("test" + missed_messages_chat);
-      //setLastVisited(missed_messages_chat);
-      socketInstance.connect();
-      socketInstance.auth = { teamId: team_id };
-      socketInstance.emit('joinTeam', team_id);
-      socketInstance.emit('userOnline', { team_id, username });
-      // Notify server that user is online
-      // Set loading to false after fetching user and connecting socket
+      setLoading(false);
     } catch (error) {
       console.error('Failed to fetch current user:', error);
       logout();
@@ -56,295 +37,78 @@ export const SocketProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
-  const fetchUserSettings = async () => {
-    try {
-      const response = await axios.get('/api/get-settings', {
-        headers: {
-          "Authorization": authHeader()
-        }
-      });
-      setUserSettings(response.data);
-      // If the TKI test should be triggered
-      if (response.data.is_first_login) {
-        updateSettings('is_first_login', false);
-        navigate("/intro");
-      }
-      // Set the TKI test state, but don't open the modal here
-      if (!response.data.is_first_login && response.data.trigger_tki_test) {
-        setModalOpen(true);
-      }
-    } catch (error) {
-      console.error('Failed to fetch current user:', error);
-      logout();
-      navigate("/login");
-      setLoading(false);
-    }
-  };
-
-  const fetchProject = async () => {
-    try {
-      const response = await axios.get(`/api/get-project-by-teamid`, {
-        headers: {
-          "Authorization": authHeader()
-        }
-      });
-      setProjectInformation(response.data);
-      /*
-      const { milestones: fetchedMilestones, start_date } = response.data;
-     
-      setStartDate(start_date); // Set start date
-      const updatedMilestones = calculateProgress(fetchedMilestones, start_date);
-      setMilestones(updatedMilestones);
-      setLoading(false); // End loading
-      updateCurrentMilestoneProgress(updatedMilestones); // Update the current milestone and progress*/
-    } catch (error) {
-      console.error('milestones:', error);
-      logout();
-      navigate("/login");
-      setLoading(false);
-    }
-  };
-
-
-  const updateSettings = async (field, value) => {
-    try {
-      const response = await axios.post('/api/update-settings',
-        {
-          [field]: value  // Dynamically setting the field and its value
-        },
-        {
-          headers: {
-            "Authorization": authHeader()
-          }
-        }
-      );
-
-      console.log(`User settings updated: ${field} set to`, response.data);
-    } catch (error) {
-      console.error('Error updating user settings:', error);
-    }
-  };
-
-
-  const updateLastLoggedIn = async (lastActiveChat) => {
-    console.log(lastActiveChat);
-    try {
-      const response = await axios.post('/api/update-last-active', { "chatData": lastActiveChat }, {
-        headers: {
-          "Authorization": authHeader()
-        }
-      });
-      console.log(response.data);
-    } catch (error) {
-      console.error('Failed to update last log in', error);
-    }
-  };
-
 
   const pullUnreadMessages = async () => {
     try {
-      const response = await axios.get(
-        "/api/missed-chats", {
+      const response = await axios.get("/api/missed-chats", {
         headers: {
           "Authorization": authHeader()
         }
-      }
-      );
+      });
       setUnreadMessages(response.data);
     } catch (error) {
-      console.error('Failed to update last log in', error);
+      console.error('Failed to fetch missed chats:', error);
     }
   };
 
+  const handleNewMessageNotification = (data) => {
+    incrementNotifications(data.privateChatId || 'Team');
 
-  const closeModal = async () => {
-    setModalOpen(false);
-  }
-
-
-
-  /*const subscribeUser = (subscription) => {
-    axios.post('api/subscribe', subscription, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(response => {
-        console.log('User subscribed to push notifications:', response.data.message);
-      })
-      .catch(error => {
-        console.error('Error subscribing user:', error);
+    if (currentUser && data.senderId !== currentUser.username) {
+      const title = "New Message!";
+      const options = {
+        body: `${data.senderId} sent a message in the chat`,
+        icon: ghost,
+        vibrate: [300, 100, 400],
+      };
+      navigator.serviceWorker.ready.then(async function (serviceWorker) {
+        await serviceWorker.showNotification(title, options);
       });
-  };
-
-  const subscribeToPushNotifications = () => {
-    const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Your public VAPID key
-
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      // Ensure the service worker is ready
-      navigator.serviceWorker.ready.then(function (registration) {
-        console.log("Service Worker is ready for push notifications");
-
-        // Convert VAPID key to Uint8Array
-        const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
-
-        // Subscribe to push notifications
-        registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: convertedVapidKey
-        }).then(function (subscription) {
-          console.log('User is subscribed:', subscription);
-
-          // Send the subscription to the backend
-          subscribeUser(subscription);
-        }).catch(function (error) {
-          console.error('Failed to subscribe the user', error);
-        });
-      });
-    } else {
-      console.error('Service Worker or Push Notifications not supported in this browser');
     }
   };
-
-  // Helper function to convert VAPID key from base64 to Uint8Array
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
-*/
 
   useEffect(() => {
     if (isAuthenticated) {
+      fetchCurrentUser();
+      pullUnreadMessages();
+    }
+  }, []);
+
+  // New useEffect for socket connection once currentUser is set
+  useEffect(() => {
+    if (currentUser && isAuthenticated) {
       const token = authHeader().split(' ')[1]; // Extract the token from "Bearer <token>"
       const socketInstance = io('https://spirit.lfe.ed.tum.de/', {
         auth: {
           token: token
         },
         transports: ['websocket'],
-        autoConnect: false // Prevent auto connection
+        autoConnect: false,
       });
 
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-          // Reconnect the socket when the app becomes visible
-          window.location.reload(true);
-        }
-      };
+      socketInstance.connect();
+      socketInstance.emit('joinTeam', currentUser.team_id);
+      socketInstance.emit('userOnline', { team_id: currentUser.team_id, username: currentUser.username });
 
-      //subscribeToPushNotifications();
-
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-
-      /*if ('Notification' in window && Notification.permission !== 'granted') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            console.log('Notification permission granted');
-          } else {
-            console.log('Notification permission denied');
-          }
-        });
-      }
-*/
-      function showNotification() {
-        if (Notification.permission === 'granted') {
-          new Notification('New Message', {
-            body: 'You have a new message!'
-          });
-        }
-      }
-
-
-      socketInstance.on('newMessageMetadata', (data) => {
-
-        //console.log('Message received:', data);
-        const chatId = data.privateChatId ? data.privateChatId : 'Team';
-        // Increment notifications
-        incrementNotifications(chatId);
-        
-        //showNotification();
-
-        if (data.senderId !== currentUser.username) {
-          const title = "New Message!";
-          const options = {
-            body: data.senderId + " sent a message in the chat",
-            icon: ghost,
-            vibrate: [300, 100, 400]
-          };
-          navigator.serviceWorker.ready.then(async function (serviceWorker) {
-            await serviceWorker.showNotification(title, options);
-          });
-        }
-        // Simple notification script
-        /* if (Notification.permission === "granted") {
-           new Notification("Test Notification", { body: "This is a test notification." });
-         } else if (Notification.permission !== "denied") {
-           Notification.requestPermission().then(permission => {
-             if (permission === "granted") {
-               new Notification("Test Notification", { body: "This is a test notification." });
-             }
-           });
-         }
- */
-
-        // Get the current username based on currentTab
-        /*const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
-        console.log(currentUser);
-        console.log(currentTab);
-  
-        // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
-        if (currentUser === chatId || (parseInt(currentTab) === 1 && chatId === 'Team')) {
-          // markAsRead(privateChatId);
-      }*/
-      });
+      socketInstance.on('newMessageMetadata', handleNewMessageNotification);
 
       socketInstance.on('updateUserStatus', ({ data }) => {
-        for (const username in data) {
-          data[username] = 'online';
-        }
-        setOnlineStatus(data);
-        setLoading(false);
-      });
-
-
-
-      socketInstance.on('userDisconnected', () => {
-      });
-
-      socketInstance.on('connect', () => {
-        console.log('Connected to WebSocket');
+        // Handle online status
+        console.log('User status updated', data);
       });
 
       socketInstance.on('disconnect', () => {
         console.log('Disconnected from WebSocket');
-        //updateLastLoggedIn(unreadMessages);
       });
 
-
-      pullUnreadMessages();
-      fetchCurrentUser(socketInstance);
-      fetchUserSettings();
-      fetchProject();
       setSocket(socketInstance);
 
       return () => {
-        socketInstance.off('updateUserStatus');
-        socketInstance.off('newMessageMetadata');
-        //updateLastLoggedIn(unreadMessages);
-        //socketInstance.disconnect();
+        socketInstance.off('newMessageMetadata', handleNewMessageNotification);
+        socketInstance.disconnect();
       };
-    } else {
-      logout();
-      navigate("/login");
-      setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   if (loading) {
     return (
@@ -355,9 +119,9 @@ export const SocketProvider = ({ children }) => {
   }
 
   return (
-    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, projectInformation, updateLastLoggedIn, updateSettings }}>
+    <SocketContext.Provider value={{ currentUser, socket }}>
       {children}
-      <TKIForm visible={isModalOpen} onClose={closeModal} />
+      <TKIForm visible={isModalOpen} onClose={() => setModalOpen(false)} />
     </SocketContext.Provider>
   );
 };
