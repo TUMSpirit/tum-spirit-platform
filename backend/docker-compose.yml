@@ -17,6 +17,8 @@ services:
       - "4000:4000"
     depends_on:
       - mongo
+    env_file:
+      - .env
 
   mongo:
     image: mongo:latest
