@@ -161,6 +161,22 @@ export const SocketProvider = ({ children }) => {
     setModalOpen(false);
   }
 
+
+
+const subscribeUser = (subscription) => {
+  axios.post('api/subscribe', subscription, {
+      headers: {
+          'Content-Type': 'application/json'
+      }
+  })
+  .then(response => {
+      console.log('User subscribed to push notifications:', response.data.message);
+  })
+  .catch(error => {
+      console.error('Error subscribing user:', error);
+  });
+};
+
   const subscribeToPushNotifications = () => {
     const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Replace with your actual public VAPID key
 
@@ -168,24 +184,15 @@ export const SocketProvider = ({ children }) => {
         // Convert VAPID key to Uint8Array
         const convertedVapidKey = urlBase64ToUint8Array(publicVapidKey);
 
-        // Subscribe the user
         registration.pushManager.subscribe({
-            userVisibleOnly: true,  // Ensure notifications are always visible
-            applicationServerKey: convertedVapidKey
-        }).then(function(subscription) {
-            // Send the subscription to your backend
-            fetch('https://spirit.lfe.ed.tum.de/subscribe', {
-                method: 'POST',
-                body: JSON.stringify(subscription),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(() => {
-                console.log('User subscribed to push notifications.');
-            });
-        }).catch(err => {
-            console.error('Failed to subscribe user:', err);
-        });
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey
+      }).then(function(subscription) {
+          // Send the subscription to the FastAPI backend
+          subscribeUser(subscription);
+      }).catch(function(error) {
+          console.error('Failed to subscribe the user', error);
+      });
     });
 };
 
