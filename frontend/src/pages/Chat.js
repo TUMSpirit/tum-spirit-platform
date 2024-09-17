@@ -7,11 +7,12 @@ import { notification } from 'antd';
 import { useAuthHeader } from 'react-auth-kit';
 import axios from 'axios';
 import { useSocket } from '../context/SocketProvider';
+import ghost from '../assets/images/ios_180x180.png';
+
 
 const Chat = () => {
 
     const {currentUser, onlineStatus, socket, updateLastLoggedIn} = useSocket(); 
-
     const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages} = useUnreadMessage();
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
@@ -23,7 +24,6 @@ const Chat = () => {
     const [typingUser, setTypingUser] = useState(null);
     const HEADER_HEIGHT_PX = 190;
     const authHeader = useAuthHeader();
-    //const [currentUser, setCurrentUser] = useState(null);
     const [setAutoScroll] = useState(true);
     const [teamMembers, setTeamMembers] = useState([]);
     const [privateChatId, setPrivateChatId] = useState(null);
@@ -31,26 +31,6 @@ const Chat = () => {
     const [messagePage, setMessagePage] = useState(1);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const [loading, setLoading] = useState(false);
-
-    //const [onlineStatus, setOnlineStatus] = useState({}); // New state for online status
-
-    /*const fetchCurrentUser = async () => {
-        try {
-            const response = await axios.get('/api/me', {
-                headers: {
-                    "Authorization": authHeader()
-                }
-            });
-            const {team_id, username} = response.data;
-            //setCurrentUser(response.data);
-            socket.auth = { teamId: team_id };
-            socket.connect();
-            socket.emit('joinTeam', team_id);
-            socket.emit('userOnline', {team_id, username}); // Notify server that user is online
-        } catch (error) {
-            console.error('Failed to fetch current user:', error);
-        }
-    };*/
 
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
@@ -137,6 +117,18 @@ const Chat = () => {
                   markAsRead(chatId);
                   chatUser? updateLastLoggedIn(chatUser):updateLastLoggedIn("Team");
                 }
+
+                if (data.senderId !== currentUser.username) {
+                    const title = "New Message!";
+                    const options = {
+                      body: data.senderId + " sent a message in the chat",
+                      icon: ghost,
+                      vibrate: [300, 100, 400]
+                    };
+                    navigator.serviceWorker.ready.then(async function (serviceWorker) {
+                      await serviceWorker.showNotification(title, options);
+                    });
+                  }
             }
         };
 
