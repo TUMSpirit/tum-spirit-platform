@@ -153,7 +153,7 @@ export const SocketProvider = ({ children }) => {
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'visible') {
       // Reconnect the socket when the app becomes visible
-      //window.location.reload(false);
+      window.location.reload(false);
     }
   };
 
