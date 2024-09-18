@@ -1,5 +1,5 @@
 self.addEventListener('push', (event) => {
-    console.log("testt");
+    alert("testt");
     let pushData = event.data.json();
     if (!pushData || !pushData.title) {
         console.error('Received WebPush with an empty title. Received body: ', pushData);
