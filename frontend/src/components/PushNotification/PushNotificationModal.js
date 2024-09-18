@@ -1,6 +1,7 @@
 import { triggerFocus } from 'antd/es/input/Input';
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Typography } from "antd";
+import axios from 'axios';
 
 const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
   const [subscription, setSubscription] = useState(null);
@@ -69,12 +70,63 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
     };
     try {
       let subscription = await pushManager.subscribe(subscriptionOptions);
+      subscribeUser(subscription);
       displaySubscriptionInfo(subscription);
       setSubscribed(true);
     } catch (error) {
       alert('User denied push permission');
     }
   };
+
+  const subscribeUser = (subscription) => {
+    axios.post('api/subscribe', subscription, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('User subscribed to push notifications:', response.data.message);
+    })
+    .catch(error => {
+        console.error('Error subscribing user:', error);
+    });
+  };
+
+  const subscribeToPushNotifications = () => {
+    const publicVapidKey = 'BD5BRBxsxQruqlU6tUPQMO0-JvE9BH9yLukmsHqiaMd_rWmMHiplKoMD762P0t1Sb9KV0Dqphn9yXDN4PsHPyd4'; // Your public VAPID key
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        // Ensure the service worker is ready
+        navigator.serviceWorker.ready.then(function(registration) {
+            console.log("Service Worker is ready for push notifications");
+            // Convert VAPID key to Uint8Array
+            const convertedVapidKey = publicVapidKey;
+            // Subscribe to push notifications
+            registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey
+            }).then(function(subscription) {
+                // Send the subscription to the backend
+                subscribeUser(subscription);
+            }).catch(function(error) {
+                console.error('Failed to subscribe the user', error);
+            });
+        });
+    } else {
+        console.error('Service Worker or Push Notifications not supported in this browser');
+    }
+  };
+
+  // Helper function to convert VAPID key from base64 to Uint8Array
+  function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+  }
 
   const displaySubscriptionInfo = (subscription) => {
     setSubscription(subscription);
