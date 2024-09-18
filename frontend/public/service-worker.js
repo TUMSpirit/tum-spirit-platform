@@ -1,12 +1,21 @@
 self.addEventListener('push', (event) => {
+    console.log("testt");
     let pushData = event.data.json();
     if (!pushData || !pushData.title) {
         console.error('Received WebPush with an empty title. Received body: ', pushData);
     }
-    self.registration.showNotification(pushData.title, pushData)
+    const title = "New Message!";
+    const options = {
+        body: "sent a message in the chat",
+        vibrate: [300, 100, 400]
+    };
+    navigator.serviceWorker.ready.then(async function (serviceWorker) {
+        await serviceWorker.showNotification(title, options);
+    });
+    /*self.registration.showNotification(pushData.title, pushData)
         .then(() => {
             // Optional analytics tracking
-        });
+        });*/
 });
 
 self.addEventListener('notificationclick', function (event) {
