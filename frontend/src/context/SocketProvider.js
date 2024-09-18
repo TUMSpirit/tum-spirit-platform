@@ -179,7 +179,7 @@ export const SocketProvider = ({ children }) => {
         //showNotification(); 
            axios.post('api/send-notification')
             .then(response => {
-                alert(response.data.message);  // Should say "Notification sent"
+              //  alert(response.data.message);  // Should say "Notification sent"
             })
             .catch(error => {
                 console.error('Error triggering notification:', error);
