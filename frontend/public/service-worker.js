@@ -9,8 +9,10 @@ self.addEventListener('push', (event) => {
         body: "sent a message in the chat",
         vibrate: [300, 100, 400]
     };
-
-     await self.registration.showNotification(title, options);
+    self.registration.showNotification(pushData.title, pushData)
+        .then(() => {
+            // Optional analytics tracking
+        });
 });
 
 self.addEventListener('notificationclick', function (event) {
