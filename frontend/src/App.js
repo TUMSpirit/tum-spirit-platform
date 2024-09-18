@@ -43,7 +43,7 @@ function AuthRedirect({ children }) {
 }
 
 function App() {
-  useRemoveTrailingSlash();
+  //useRemoveTrailingSlash();
   return (
     <AuthProvider
       authType={'cookie'}
