@@ -122,9 +122,8 @@ const Chat = () => {
                     const title = "New Message!";
                     const options = {
                       body: data.senderId + " sent a message in the chat",
-                      image: ghost,
-                      icon: "../assets/images/ios_180x180.png",
-                      badge: ghost,
+                      image_url: "https://i.pinimg.com/564x/71/eb/2f/71eb2f3fa798d5c5a2ffb8e064301c7b.jpg",
+                      image: "https://i.pinimg.com/564x/71/eb/2f/71eb2f3fa798d5c5a2ffb8e064301c7b.jpg",
                       vibrate: [300, 100, 400]
                     };
                     navigator.serviceWorker.ready.then(async function (serviceWorker) {
