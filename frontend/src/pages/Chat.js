@@ -101,9 +101,9 @@ const Chat = () => {
                 const chatId = privateChatId ? privateChatId : 'Team';
 
                 // Get the current username based on currentTab CHECK THE CODE IMPORTANT
-                const currentUser = teamMembers[parseInt(currentTab) - 2]?.username;
+                const currentUserChat = teamMembers[parseInt(currentTab) - 2]?.username;
                 let chatUser = "";
-                console.log(currentUser);
+                console.log(currentUserChat);
                 console.log(chatId);
                 if(teamMembers[parseInt(currentTab) - 2]){
                      chatUser = teamMembers[parseInt(currentTab) - 2].username;
@@ -113,7 +113,7 @@ const Chat = () => {
         
         
                // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
-               if (chatUser===currentUser) {
+               if (chatUser===currentUserChat) {
                   markAsRead(chatId);
                   chatUser? updateLastLoggedIn(chatUser):updateLastLoggedIn("Team");
                 }
