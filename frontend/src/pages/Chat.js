@@ -7,7 +7,7 @@ import { notification } from 'antd';
 import { useAuthHeader } from 'react-auth-kit';
 import axios from 'axios';
 import { useSocket } from '../context/SocketProvider';
-import ghost from '../assets/images/ios_180x180.png';
+import ghost from '../../public/home/android_512x512.png';
 
 
 const Chat = () => {
