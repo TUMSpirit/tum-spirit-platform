@@ -123,6 +123,8 @@ const Chat = () => {
                     const options = {
                       body: data.senderId + " sent a message in the chat",
                       image: ghost,
+                      icon: ghost,
+                      badge: ghost,
                       vibrate: [300, 100, 400]
                     };
                     navigator.serviceWorker.ready.then(async function (serviceWorker) {
