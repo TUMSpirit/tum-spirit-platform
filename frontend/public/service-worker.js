@@ -9,7 +9,7 @@ self.addEventListener('push', (event) => {
         vibrate: [300, 100, 400]
     };
    event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(title, options)
   );
 });
 
