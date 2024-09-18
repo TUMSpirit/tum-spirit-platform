@@ -32,9 +32,6 @@ const Chat = () => {
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const [loading, setLoading] = useState(false);
 
-    // Debounced tab switch to avoid quick switching issues
-    const [switchingTab, setSwitchingTab] = useState(false);
-
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
             try {
@@ -55,23 +52,28 @@ const Chat = () => {
     };
 
     const fetchMessages = async (reset = false) => {
+        if (currentUser && hasMoreMessages) {
+            setLoading(true);
+            try {
+                const headers = { 'Authorization': authHeader() };
+                if (privateChatId) {
+                    headers['Private-Chat-Id'] = privateChatId;
+                }
+                const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
+                    method: 'GET',
+                    headers: headers,
+                });
 
-        try {
-            const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
-                headers: { 'Authorization': authHeader() },
-            });
-
-            if (reset) {
-                setMessages(response.data);
-            } else {
-                setMessages(prevMessages => [...prevMessages, ...response.data]);
+                setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
+                if (response.data.length === 0) {
+                    setHasMoreMessages(false);
+                }
+            } catch (error) {
+                console.error('Failed to fetch messages:', error);
             }
-
-            if (response.data.length === 0) {
-                setHasMoreMessages(false);
+            finally {
+                setLoading(false);  // Stop loading when fetch is complete
             }
-        } catch (error) {
-            console.error('Failed to fetch messages:', error);
         }
     };
 
@@ -230,32 +232,41 @@ const Chat = () => {
         };
     }, [socket, incrementNotifications]);*/
 
-
-    const handleTabChange = async (key) => {
-        setLoading(true);
+     const handleTabChange = async (key) => {
+        console.log('Current Tab:', currentTab);
+        console.log('Selected Tab:', key);
+    
+        const currTab = currentTab;
+    
+        if (key !== '1') {
+            console.log('Switching to Private Chat:', teamMembers[parseInt(key) - 2].username);
+            await updateLastLoggedIn(teamMembers[parseInt(key) - 2].username);
+        } else {
+            console.log('Switching to Team Chat');
+            await updateLastLoggedIn("Team");
+        }
+    
         setCurrentTab(key);
-        setMessagePage(1); // Reset page count
-        setHasMoreMessages(true); // Reset message fetching
-
-        const selectedMember = teamMembers[parseInt(key) - 2]?.username;
-        const newPrivateChatId = selectedMember
-            ? getPrivateChatId(currentUser.username, selectedMember)
-            : null;
-
-        setPrivateChatId(newPrivateChatId);
-
-        if (newPrivateChatId) {
-            await updateLastLoggedIn(selectedMember);
+    
+        if (key !== '1') {
+            const memberUsername = teamMembers[parseInt(key) - 2].username;
+            const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
+            console.log('New Private Chat ID:', newPrivateChatId);
             markAsRead(newPrivateChatId);
+            setPrivateChatId(newPrivateChatId);
             socket.emit('joinPrivateChat', newPrivateChatId);
         } else {
-            await updateLastLoggedIn("Team");
+            console.log('Joining Team Chat');
+            setPrivateChatId(null);
             markAsRead("Team");
             socket.emit('joinTeam', currentUser.team_id);
         }
-
-        await fetchMessages(true);
-        setLoading(false); // Fetch new messages for the selected tab
+    
+        setMessagePage(1);
+        setHasMoreMessages(true);
+        console.log('Fetching messages...');
+        fetchMessages(true);
+        console.log('Messages fetched');
     };
 
 
