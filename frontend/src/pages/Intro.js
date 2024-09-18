@@ -108,7 +108,7 @@ const TypeWriterDialog = () => {
         } else {
             setIsFadingOut(true);
             setTimeout(() => {
-                navigate('/home');
+                navigate('/');
             }, 1000);
         }
     };
