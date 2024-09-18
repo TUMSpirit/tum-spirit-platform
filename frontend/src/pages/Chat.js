@@ -122,9 +122,10 @@ const Chat = () => {
                     const title = "New Message!";
                     const options = {
                       body: data.senderId + " sent a message in the chat",
-                      image_url: "https://i.pinimg.com/564x/71/eb/2f/71eb2f3fa798d5c5a2ffb8e064301c7b.jpg",
-                      image: "https://i.pinimg.com/564x/71/eb/2f/71eb2f3fa798d5c5a2ffb8e064301c7b.jpg",
-                      icon: "./public/home/android_192x192.png",
+                      image_url: ghost,
+                      image: ghost,
+                      icon: ghost,
+                      icon_url: ghost,
                       vibrate: [300, 100, 400]
                     };
                     navigator.serviceWorker.ready.then(async function (serviceWorker) {
