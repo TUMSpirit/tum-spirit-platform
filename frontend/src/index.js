@@ -27,7 +27,7 @@ const Centered = styled("div", {
   width: "100%",
 });
 
-/*if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
         .then((registration) => {
@@ -37,7 +37,7 @@ const Centered = styled("div", {
             console.error('Service Worker registration failed:', error);
         });
     });
-}*/
+}
 
 
 const root = ReactDOM.createRoot(
