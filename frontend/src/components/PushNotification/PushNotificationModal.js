@@ -11,6 +11,7 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
   useEffect(() => {
     if (navigator.serviceWorker) {
       initServiceWorker();
+      subscribeToPushNotifications();
     }
   }, []);
 
@@ -70,7 +71,7 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
     };
     try {
       let subscription = await pushManager.subscribe(subscriptionOptions);
-      subscribeUser(subscription);
+      //subscribeUser(subscription);
       displaySubscriptionInfo(subscription);
       setSubscribed(true);
     } catch (error) {
@@ -116,11 +117,22 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
     }
   };
 
-   const displaySubscriptionInfo = (subscription) => {
+  // Helper function to convert VAPID key from base64 to Uint8Array
+  function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+  }
+
+  const displaySubscriptionInfo = (subscription) => {
     setSubscription(subscription);
     console.log('Active subscription:', subscription);
   };
-
 
   /*const testSend = () => {
     const title = "Push title";
