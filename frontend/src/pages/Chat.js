@@ -55,7 +55,6 @@ const Chat = () => {
     };
 
     const fetchMessages = async (reset = false) => {
-        if (!currentUser || !hasMoreMessages) return;
 
         try {
             const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
@@ -233,11 +232,8 @@ const Chat = () => {
 
 
     const handleTabChange = async (key) => {
-        if (switchingTab) return; // Prevent tab switching during debounce
-
-        setSwitchingTab(true); // Debounce flag
+        setLoading(true);
         setCurrentTab(key);
-        setMessages([]); // Clear messages for new tab
         setMessagePage(1); // Reset page count
         setHasMoreMessages(true); // Reset message fetching
 
@@ -258,10 +254,8 @@ const Chat = () => {
             socket.emit('joinTeam', currentUser.team_id);
         }
 
-        await fetchMessages(true); // Fetch new messages for the selected tab
-
-        // Debounce tab switching by 500ms to avoid rapid tab switches
-        setTimeout(() => setSwitchingTab(false), 500);
+        await fetchMessages(true);
+        setLoading(false); // Fetch new messages for the selected tab
     };
 
 
