@@ -146,6 +146,54 @@ export const SocketProvider = ({ children }) => {
   };
 
 
+    // Register Service Worker and ask for notification permission
+  async function registerServiceWorkerAndSubscribe() {
+      const publicVapidKey = 'BAwUJxIa7mJZMqu78Tfy2Sb1BWnYiAatFCe1cxpnM-hxNtXjAwaNKz1QKLU8IYYhjUASOFzSvSnMgC00vfsU0IM';
+
+      // Request notification permission from the user
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+          console.error('Notification permission denied.');
+          return;
+      }
+  
+      console.log('Notification permission granted.');
+  
+      // Register service worker
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('Service Worker registered:', registration);
+  
+      // Subscribe to push notifications
+      const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+      });
+  
+      console.log('Push subscription:', subscription);
+  
+      // Send subscription to backend
+      await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(subscription),
+      });
+  }
+  
+  // Helper to convert VAPID public key from base64
+  function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+  }
+
+
   const closeModal = async () => {
     setModalOpen(false);
   }
@@ -168,6 +216,7 @@ export const SocketProvider = ({ children }) => {
         autoConnect: false // Prevent auto connection
       });
 
+      registerServiceWorkerAndSubscribe();
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
       socketInstance.on('newMessageMetadata', (data) => {
