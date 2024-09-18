@@ -118,7 +118,7 @@ const Chat = () => {
                   chatUser? updateLastLoggedIn(chatUser):updateLastLoggedIn("Team");
                 }
 
-                if (data.senderId !== currentUser.username) {
+                /*if (data.senderId !== currentUser.username) {
                     const title = "New Message!";
                     const options = {
                       body: data.senderId + " sent a message in the chat",
@@ -131,7 +131,7 @@ const Chat = () => {
                     navigator.serviceWorker.ready.then(async function (serviceWorker) {
                       await serviceWorker.showNotification(title, options);
                     });
-                  }
+                  }*/
             }
         };
 
