@@ -72,7 +72,7 @@ const Chat = () => {
     };
 
     const fetchMessages = async (reset = false) => {
-        if (currentUser && hasMoreMessages) {
+        if (currentUser) {
             setLoading(true);
             try {
                 const headers = { 'Authorization': authHeader() };
@@ -81,12 +81,9 @@ const Chat = () => {
                 }
 
             const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
-                headers: {
-                    ...headers,
-                    'Cache-Control': 'no-cache', // Disable caching
-                },
-            });
-
+                    method: 'GET',
+                    headers: headers,
+                });
             console.log('Fetched messages response:', response.data); // Debugging response data
 
             setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
