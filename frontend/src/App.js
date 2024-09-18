@@ -39,7 +39,7 @@ export function useRemoveTrailingSlash() {
 
 function AuthRedirect({ children }) {
   const auth = useAuthUser();
-  return auth() ? <Navigate to="/home" replace /> : children;
+  return auth() ? <Navigate to="/" replace /> : children;
 }
 
 function App() {
@@ -54,7 +54,7 @@ function App() {
       <UnreadMessageProvider>
         <SocketProvider>
             <Routes>
-              <Route path="/intro" element={<TypewriterDialog />} />
+              <Route path="/" element={<TypewriterDialog />} />
               <Route
                 path="*"
                 element={
@@ -67,10 +67,10 @@ function App() {
                         <Route path="/team" element={<Team />} />
                         <Route path="/documents" element={<Documents />} />
                         <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/home" element={<Home />} />
+                        <Route path="/" element={<Home />} />
                         <Route
                           path="*"
-                          element={<Navigate to="/home" replace />}
+                          element={<Navigate to="/" replace />}
                         />
                       </Routes>
                     </Main>
