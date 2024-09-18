@@ -7,7 +7,7 @@ from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
 # import routers
 from .src.routers import auth
 from .src.routers import settings
-#from .src.routers import push
+from .src.routers import push
 from .src.routers import project
 from .src.routers import milestone
 from .src.routers import team
