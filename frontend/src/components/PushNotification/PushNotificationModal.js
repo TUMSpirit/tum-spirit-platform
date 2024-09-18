@@ -116,6 +116,12 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
     }
   };
 
+   const displaySubscriptionInfo = (subscription) => {
+    setSubscription(subscription);
+    console.log('Active subscription:', subscription);
+  };
+
+
   /*const testSend = () => {
     const title = "Push title";
     const options = {
