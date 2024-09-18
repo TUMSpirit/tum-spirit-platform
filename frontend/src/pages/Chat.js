@@ -79,11 +79,6 @@ const Chat = () => {
                 if (privateChatId) {
                     headers['Private-Chat-Id'] = privateChatId;
                 }
-                const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
-                    method: 'GET',
-                    headers: headers,
-                });
-            console.log('Fetching messages with headers:', headers); // Debugging headers
 
             const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
                 headers: {
