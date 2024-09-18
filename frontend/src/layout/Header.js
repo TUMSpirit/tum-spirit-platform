@@ -205,7 +205,7 @@ function Header({
           {subHeaderComponent.component}
         </div>
       )}
-      <PushNotificationModal isModalOpen={modalIsOpen} setModalIsOpen={setModalIsOpen}></PushNotificationModal>
+      <PushNotificationModal modalIsOpen={modalIsOpen} setModalIsOpen={setModalIsOpen}></PushNotificationModal>
       <ImprintModal isVisible={imprintVisible} setIsVisible={setImprintVisible}></ImprintModal>
       <TutorialPopup open={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
     </>
