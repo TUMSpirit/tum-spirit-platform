@@ -53,14 +53,6 @@ function App() {
                       <Route path="/documents" element={<Documents />} />
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/home" element={<Home />} />
-                      <Route
-                        path="*"
-                        element={<Navigate to="/home" replace />}
-                      />
-                      <Route
-                        path="/"
-                        element={<Navigate to="/home" replace />}
-                      />
                     </Routes>
                   </Main>
                 </RequireAuth>
