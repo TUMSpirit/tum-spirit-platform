@@ -54,7 +54,7 @@ function App() {
       <UnreadMessageProvider>
         <SocketProvider>
             <Routes>
-              <Route path="/" element={<TypewriterDialog />} />
+              <Route path="/intro" element={<TypewriterDialog />} />
               <Route
                 path="*"
                 element={
