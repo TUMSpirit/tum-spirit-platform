@@ -1,16 +1,15 @@
-self.addEventListener('push', (event) => {
-    let pushData = event.data.json();
-    if (!pushData || !pushData.title) {
-        console.error('Received WebPush with an empty title. Received body: ', pushData);
-    }
-    const title = "New Message!";
+self.addEventListener('push', function(event) {
+    const data = event.data ? event.data.json() : {};
+
     const options = {
-        body: "sent a message in the chat",
-        vibrate: [300, 100, 400]
+        body: data.body || 'You have a new notification!',
+        icon: data.icon || '/icon.png',
+        data: { url: data.url || '/' }
     };
-   event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+
+    event.waitUntil(
+        self.registration.showNotification(data.title || 'New Notification!', options)
+    );
 });
 
 self.addEventListener('notificationclick', function (event) {
