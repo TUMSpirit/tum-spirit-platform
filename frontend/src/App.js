@@ -52,6 +52,7 @@ function App() {
                       <Route path="/team" element={<Team />} />
                       <Route path="/documents" element={<Documents />} />
                       <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/home/" element={<Navigate to="/home" replace />} />
                       <Route path="/home" element={<Home />} />
                       <Route
                         path="*"
