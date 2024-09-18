@@ -122,7 +122,7 @@ const Chat = () => {
                     const title = "New Message!";
                     const options = {
                       body: data.senderId + " sent a message in the chat",
-                      icon: ghost,
+                      image: ghost,
                       vibrate: [300, 100, 400]
                     };
                     navigator.serviceWorker.ready.then(async function (serviceWorker) {
