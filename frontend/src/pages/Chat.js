@@ -265,7 +265,7 @@ const Chat = () => {
         setMessagePage(1);
         setHasMoreMessages(true);
         console.log('Fetching messages...');
-        await fetchMessages(true);
+        fetchMessages(true);
         console.log('Messages fetched');
     };
 
