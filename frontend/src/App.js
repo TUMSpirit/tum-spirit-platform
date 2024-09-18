@@ -21,6 +21,22 @@ import TypewriterDialog from "./pages/Intro.js";
 
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
 
+
+
+// Helper Component to remove trailing slashes
+function RemoveTrailingSlash({ children }) {
+  const location = useLocation();
+  
+  // Remove trailing slash if present
+  useEffect(() => {
+    if (location.pathname !== '/' && location.pathname.endsWith('/')) {
+      window.history.replaceState(null, '', location.pathname.slice(0, -1));
+    }
+  }, [location.pathname]);
+
+  return children;
+}
+
 // src/index.js or src/App.js
 
 function AuthRedirect({ children }) {
@@ -52,7 +68,6 @@ function App() {
                       <Route path="/team" element={<Team />} />
                       <Route path="/documents" element={<Documents />} />
                       <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/home/" element={<Navigate to="/home" replace />} />
                       <Route path="/home" element={<Home />} />
                       <Route
                         path="*"
