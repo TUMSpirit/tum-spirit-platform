@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, RequireAuth, useAuthUser } from "react-auth-kit";
 import { UnreadMessageProvider } from './context/UnreadMessageContext';
 import { SocketProvider } from './context/SocketProvider.js';
@@ -21,20 +21,18 @@ import TypewriterDialog from "./pages/Intro.js";
 
 axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
 
-
-
-// Helper Component to remove trailing slashes
-function RemoveTrailingSlash({ children }) {
+export function useRemoveTrailingSlash() {
   const location = useLocation();
-  
-  // Remove trailing slash if present
-  useEffect(() => {
-    if (location.pathname !== '/' && location.pathname.endsWith('/')) {
-      window.history.replaceState(null, '', location.pathname.slice(0, -1));
-    }
-  }, [location.pathname]);
+  const navigate = useNavigate();
 
-  return children;
+  useEffect(() => {
+    const { pathname } = location;
+
+    // Check if the path ends with a slash and is not the root path "/"
+    if (pathname !== '/' && pathname.endsWith('/')) {
+      navigate(pathname.slice(0, -1), { replace: true });
+    }
+  }, [location, navigate]);
 }
 
 // src/index.js or src/App.js
@@ -45,6 +43,7 @@ function AuthRedirect({ children }) {
 }
 
 function App() {
+  useRemoveTrailingSlash();
   return (
     <AuthProvider
       authType={'cookie'}
