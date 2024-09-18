@@ -53,14 +53,11 @@ async def send_notification():
         payload = {
             "title": "Push Notification",
             "body": "This is a notification from your PWA!",
-            "icon": "/icon.png",  # Adjust to your icon path
-            "data": {
-                "url": "https://your-pwa-url.com/success"  # Change to your PWA URL
-            }
+            "icon": "/icon.png"  # Adjust to your icon path
         }
         
         # Retrieve all subscriptions from MongoDB
-        subscriptions = subscriptions_collection.find()
+        subscriptions = subscriptions_collection.find({}, {'_id': False})
 
         # Loop over each subscription and send the notification
         for subscription in subscriptions:
