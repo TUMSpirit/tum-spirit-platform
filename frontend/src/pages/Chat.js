@@ -123,7 +123,7 @@ const Chat = () => {
                     const options = {
                       body: data.senderId + " sent a message in the chat",
                       image: ghost,
-                      icon: "../assets/images/ios_192x192.png",
+                      icon: "../assets/images/ios_180x180.png",
                       badge: ghost,
                       vibrate: [300, 100, 400]
                     };
