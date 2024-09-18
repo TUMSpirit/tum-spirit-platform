@@ -54,39 +54,41 @@ function App() {
     >
       <UnreadMessageProvider>
         <SocketProvider>
-          <Routes>
-            <Route path="/intro" element={<TypewriterDialog />} />
-            <Route
-              path="*"
-              element={
-                <RequireAuth loginPath="/login">
-                  <Main>
-                    <Routes>
-                      <Route path="/calendar" element={<Calendar />} />
-                      <Route path="/chat" element={<Chat />} />
-                      <Route path="/kanban" element={<Kanban />} />
-                      <Route path="/team" element={<Team />} />
-                      <Route path="/documents" element={<Documents />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/home" element={<Home />} />
-                      <Route
-                        path="*"
-                        element={<Navigate to="/home" replace />}
-                      />
-                    </Routes>
-                  </Main>
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <AuthRedirect>
-                  <Login />
-                </AuthRedirect>
-              }
-            />
-          </Routes>
+           <RemoveTrailingSlash>
+            <Routes>
+              <Route path="/intro" element={<TypewriterDialog />} />
+              <Route
+                path="*"
+                element={
+                  <RequireAuth loginPath="/login">
+                    <Main>
+                      <Routes>
+                        <Route path="/calendar" element={<Calendar />} />
+                        <Route path="/chat" element={<Chat />} />
+                        <Route path="/kanban" element={<Kanban />} />
+                        <Route path="/team" element={<Team />} />
+                        <Route path="/documents" element={<Documents />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/home" element={<Home />} />
+                        <Route
+                          path="*"
+                          element={<Navigate to="/home" replace />}
+                        />
+                      </Routes>
+                    </Main>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <AuthRedirect>
+                    <Login />
+                  </AuthRedirect>
+                }
+              />
+            </Routes>
+          </RemoveTrailingSlash>
         </SocketProvider>
       </UnreadMessageProvider>
     </AuthProvider >
