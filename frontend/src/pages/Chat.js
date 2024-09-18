@@ -32,6 +32,9 @@ const Chat = () => {
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const [loading, setLoading] = useState(false);
 
+    // Debounced tab switch to avoid quick switching issues
+    const [switchingTab, setSwitchingTab] = useState(false);
+
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
             try {
