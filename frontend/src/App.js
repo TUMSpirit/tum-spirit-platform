@@ -53,7 +53,6 @@ function App() {
     >
       <UnreadMessageProvider>
         <SocketProvider>
-           <RemoveTrailingSlash>
             <Routes>
               <Route path="/intro" element={<TypewriterDialog />} />
               <Route
@@ -87,7 +86,6 @@ function App() {
                 }
               />
             </Routes>
-          </RemoveTrailingSlash>
         </SocketProvider>
       </UnreadMessageProvider>
     </AuthProvider >
