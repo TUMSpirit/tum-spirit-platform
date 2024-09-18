@@ -44,7 +44,7 @@ def application_setup() -> FastAPI:
     application.include_router(auth.router, prefix="/api")
     #application.include_router(celery.router, prefix="/api")
     application.include_router(settings.router, prefix="/api")
-    #application.include_router(push.router, prefix="/api")
+    application.include_router(push.router, prefix="/api")
     application.include_router(project.router, prefix="/api")
     application.include_router(milestone.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
