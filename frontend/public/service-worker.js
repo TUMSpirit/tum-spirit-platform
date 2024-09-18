@@ -9,13 +9,10 @@ self.addEventListener('push', (event) => {
         body: "sent a message in the chat",
         vibrate: [300, 100, 400]
     };
-    navigator.serviceWorker.ready.then(async function (serviceWorker) {
+    /*navigator.serviceWorker.ready.then(async function (serviceWorker) {
         await serviceWorker.showNotification(title, options);
-    });
-    /*self.registration.showNotification(pushData.title, pushData)
-        .then(() => {
-            // Optional analytics tracking
-        });*/
+    });*/
+     await self.registration.showNotification(pushData.title, pushData);
 });
 
 self.addEventListener('notificationclick', function (event) {
