@@ -230,7 +230,7 @@ function Sidenav({ color }) {
       <Menu theme="light" mode="inline" defaultSelectedKeys={[page]}>
 
         <Menu.Item key="home">
-          <NavLink to="/home">
+          <NavLink to="/">
             <span
               className="icon"
               style={{
