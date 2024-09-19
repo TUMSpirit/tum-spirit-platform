@@ -57,17 +57,25 @@ async def send_notification():
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
             try:
-                hardcoded_subscription = {
-                    "endpoint": "https://web.push.apple.com/QF2ROOGObnudptrFHZyVa975CLXU8iS4miFMPqlLpwmRUctq_UrukRrOn77XSieCozrujlHwicODRY-vOljcq44JuW93EzrMkJ89NqH4oDQe40xiYh64hA-1QBQc9bpRDaR9c0Gz73C20bbgSWOPHJiGs0S47qRerYTNAA_GTYc",
-                    "expirationTime": None,
-                    "keys": {
-                        "p256dh": "BIr74ZN4C80CnvoywTmNfLNb3dIlrL9UET8hpC7G32RucUe245JZKXBlxP3brwXhY8ede7Enjgcl4DyelcJXrj0",
-                        "auth": "hSSZxvlU7V0GVgnpRmi9KQ"
-                    }
-                }
+                    dynamic_subscription = {
+                        "endpoint": str(subscription.get('endpoint')),
+                        "keys": {
+                            "p256dh": str(subscription['keys'].get('p256dh')),  # Ensure p256dh is a string
+                            "auth": str(subscription['keys'].get('auth'))  # Ensure auth is a string
+                            }
+                        }
+            
+                    # Serialize the dynamic subscription without expirationTime
+                    dynamic_subscription_json = json.dumps(dynamic_subscription)
+            
+                    # Load it back into a Python dictionary after dumping
+                    dynamic_subscription = json.loads(dynamic_subscription_json)
+            
+                    # Now manually add the expirationTime as None
+                    dynamic_subscription['expirationTime'] = None
                 
                 webpush(
-                        subscription_info=hardcoded_subscription,  # Pass subscription_info directly as a dict
+                        subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
                         data=json.dumps(payload),  # Payload serialized to JSON for all browsers
                         vapid_private_key=VAPID_PRIVATE_KEY,
                         vapid_claims=VAPID_CLAIMS
