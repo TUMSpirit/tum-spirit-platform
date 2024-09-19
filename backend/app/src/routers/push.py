@@ -31,15 +31,25 @@ class PushSubscription(BaseModel):
 
 @router.post("/subscribe")
 async def subscribe(subscription: PushSubscription):
-    """Save the subscription to the MongoDB collection."""
+    """Save the subscription to the MongoDB collection as either Apple or Android."""
     try:
-        # Check if subscription already exists
-        existing_subscription = subscriptions_collection.find_one({"endpoint": subscription.endpoint})
-        if not existing_subscription:
-            subscriptions_collection.insert_one(subscription.dict())
-            return {"message": "Subscription added."}
+        # Determine the platform by inspecting the endpoint
+        if "web.push.apple.com" in subscription.endpoint:
+            # Check if subscription already exists in apple_subscriptions
+            existing_subscription = apple_subscriptions_collection.find_one({"endpoint": subscription.endpoint})
+            if not existing_subscription:
+                apple_subscriptions_collection.insert_one(subscription.dict())
+                return {"message": "Apple subscription added."}
+            else:
+                return {"message": "Apple subscription already exists."}
         else:
-            return {"message": "Subscription already exists."}
+            # Check if subscription already exists in android_subscriptions
+            existing_subscription = android_subscriptions_collection.find_one({"endpoint": subscription.endpoint})
+            if not existing_subscription:
+                android_subscriptions_collection.insert_one(subscription.dict())
+                return {"message": "Android subscription added."}
+            else:
+                return {"message": "Android subscription already exists."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error storing subscription: {str(e)}")
 
