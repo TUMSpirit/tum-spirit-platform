@@ -58,7 +58,7 @@ async def send_notification():
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
             try:
-                hardcoded_subscription = {
+                subscription_info = {
                     "endpoint": str(subscription['endpoint']),
                     "expirationTime": None,  # Use None if not present
                     "keys": {
@@ -66,6 +66,9 @@ async def send_notification():
                         "auth": str(subscription['keys']['auth'])  # Dynamically use auth from the subscription
                     }
                 }
+
+                # Convert subscription_info to a JSON string to ensure the correct format with double quotes
+                subscription_info_json = json.dumps(subscription_info)
                 webpush(
                     subscription_info=hardcoded_subscription,
                     data=json.dumps(payload),
