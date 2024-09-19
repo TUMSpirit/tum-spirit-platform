@@ -59,16 +59,17 @@ async def send_notification():
         for subscription in subscriptions_collection.find():
             try:
                 subscription_info = {
-                    "endpoint": str(subscription['endpoint']),
-                    "expirationTime": None,  # Use None if not present
+                    "endpoint": subscription['endpoint'],
+                    "expirationTime": None,
                     "keys": {
-                        "p256dh": str(subscription['keys']['p256dh']),  # Dynamically use p256dh from the subscription
-                        "auth": str(subscription['keys']['auth'])  # Dynamically use auth from the subscription
+                        "p256dh": subscription['keys']['p256dh'],  # Dynamically use p256dh from the subscription
+                        "auth": subscription['keys']['auth']  # Dynamically use auth from the subscription
                     }
                 }
 
                 # Convert subscription_info to a JSON string to ensure the correct format with double quotes
                 subscription_info_json = json.dumps(subscription_info)
+                print(subscription_info_json)
                 webpush(
                     subscription_info=subscription_info_json,
                     data=json.dumps(payload),
