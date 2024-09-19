@@ -337,15 +337,17 @@ const ChatBody = ({
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-        setFilteredMessages(messages.filter(message => {
+    }, [messages]);
+
+    useEffect(() => {
+    setFilteredMessages(messages.filter(message => {
         if (privateChatId) {
             return message.privateChatId === privateChatId;
         } else {
             return !message.privateChatId;
         }
     }));
-    }, [messages, loading]);
-
+    }, []);
 
 
     useEffect(() => {
