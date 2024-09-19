@@ -242,7 +242,7 @@ def get_messages(
             query = {'teamId': team_id, 'privateChatId': None}
 
         # Fetch messages with pagination and sort by timestamp (newest first)
-        messages_cursor = collection.find(query).skip(skip).limit(limit)
+        messages_cursor = collection.find(query).sort("timestamp", DESCENDING).skip(skip).limit(limit)
         
         items = []
         for item in messages_cursor:
