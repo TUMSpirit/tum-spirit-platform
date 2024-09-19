@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, AfterValidator, PlainSerializer, WithJson
 from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime
-from app.src.routers.auth import get_current_user, is_admin, User
+from app.src.routers.auth import get_current_user, User
 from dotenv import load_dotenv
 import os
 from app.config import MONGO_DB, MONGO_URI
@@ -33,23 +33,26 @@ class PushSubscription(BaseModel):
 router = APIRouter()
 
 @router.post("/subscribe")
-async def subscribe(subscription: PushSubscription):
-    """Save the subscription to the MongoDB collection as either Apple or Android."""
+async def subscribe(subscription: PushSubscription, current_user: Annotated[User, Depends(get_current_user)]):
+    """Save the subscription to the MongoDB collection as either Apple or Android with team_id."""
     try:
         # Determine the platform by inspecting the endpoint
+        subscription_with_team = subscription.dict()
+        subscription_with_team["team_id"] = current_user["team_id"]  # Add team_id to the subscription
+
         if "web.push.apple.com" in subscription.endpoint:
             # Check if subscription already exists in apple_subscriptions
-            existing_subscription = apple_subscriptions_collection.find_one({"endpoint": subscription.endpoint})
+            existing_subscription = apple_subscriptions_collection.find_one({"endpoint": subscription.endpoint, "team_id": current_user["team_id"]})
             if not existing_subscription:
-                apple_subscriptions_collection.insert_one(subscription.dict())
+                apple_subscriptions_collection.insert_one(subscription_with_team)
                 return {"message": "Apple subscription added."}
             else:
                 return {"message": "Apple subscription already exists."}
         else:
             # Check if subscription already exists in android_subscriptions
-            existing_subscription = android_subscriptions_collection.find_one({"endpoint": subscription.endpoint})
+            existing_subscription = android_subscriptions_collection.find_one({"endpoint": subscription.endpoint, "team_id": current_user["team_id"]})
             if not existing_subscription:
-                android_subscriptions_collection.insert_one(subscription.dict())
+                android_subscriptions_collection.insert_one(subscription_with_team)
                 return {"message": "Android subscription added."}
             else:
                 return {"message": "Android subscription already exists."}
@@ -58,17 +61,17 @@ async def subscribe(subscription: PushSubscription):
 
 
 @router.post("/send-notification")
-async def send_notification():
-    """Send a web push notification to both Apple and Android subscribed clients."""
+async def send_notification(current_user: Annotated[User, Depends(get_current_user)]):
+    """Send a web push notification to both Apple and Android subscribed clients, filtered by team_id."""
     payload = {
         "title": "Push Notification",
-        "body": "This is a notification from your PWA!",
+        "body": f"{current_user['username']} sent a message!",
         "icon": "/icon.png"
     }
 
     try:
-        # Send notifications to Apple subscriptions
-        for subscription in apple_subscriptions_collection.find():
+        # Send notifications to Apple subscriptions filtered by team_id
+        for subscription in apple_subscriptions_collection.find({"team_id": current_user["team_id"]}):
             try:
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
@@ -87,8 +90,8 @@ async def send_notification():
             except WebPushException as ex:
                 print(f"Failed to send notification to Apple subscription: {subscription['endpoint']}: {ex}")
 
-        # Send notifications to Android subscriptions
-        for subscription in android_subscriptions_collection.find():
+        # Send notifications to Android subscriptions filtered by team_id
+        for subscription in android_subscriptions_collection.find({"team_id": current_user["team_id"]}):
             try:
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
@@ -107,7 +110,8 @@ async def send_notification():
             except WebPushException as ex:
                 print(f"Failed to send notification to Android subscription: {subscription['endpoint']}: {ex}")
 
-        return {"message": "Notifications sent to all Apple and Android subscribers."}
+        return {"message": f"Notifications sent to all teammates of {current_user['username']}."}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
+
