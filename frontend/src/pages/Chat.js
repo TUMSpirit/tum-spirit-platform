@@ -28,7 +28,7 @@ const Chat = () => {
     const [teamMembers, setTeamMembers] = useState([]);
     const [privateChatId, setPrivateChatId] = useState(null);
     const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
-    const [messagePage, setMessagePage] = useState(1);
+    const [messagePage, setMessagePage] = useState(0);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const [loading, setLoading] = useState(false);
 
@@ -51,31 +51,40 @@ const Chat = () => {
         }
     };
 
-    const fetchMessages = async (reset = false) => {
-        if (currentUser && hasMoreMessages) {
-            setLoading(true);
-            try {
-                const headers = { 'Authorization': authHeader() };
-                if (privateChatId) {
-                    headers['Private-Chat-Id'] = privateChatId;
-                }
-                const response = await axios.get(`/api/chat/get-messages?page=${messagePage}`, {
-                    method: 'GET',
-                    headers: headers,
-                });
+  const fetchMessages = async (reset = false) => {
+        if (!currentUser || !hasMoreMessages || loading) return; // Prevent fetching if already loading or no more messages
+        
+        setLoading(true);
+        try {
+            const headers = { 'Authorization': authHeader() };
+            if (privateChatId) {
+                headers['Private-Chat-Id'] = privateChatId;
+            }
 
-                setMessages(prevMessages => reset ? response.data : [...prevMessages, ...response.data]);
-                if (response.data.length === 0) {
-                    setHasMoreMessages(false);
-                }
-            } catch (error) {
-                console.error('Failed to fetch messages:', error);
+            const response = await axios.get(`/api/chat/get-messages`, {
+                params: {
+                    skip: messagePage * 75, // Skip messages based on the current page
+                    limit: 75, // Limit the number of messages per request
+                },
+                headers: headers,
+            });
+
+            const fetchedMessages = response.data;
+            
+            // If reset, replace the messages, otherwise append older messages at the beginning
+            setMessages(prevMessages => reset ? fetchedMessages : [...fetchedMessages, ...prevMessages]);
+            
+            // If no more messages, set hasMoreMessages to false
+            if (fetchedMessages.length === 0) {
+                setHasMoreMessages(false);
             }
-            finally {
-                setLoading(false);  // Stop loading when fetch is complete
-            }
+        } catch (error) {
+            console.error('Failed to fetch messages:', error);
+        } finally {
+            setLoading(false); // Stop loading after fetching messages
         }
     };
+
 
 
 
@@ -295,6 +304,9 @@ const Chat = () => {
                 onlineStatus={onlineStatus}
                 getUnreadMessages={getUnreadMessages}// Pass online status to ChatBody
                 loading={loading}
+                fetchMessages={fetchMessages} // Pass fetchMessages to ChatBody to trigger manual fetching
+                hasMoreMessages={hasMoreMessages} // Track if more messages can be loaded
+                setMessagePage={setMessagePage} // Control pagination
             />
             <ChatFooter
                 socket={socket}
