@@ -70,7 +70,7 @@ async def send_notification():
                 # Convert subscription_info to a JSON string to ensure the correct format with double quotes
                 subscription_info_json = json.dumps(subscription_info)
                 webpush(
-                    subscription_info=hardcoded_subscription,
+                    subscription_info=subscription_info_json,
                     data=json.dumps(payload),
                     vapid_private_key=VAPID_PRIVATE_KEY,
                     vapid_claims=VAPID_CLAIMS
