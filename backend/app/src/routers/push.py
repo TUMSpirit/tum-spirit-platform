@@ -59,19 +59,19 @@ async def send_notification():
         for subscription in subscriptions_collection.find():
             try:
                 subscription_info = {
-                    "endpoint": subscription['endpoint'],
-                    "expirationTime": None,
+                    "endpoint": str(subscription['endpoint']),
+                    "expirationTime": None,  # Use None if not present
                     "keys": {
-                        "p256dh": subscription['keys']['p256dh'],  # Dynamically use p256dh from the subscription
-                        "auth": subscription['keys']['auth']  # Dynamically use auth from the subscription
+                        "p256dh": str(subscription['keys']['p256dh']),  # Dynamically use p256dh from the subscription
+                        "auth": str(subscription['keys']['auth'])  # Dynamically use auth from the subscription
                     }
                 }
 
                 # Convert subscription_info to a JSON string to ensure the correct format with double quotes
-                subscription_info_json = json.dumps(subscription_info)
-                print(subscription_info_json)
+                //subscription_info_json = json.dumps(subscription_info)
+                print(subscription_info)
                 webpush(
-                    subscription_info=subscription_info_json,
+                    subscription_info=subscription_info,
                     data=json.dumps(payload),
                     vapid_private_key=VAPID_PRIVATE_KEY,
                     vapid_claims=VAPID_CLAIMS
