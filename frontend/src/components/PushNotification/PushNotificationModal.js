@@ -19,8 +19,7 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
   };
 
   const initServiceWorker = async () => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      let swRegistration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
+      let swRegistration = await navigator.serviceWorker.register('/service-worker.js');
       let pushManager = swRegistration.pushManager;
 
       if (!isPushManagerActive(pushManager)) {
@@ -40,7 +39,6 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
           setSubscribed(false);
           alert('User denied push permission');
       }
-    }
   };
 
   const isPushManagerActive = (pushManager) => {
@@ -72,6 +70,7 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
       let subscription = await pushManager.subscribe(subscriptionOptions);
       //subscribeUser(subscription);
       displaySubscriptionInfo(subscription);
+      subscribeUser(subscription);
       setSubscribed(true);
     } catch (error) {
       alert('User denied push permission');
