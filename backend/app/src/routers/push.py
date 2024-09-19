@@ -15,6 +15,15 @@ router = APIRouter()
 
 # Allow CORS for local development
 
+hardcoded_subscription = {
+    "endpoint": "https://fcm.googleapis.com/fcm/send/https://fcm.googleapis.com/fcm/send/fZ-UlLVo5ak:APA91bGuw4tNMyNnCqa3KHAG4hTs05ixm1OsVIMGwsOFD0delavfVIBwffhNIeg7gT93KCh3ABmouTnlCD-zF269Utl5ymfNfugzZQB7psw0qUzBrDrlX4hhfNf75D1J3VikrccwYrYu",
+    "expirationTime": None,
+    "keys": {
+        "p256dh": "BGuQx3T0VaVHHy7L12z0MQRIc-AmrSVFZ2WGRMxxu6KK1COjMf_RoNAeoKy7csz41Pvh6vHSKpE97KDpkN0F0UE",
+        "auth": "g1kBaAMn3aK5Mzh3zgYM-A"
+    }
+}
+
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
@@ -47,8 +56,7 @@ async def subscribe(subscription: PushSubscription):
 
 
 @router.post("/send-notification")
-async def send_notification():
-    """Send web push notification to all subscribed clients and return the list of subscriptions."""
+ """Send a web push notification using a hardcoded subscription."""
     try:
         # Payload for the notification
         payload = {
@@ -60,30 +68,18 @@ async def send_notification():
             }
         }
 
-        # Retrieve all subscriptions from MongoDB
-        subscriptions = list(subscriptions_collection.find())
-
-        # Loop over each subscription and send the notification
-        for subscription in subscriptions:
-            try:
-                webpush(
-                    subscription_info=subscription,
-                    data=json.dumps(payload),
-                    vapid_private_key=VAPID_PRIVATE_KEY,
-                    vapid_claims=VAPID_CLAIMS
-                )
-                print(f"Notification sent to {subscription['endpoint']}")
-            except WebPushException as ex:
-                print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
-                # Handle expired subscriptions
-                if ex.response.status_code == 410:
-                    print(f"Removing subscription: {subscription['endpoint']} as it is no longer valid.")
-                    subscriptions_collection.delete_one({"endpoint": subscription['endpoint']})
-
-        return {
-            "message": "Notifications sent to all subscribers.",
-            "subscriptions": subscriptions  # Return the list of subscriptions that were notified
-        }
+        # Send the notification using the hardcoded subscription
+        try:
+            webpush(
+                subscription_info=hardcoded_subscription,
+                data=json.dumps(payload),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS
+            )
+            return {"message": "Notification sent successfully!"}
+        except WebPushException as ex:
+            print(f"Failed to send notification: {ex}")
+            raise HTTPException(status_code=500, detail=f"Error sending notification: {str(ex)}")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing notification: {str(e)}")
