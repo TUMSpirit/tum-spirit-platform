@@ -53,7 +53,6 @@ async def send_notification():
             "body": "This is a notification from your PWA!",
             "icon": "/icon.png"  # Adjust to your icon path
         }
-    
 
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
@@ -69,7 +68,7 @@ async def send_notification():
                  # Check if the endpoint contains 'web.push' (iOS Safari)
                 if 'web.push' in subscription_info['endpoint']:
                     # iOS Safari requires JSON strings, so use json.dumps for payload
-                    print("Sending notification to Safari (iOS):", json.dumps(subscription_info, indent=2))
+                    print("Sending notification to Safari (iOS):", json.dumps(subscription_info))
                     webpush(
                         subscription_info=subscription_info,  # Pass subscription_info directly as a dict
                         data=json.dumps(payload),  # Payload serialized to JSON
