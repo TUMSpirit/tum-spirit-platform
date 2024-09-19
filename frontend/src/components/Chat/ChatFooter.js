@@ -121,6 +121,22 @@ const ChatFooter = ({
             };
             console.log(`Sending message with replyingTo: ${userMessage.replyingTo}`);
             socket.emit('message', userMessage);
+            axios.post('api/send-notification', {
+              username: currentUser.username,   // Assuming currentUser contains the logged-in user
+              message: trimmedMessage  // Example message
+          },{
+        headers: {
+          "Authorization": authHeader()
+          }
+        })
+          .then(response => {
+            console.log(response.data.message);  // You can show success message or handle response
+          })
+          .catch(error => {
+            console.error('Error triggering notification:', error);
+        });
+
+      });
         }
         setMessage('');
         setReplyingTo(null);
