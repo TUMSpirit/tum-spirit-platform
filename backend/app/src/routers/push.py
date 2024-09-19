@@ -16,11 +16,11 @@ router = APIRouter()
 # Allow CORS for local development
 
 hardcoded_subscription = {
-    "endpoint": "https://fcm.googleapis.com/fcm/send/fmOulvs9C9o:APA91bHvtxz93nwSQJeikedokwmr73nUwsFEHI71houwaDI1HHGTsHA8L7LOR6ZY4ZuvN4-p8kqbXbw2FNnyhbjl0UaiIiosfrMcilJaY33a-pIVQFmMizhR3JgVvV7iksDTbunMeAra",
+    "endpoint": "https://web.push.apple.com/QF2ROOGObnudptrFHZyVa975CLXU8iS4miFMPqlLpwmRUctq_UrukRrOn77XSieCozrujlHwicODRY-vOljcq44JuW93EzrMkJ89NqH4oDQe40xiYh64hA-1QBQc9bpRDaR9c0Gz73C20bbgSWOPHJiGs0S47qRerYTNAA_GTYc",
     "expirationTime": None,
     "keys": {
-        "p256dh": "BKEmpuNJDqLq4wG5U6O6252xfnmw3evB6AkjV5JoRWjneB2WkPww20JfaRgQZVTIbWVZwJFRBgPhRskLJcKk2t4",
-        "auth": "Kko3N_9Pnz02BwKC3sbNaQ"
+        "p256dh": "BIr74ZN4C80CnvoywTmNfLNb3dIlrL9UET8hpC7G32RucUe245JZKXBlxP3brwXhY8ede7Enjgcl4DyelcJXrj0",
+        "auth": "hSSZxvlU7V0GVgnpRmi9KQ"
     }
 }
 
