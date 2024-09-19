@@ -53,12 +53,10 @@ async def send_notification():
             "body": "This is a notification from your PWA!",
             "icon": "/icon.png"  # Adjust to your icon path
         }
-        
-        # Retrieve all subscriptions from MongoDB
-        subscriptions = subscriptions_collection.find()
+    
 
         # Loop over each subscription and send the notification
-        for subscription in subscriptions:
+        for subscription in subscriptions_collection.find():
             try:
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
@@ -68,6 +66,8 @@ async def send_notification():
                         "auth": subscription['keys']['auth']
                     }
                 }
+                print(subscription_info)
+                
                 webpush(
                     subscription_info=subscription_info,
                     data=json.dumps(payload),
