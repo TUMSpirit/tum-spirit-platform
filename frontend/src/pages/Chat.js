@@ -66,13 +66,16 @@ const Chat = () => {
                     skip: messagePage * 75, // Skip messages based on the current page
                     limit: 75, // Limit the number of messages per request
                 },
-                headers: headers,
+                headers: { 'Authorization': authHeader() }
             });
 
             const fetchedMessages = response.data;
             
+            // Reverse the fetched messages so the oldest is at the top and newest is at the bottom
+            const reversedMessages = fetchedMessages.reverse();
+    
             // If reset, replace the messages, otherwise append older messages at the beginning
-            setMessages(prevMessages => reset ? fetchedMessages : [...fetchedMessages, ...prevMessages]);
+            setMessages(prevMessages => reset ? reversedMessages : [...reversedMessages, ...prevMessages]);
             
             // If no more messages, set hasMoreMessages to false
             if (fetchedMessages.length === 0) {
