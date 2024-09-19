@@ -156,7 +156,7 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
           </Button>
         ]}
       >
-        <Button onClick={subscribeToPushNotifications}>Subscribe to notifications</Button>
+        <Button onClick={subscribeToPush}>Subscribe to notifications</Button>
         <div>
           <Title level={5} style={{ marginTop: "15px" }}><strong>Active Subscription:</strong></Title>
           <pre>{JSON.stringify(subscription?.toJSON(), null, 2)}</pre>
