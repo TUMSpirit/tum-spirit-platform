@@ -229,7 +229,11 @@ export const SocketProvider = ({ children }) => {
         axios.post('api/send-notification', {
               username: data.senderId,   // Assuming currentUser contains the logged-in user
               message: data.content  // Example message
-          })
+          },{
+        headers: {
+          "Authorization": authHeader()
+          }
+        })
           .then(response => {
             console.log(response.data.message);  // You can show success message or handle response
           })
