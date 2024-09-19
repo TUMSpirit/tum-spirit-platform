@@ -2,11 +2,13 @@ import { triggerFocus } from 'antd/es/input/Input';
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Typography } from "antd";
 import axios from 'axios';
+import {use}
 
 const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
   const [subscription, setSubscription] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
   const { Title, Text } = Typography;
+  const authHeader = useAuthenticate();
 
   useEffect(() => {
     if (navigator.serviceWorker) {
@@ -76,11 +78,12 @@ const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
       alert('User denied push permission');
     }
   };
-
+  
   const subscribeUser = (subscription) => {
     axios.post('api/subscribe', subscription, {
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+             "Authorization": authHeader()
         }
     })
     .then(response => {
