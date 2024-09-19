@@ -229,7 +229,7 @@ def get_messages(
     current_user: User = Depends(get_current_user),
     private_chat_id: Optional[str] = Header(None),
     skip: int = Query(0, description="Number of messages to skip for pagination"),
-    limit: int = Query(20, description="Number of messages to fetch per request"),
+    limit: int = Query(25, description="Number of messages to fetch per request"),
 ):
     try:
         team_id = ObjectId(current_user["team_id"])
@@ -242,7 +242,7 @@ def get_messages(
             query = {'teamId': team_id, 'privateChatId': None}
 
         # Fetch messages with pagination and sort by timestamp (newest first)
-        messages_cursor = collection.find(query).sort("timestamp", DESCENDING).skip(skip).limit(limit)
+        messages_cursor = collection.find(query).skip(skip).limit(limit)
         
         items = []
         for item in messages_cursor:
