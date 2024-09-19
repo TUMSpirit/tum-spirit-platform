@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Body, Query
 from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING
 from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 from app.src.routers.auth import get_current_user, User
