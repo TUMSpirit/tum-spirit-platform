@@ -59,11 +59,11 @@ async def send_notification():
         for subscription in subscriptions_collection.find():
             try:
                 subscription_info = {
-                    "endpoint": str(subscription['endpoint']),
+                    "endpoint": subscription['endpoint'],
                     "expirationTime": None,  # Use None if not present
                     "keys": {
-                        "p256dh": str(subscription['keys']['p256dh']),  # Dynamically use p256dh from the subscription
-                        "auth": str(subscription['keys']['auth'])  # Dynamically use auth from the subscription
+                        "p256dh": subscription['keys']['p256dh'],  # Dynamically use p256dh from the subscription
+                        "auth": subscription['keys']['auth']  # Dynamically use auth from the subscription
                     }
                 }
                  # Check if the endpoint contains 'web.push' (iOS Safari)
