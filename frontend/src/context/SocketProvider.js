@@ -147,7 +147,7 @@ export const SocketProvider = ({ children }) => {
 
 
     // Register Service Worker and ask for notification permission
-  async function registerServiceWorkerAndSubscribe() {
+  /*async function registerServiceWorkerAndSubscribe() {
       const publicVapidKey = 'BAwUJxIa7mJZMqu78Tfy2Sb1BWnYiAatFCe1cxpnM-hxNtXjAwaNKz1QKLU8IYYhjUASOFzSvSnMgC00vfsU0IM';
 
       // Request notification permission from the user
@@ -191,7 +191,7 @@ export const SocketProvider = ({ children }) => {
           outputArray[i] = rawData.charCodeAt(i);
       }
       return outputArray;
-  }
+  }*/
 
 
   const closeModal = async () => {
@@ -216,7 +216,7 @@ export const SocketProvider = ({ children }) => {
         autoConnect: false // Prevent auto connection
       });
 
-      registerServiceWorkerAndSubscribe();
+      //registerServiceWorkerAndSubscribe();
       document.addEventListener('visibilitychange', handleVisibilityChange);
 
       socketInstance.on('newMessageMetadata', (data) => {
