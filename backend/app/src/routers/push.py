@@ -64,22 +64,33 @@ async def send_notification():
                         "auth": str(subscription['keys'].get('auth'))  # Ensure auth is a string
                         }
                     }
-            
-                # Serialize the dynamic subscription without expirationTime
-                dynamic_subscription_json = json.dumps(dynamic_subscription)
-            
-                # Load it back into a Python dictionary after dumping
-                dynamic_subscription = json.loads(dynamic_subscription_json)
-            
-                # Now manually add the expirationTime as None
-                dynamic_subscription['expirationTime'] = None
+
+                  # Check if the endpoint contains 'web.push' (iOS Safari)
+                if 'web.push' in subscription_info['endpoint']:
+                    # Serialize the dynamic subscription without expirationTime
+                    dynamic_subscription_json = json.dumps(dynamic_subscription)
                 
-                webpush(
+                    # Load it back into a Python dictionary after dumping
+                    dynamic_subscription = json.loads(dynamic_subscription_json)
+                
+                    # Now manually add the expirationTime as None
+                    dynamic_subscription['expirationTime'] = None
+                    webpush(
                         subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
-                        data=json.dumps(payload),  # Payload serialized to JSON for all browsers
+                        data=json.dumps(payload),  # Payload serialized to JSON
                         vapid_private_key=VAPID_PRIVATE_KEY,
                         vapid_claims=VAPID_CLAIMS
-                )
+                    )
+                else:
+                    # For Chrome and other browsers, no special handling required
+                    print("Sending notification to Chrome or other browsers:", subscription_info)
+                    webpush(
+                        subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
+                        data=json.dumps(payload),  # Payload serialized to JSON
+                        vapid_private_key=VAPID_PRIVATE_KEY,
+                        vapid_claims=VAPID_CLAIMS
+                    )
+                    
             except WebPushException as ex:
                 print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
 
