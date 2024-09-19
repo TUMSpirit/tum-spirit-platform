@@ -48,16 +48,20 @@ async def subscribe(subscription: PushSubscription):
 
 @router.post("/send-notification")
 async def send_notification():
-    """Send web push notification to all subscribed clients."""
+    """Send web push notification to all subscribed clients and return the list of subscriptions."""
     try:
+        # Payload for the notification
         payload = {
-            "title": "Push Notification",
-            "body": "This is a notification from your PWA!",
-            "icon": "/icon.png"  # Adjust to your icon path
+            "title": "Test Notification",
+            "body": "This is a test notification from your PWA.",
+            "icon": "/icon.png",  # Your icon URL
+            "data": {
+                "url": "https://your-pwa-url.com/success"  # URL to open when clicking notification
+            }
         }
-        
+
         # Retrieve all subscriptions from MongoDB
-        subscriptions = subscriptions_collection.find({}, {'_id': False})
+        subscriptions = list(subscriptions_collection.find())
 
         # Loop over each subscription and send the notification
         for subscription in subscriptions:
@@ -68,10 +72,18 @@ async def send_notification():
                     vapid_private_key=VAPID_PRIVATE_KEY,
                     vapid_claims=VAPID_CLAIMS
                 )
+                print(f"Notification sent to {subscription['endpoint']}")
             except WebPushException as ex:
                 print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
+                # Handle expired subscriptions
+                if ex.response.status_code == 410:
+                    print(f"Removing subscription: {subscription['endpoint']} as it is no longer valid.")
+                    subscriptions_collection.delete_one({"endpoint": subscription['endpoint']})
 
-        return {"message": "Notification sent to all subscribers."}
+        return {
+            "message": "Notifications sent to all subscribers.",
+            "subscriptions": subscriptions  # Return the list of subscriptions that were notified
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
