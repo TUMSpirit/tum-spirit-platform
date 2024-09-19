@@ -2,13 +2,13 @@ import { triggerFocus } from 'antd/es/input/Input';
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Typography } from "antd";
 import axios from 'axios';
-import {use}
+import { useAuthHeader } from 'react-auth-kit';
 
 const PushNotificationModal = ({ modalIsOpen, setModalIsOpen }) => {
   const [subscription, setSubscription] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
   const { Title, Text } = Typography;
-  const authHeader = useAuthenticate();
+  const authHeader = useAuthHeader();
 
   useEffect(() => {
     if (navigator.serviceWorker) {
