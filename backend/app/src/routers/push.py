@@ -66,7 +66,7 @@ async def send_notification():
                     }
 
                   # Check if the endpoint contains 'web.push' (iOS Safari)
-                if 'web.push' in subscription_info['endpoint']:
+                if 'web.push' in dynamic_subscription['endpoint']:
                     # Serialize the dynamic subscription without expirationTime
                     dynamic_subscription_json = json.dumps(dynamic_subscription)
                 
