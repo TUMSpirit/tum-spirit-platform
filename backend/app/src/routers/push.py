@@ -57,6 +57,14 @@ async def send_notification():
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
             try:
+                hardcoded_subscription = {
+                    "endpoint": "https://web.push.apple.com/QF2ROOGObnudptrFHZyVa975CLXU8iS4miFMPqlLpwmRUctq_UrukRrOn77XSieCozrujlHwicODRY-vOljcq44JuW93EzrMkJ89NqH4oDQe40xiYh64hA-1QBQc9bpRDaR9c0Gz73C20bbgSWOPHJiGs0S47qRerYTNAA_GTYc",
+                    "expirationTime": None,
+                    "keys": {
+                        "p256dh": "BIr74ZN4C80CnvoywTmNfLNb3dIlrL9UET8hpC7G32RucUe245JZKXBlxP3brwXhY8ede7Enjgcl4DyelcJXrj0",
+                        "auth": "hSSZxvlU7V0GVgnpRmi9KQ"
+                    }
+                }
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
                     "expirationTime": None,  # Use None if not present
@@ -70,7 +78,7 @@ async def send_notification():
                     # iOS Safari requires JSON strings, so use json.dumps for payload
                     print("Sending notification to Safari (iOS):", json.dumps(subscription_info))
                     webpush(
-                        subscription_info=subscription_info,  # Pass subscription_info directly as a dict
+                        subscription_info=hardcoded_subscription,  # Pass subscription_info directly as a dict
                         data=json.dumps(payload),  # Payload serialized to JSON
                         vapid_private_key=VAPID_PRIVATE_KEY,
                         vapid_claims=VAPID_CLAIMS
