@@ -339,16 +339,6 @@ const ChatBody = ({
         }
     }, [messages]);
 
-    useEffect(() => {
-    setFilteredMessages(messages.filter(message => {
-        if (privateChatId) {
-            return message.privateChatId === privateChatId;
-        } else {
-            return !message.privateChatId;
-        }
-    }));
-    }, []);
-
 
     useEffect(() => {
         setSubHeaderComponent({
@@ -384,6 +374,14 @@ const ChatBody = ({
 
         return () => setSubHeaderComponent(null); // Clear subheader when unmounting
     }, [currentTab, tabsItems, setSubHeaderComponent, searchTerm]);
+
+    setFilteredMessages(messages.filter(message => {
+        if (privateChatId) {
+            return message.privateChatId === privateChatId;
+        } else {
+            return !message.privateChatId;
+        }
+    }));
 
     return (
         <div
