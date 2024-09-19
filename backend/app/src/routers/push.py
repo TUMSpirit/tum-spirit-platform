@@ -66,8 +66,8 @@ async def subscribe(subscription: PushSubscription, current_user: Annotated[User
 async def send_notification(notification_request: NotificationRequest, current_user: Annotated[User, Depends(get_current_user)]):
     """Send a web push notification to both Apple and Android subscribed clients, filtered by team_id."""
     payload = {
-        "title": f"👻 Boo! New Message: {notification_request.username}",  # Ghost emoji and playful title
-        "body": f"{notification_request.message} 💬\nThe spirit realm is stirring, answer quickly!",  # Message with playful prompt
+        "title": f"Boo! New Message: {notification_request.username}",  # Ghost emoji and playful title
+        "body": f"{notification_request.message}",  # Message with playful prompt
         "vibrate": [200, 100, 200],  # Vibration pattern (optional)
         "tag": "spirit-message"  # Add a unique tag to group notifications
     }
