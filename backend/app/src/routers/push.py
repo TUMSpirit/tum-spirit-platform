@@ -30,6 +30,11 @@ class PushSubscription(BaseModel):
     endpoint: str
     keys: dict
 
+# Define a model for the request body
+class NotificationRequest(BaseModel):
+    username: str
+    message: str
+
 router = APIRouter()
 
 @router.post("/subscribe")
@@ -59,14 +64,12 @@ async def subscribe(subscription: PushSubscription, current_user: Annotated[User
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error storing subscription: {str(e)}")
 
-
 @router.post("/send-notification")
-async def send_notification(current_user: Annotated[User, Depends(get_current_user)]):
+async def send_notification(notification_request: NotificationRequest, current_user: Annotated[User, Depends(get_current_user)]):
     """Send a web push notification to both Apple and Android subscribed clients, filtered by team_id."""
     payload = {
-        "title": "Push Notification",
-        "body": f"{current_user['username']} sent a message!",
-        "icon": "/icon.png"
+        "title": f"Message from {notification_request.username}",  # Use the username in the title
+        "body": notification_request.message  # Use the message from the request body
     }
 
     try:
@@ -110,7 +113,7 @@ async def send_notification(current_user: Annotated[User, Depends(get_current_us
             except WebPushException as ex:
                 print(f"Failed to send notification to Android subscription: {subscription['endpoint']}: {ex}")
 
-        return {"message": f"Notifications sent to all teammates of {current_user['username']}."}
+        return {"message": f"Notifications sent to all teammates of {notification_request.username}."}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
