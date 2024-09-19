@@ -56,6 +56,7 @@ async def subscribe(subscription: PushSubscription):
 
 
 @router.post("/send-notification")
+async def send_notification():
  """Send a web push notification using a hardcoded subscription."""
     try:
         # Payload for the notification
