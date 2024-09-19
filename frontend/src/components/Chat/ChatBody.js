@@ -33,7 +33,6 @@ const ChatBody = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
-    const [filteredMessages, setFilteredMessages] = useState([]);
     const authHeader = useAuthHeader();
     const chatContainerRef = useRef(null);
     const { setSubHeaderComponent } = useSubHeader();
@@ -375,13 +374,13 @@ const ChatBody = ({
         return () => setSubHeaderComponent(null); // Clear subheader when unmounting
     }, [currentTab, tabsItems, setSubHeaderComponent, searchTerm]);
 
-    setFilteredMessages(messages.filter(message => {
+    const filteredMessages = messages.filter(message => {
         if (privateChatId) {
             return message.privateChatId === privateChatId;
         } else {
             return !message.privateChatId;
         }
-    }));
+    });
 
     return (
         <div
