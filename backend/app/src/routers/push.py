@@ -59,14 +59,13 @@ async def send_notification():
         for subscription in subscriptions_collection.find():
             try:
                 hardcoded_subscription = {
-                    "endpoint": subscription['endpoint'],
+                    "endpoint": str(subscription['endpoint']),
                     "expirationTime": None,  # Use None if not present
                     "keys": {
-                        "p256dh": subscription['keys']['p256dh'],  # Dynamically use p256dh from the subscription
-                        "auth": subscription['keys']['auth']  # Dynamically use auth from the subscription
+                        "p256dh": str(subscription['keys']['p256dh']),  # Dynamically use p256dh from the subscription
+                        "auth": str(subscription['keys']['auth'])  # Dynamically use auth from the subscription
                     }
                 }
-                
                 webpush(
                     subscription_info=hardcoded_subscription,
                     data=json.dumps(payload),
