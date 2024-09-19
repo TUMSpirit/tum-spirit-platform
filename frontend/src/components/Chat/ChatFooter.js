@@ -81,6 +81,27 @@ const ChatFooter = ({
         setReplyingTo(null);
     };
 
+    const handleSendNotification = (username, message) => {
+        axios.post(
+            'api/send-notification',
+            {
+                username: username,  // The logged-in user
+                message: message,    // The message content
+            },
+            {
+                headers: {
+                    "Authorization": authHeader()  // Authorization token
+                }
+            }
+        )
+        .then(response => {
+            console.log(response.data.message);  // Handle success message
+        })
+        .catch(error => {
+            console.error('Error triggering notification:', error);
+        });
+    };
+
     const handleSendMessage = (e) => {
         e.preventDefault();
         const trimmedMessage = message.trim();
@@ -121,22 +142,7 @@ const ChatFooter = ({
             };
             console.log(`Sending message with replyingTo: ${userMessage.replyingTo}`);
             socket.emit('message', userMessage);
-            axios.post('api/send-notification', {
-              username: currentUser.username,   // Assuming currentUser contains the logged-in user
-              message: trimmedMessage  // Example message
-          },{
-        headers: {
-          "Authorization": authHeader()
-          }
-        })
-          .then(response => {
-            console.log(response.data.message);  // You can show success message or handle response
-          })
-          .catch(error => {
-            console.error('Error triggering notification:', error);
-        });
-
-      });
+            handleSendNotification(currentUser.username, trimmedMessage);
         }
         setMessage('');
         setReplyingTo(null);
