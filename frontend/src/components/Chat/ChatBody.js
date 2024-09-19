@@ -28,7 +28,10 @@ const ChatBody = ({
     currentUserAvatarColor,
     onlineStatus,
     getUnreadMessages,
-    loading // Add onlineStatus prop
+    loading,
+    fetchMessages, // Pass fetchMessages to ChatBody to trigger manual fetching
+    hasMoreMessages, // Track if more messages can be loaded
+    setMessagePage // Add onlineStatus prop
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
