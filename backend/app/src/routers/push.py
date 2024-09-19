@@ -37,25 +37,32 @@ class NotificationRequest(BaseModel):
 
 @router.post("/subscribe")
 async def subscribe(subscription: PushSubscription, current_user: Annotated[User, Depends(get_current_user)]):
-    """Save the subscription to the MongoDB collection as either Apple or Android with team_id."""
+    """Save the subscription to the MongoDB collection as either Apple or Android with user_id and team_id."""
     try:
-        # Determine the platform by inspecting the endpoint
-        subscription_with_team = subscription.dict()
-        subscription_with_team["team_id"] = current_user["team_id"]  # Add team_id to the subscription
-
+        # Add team_id and user_id (or username) to the subscription
+        subscription_with_user_info = subscription.dict()
+        subscription_with_user_info["team_id"] = current_user["team_id"]
+        subscription_with_user_info["user_id"] = current_user["_id"]  # Use user ID from current_user
+        
         if "web.push.apple.com" in subscription.endpoint:
             # Check if subscription already exists in apple_subscriptions
-            existing_subscription = apple_subscriptions_collection.find_one({"endpoint": subscription.endpoint, "team_id": current_user["team_id"]})
+            existing_subscription = apple_subscriptions_collection.find_one({
+                "endpoint": subscription.endpoint, 
+                "user_id": current_user["_id"]
+            })
             if not existing_subscription:
-                apple_subscriptions_collection.insert_one(subscription_with_team)
+                apple_subscriptions_collection.insert_one(subscription_with_user_info)
                 return {"message": "Apple subscription added."}
             else:
                 return {"message": "Apple subscription already exists."}
         else:
             # Check if subscription already exists in android_subscriptions
-            existing_subscription = android_subscriptions_collection.find_one({"endpoint": subscription.endpoint, "team_id": current_user["team_id"]})
+            existing_subscription = android_subscriptions_collection.find_one({
+                "endpoint": subscription.endpoint, 
+                "user_id": current_user["_id"]
+            })
             if not existing_subscription:
-                android_subscriptions_collection.insert_one(subscription_with_team)
+                android_subscriptions_collection.insert_one(subscription_with_user_info)
                 return {"message": "Android subscription added."}
             else:
                 return {"message": "Android subscription already exists."}
@@ -75,6 +82,8 @@ async def send_notification(notification_request: NotificationRequest, current_u
     try:
         # Send notifications to Apple subscriptions filtered by team_id
         for subscription in apple_subscriptions_collection.find({"team_id": current_user["team_id"]}):
+            if subscription['user_id'] == current_user["_id"]:  # Skip the sender
+                continue  # Don't send notification to the message sende
             try:
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
@@ -95,6 +104,8 @@ async def send_notification(notification_request: NotificationRequest, current_u
 
         # Send notifications to Android subscriptions filtered by team_id
         for subscription in android_subscriptions_collection.find({"team_id": current_user["team_id"]}):
+            if subscription['user_id'] == current_user["_id"]:  # Skip the sender
+                continue  # Don't send notification to the message sender
             try:
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
