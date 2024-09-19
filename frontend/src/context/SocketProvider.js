@@ -226,6 +226,7 @@ export const SocketProvider = ({ children }) => {
         // Increment notifications
         incrementNotifications(chatId);
         //showNotification();         
+      });
 
       socketInstance.on('updateUserStatus', ({ data }) => {
         for (const username in data) {
