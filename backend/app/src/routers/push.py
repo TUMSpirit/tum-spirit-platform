@@ -35,8 +35,6 @@ class NotificationRequest(BaseModel):
     username: str
     message: str
 
-router = APIRouter()
-
 @router.post("/subscribe")
 async def subscribe(subscription: PushSubscription, current_user: Annotated[User, Depends(get_current_user)]):
     """Save the subscription to the MongoDB collection as either Apple or Android with team_id."""
