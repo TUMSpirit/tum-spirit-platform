@@ -46,20 +46,20 @@ async def subscribe(subscription: PushSubscription):
 
 @router.post("/send-notification")
 async def send_notification():
-    """Send a web push notification using a hardcoded subscription."""
+    """Send web push notification to all subscribed clients."""
     try:
-        # Payload for the notification
         payload = {
-            "title": "Test Notification",
-            "body": "This is a test notification from your PWA.",
-            "icon": "/icon.png",  # Your icon URL
+            "title": "Push Notification",
+            "body": "This is a notification from your PWA!",
+            "icon": "/icon.png"  # Adjust to your icon path
         }
         
-        subscriptions=subscriptions_collection.find()
-        
+        # Retrieve all subscriptions from MongoDB
+        subscriptions = subscriptions_collection.find()
+
+        # Loop over each subscription and send the notification
         for subscription in subscriptions:
             try:
-                # Manually construct the subscription_info JSON object from MongoDB data
                 subscription_info = {
                     "endpoint": subscription['endpoint'],
                     "expirationTime": None,
@@ -68,16 +68,16 @@ async def send_notification():
                         "auth": subscription['keys']['auth']
                     }
                 }
-            webpush(
-                subscription_info=hardcoded_subscription,
-                data=json.dumps(payload),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims=VAPID_CLAIMS
-            )
-            return {"message": "Notification sent successfully!"}
-        except WebPushException as ex:
-            print(f"Failed to send notification: {ex}")
-            raise HTTPException(status_code=500, detail=f"Error sending notification: {str(ex)}")
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+            except WebPushException as ex:
+                print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
+
+        return {"message": "Notification sent to all subscribers."}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing notification: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
