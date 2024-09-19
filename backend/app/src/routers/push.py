@@ -68,7 +68,7 @@ async def send_notification():
                 }
 
                 # Convert subscription_info to a JSON string to ensure the correct format with double quotes
-                //subscription_info_json = json.dumps(subscription_info)
+                #subscription_info_json = json.dumps(subscription_info)
                 print(subscription_info)
                 webpush(
                     subscription_info=subscription_info,
