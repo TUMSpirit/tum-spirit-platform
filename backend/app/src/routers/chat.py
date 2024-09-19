@@ -225,20 +225,27 @@ def delete_message(message_id: str, current_user: User = Depends(get_current_use
 
 
 @router.get("/chat/get-messages", tags=["chat"], response_model=List[Message])
-def get_messages(current_user: User = Depends(get_current_user), private_chat_id: Optional[str] = Header(None)):
+def get_messages(
+    current_user: User = Depends(get_current_user),
+    private_chat_id: Optional[str] = Header(None),
+    skip: int = Query(0, description="Number of messages to skip for pagination"),
+    limit: int = Query(20, description="Number of messages to fetch per request"),
+):
     try:
         team_id = ObjectId(current_user["team_id"])
-        print(f"Fetching messages for team_id: {team_id} and private_chat_id: {private_chat_id}")
+        print(f"Fetching messages for team_id: {team_id}, private_chat_id: {private_chat_id}, skip: {skip}, limit: {limit}")
 
+        # Set query based on whether it's a private chat or team chat
         if private_chat_id:
             query = {'privateChatId': private_chat_id}
         else:
             query = {'teamId': team_id, 'privateChatId': None}
 
+        # Fetch messages with pagination and sort by timestamp (newest first)
+        messages_cursor = collection.find(query).sort("timestamp", DESCENDING).skip(skip).limit(limit)
+        
         items = []
-
-        for item in collection.find(query):
-            print(f"Found message: {item}")
+        for item in messages_cursor:
             item['id'] = str(item['_id'])
             item['teamId'] = str(item['teamId'])
             item['senderId'] = str(item['senderId'])
@@ -253,7 +260,6 @@ def get_messages(current_user: User = Depends(get_current_user), private_chat_id
     except Exception as e:
         print(f"Error fetching messages: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/chat/get-message/{message_id}", response_model=Message, tags=["chat"])
 def get_message(message_id: str, current_user: User = Depends(get_current_user)):
