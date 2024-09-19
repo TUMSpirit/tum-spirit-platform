@@ -58,12 +58,12 @@ async def send_notification():
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
             try:
-                hardcoded_subscription = {
-                    "endpoint": "https://web.push.apple.com/QF2ROOGObnudptrFHZyVa975CLXU8iS4miFMPqlLpwmRUctq_UrukRrOn77XSieCozrujlHwicODRY-vOljcq44JuW93EzrMkJ89NqH4oDQe40xiYh64hA-1QBQc9bpRDaR9c0Gz73C20bbgSWOPHJiGs0S47qRerYTNAA_GTYc",
-                    "expirationTime": None,
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
+                    "expirationTime": None,  # Use None if not present
                     "keys": {
-                        "p256dh": "BIr74ZN4C80CnvoywTmNfLNb3dIlrL9UET8hpC7G32RucUe245JZKXBlxP3brwXhY8ede7Enjgcl4DyelcJXrj0",
-                        "auth": "hSSZxvlU7V0GVgnpRmi9KQ"
+                        "p256dh": subscription['keys']['p256dh'],  # Dynamically use p256dh from the subscription
+                        "auth": subscription['keys']['auth']  # Dynamically use auth from the subscription
                     }
                 }
                 
