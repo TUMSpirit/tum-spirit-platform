@@ -83,7 +83,6 @@ async def send_notification():
                     )
                 else:
                     # For Chrome and other browsers, no special handling required
-                    print("Sending notification to Chrome or other browsers:", subscription_info)
                     webpush(
                         subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
                         data=json.dumps(payload),  # Payload serialized to JSON
