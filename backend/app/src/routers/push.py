@@ -16,18 +16,21 @@ router = APIRouter()
 # Connect to MongoDB
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
-subscriptions_collection = db['subscriptions']
+apple_subscriptions_collection = db['apple_subscriptions']
+android_subscriptions_collection = db['android_subscriptions']
+
 
 # VAPID Keys from environment
 VAPID_PUBLIC_KEY = os.getenv("NOTIFICATION_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("NOTIFICATION_PRIVATE_KEY")
 VAPID_CLAIMS = {"sub": "mailto:"+os.getenv("NOTIFICATION_MAIL")}
 
-# Model for the subscription
+# Model for the push subscription
 class PushSubscription(BaseModel):
     endpoint: str
     keys: dict
 
+router = APIRouter()
 
 @router.post("/subscribe")
 async def subscribe(subscription: PushSubscription):
@@ -56,54 +59,55 @@ async def subscribe(subscription: PushSubscription):
 
 @router.post("/send-notification")
 async def send_notification():
-    """Send web push notification to all subscribed clients."""
+    """Send a web push notification to both Apple and Android subscribed clients."""
+    payload = {
+        "title": "Push Notification",
+        "body": "This is a notification from your PWA!",
+        "icon": "/icon.png"
+    }
+
     try:
-        payload = {
-            "title": "Push Notification",
-            "body": "This is a notification from your PWA!",
-            "icon": "/icon.png"  # Adjust to your icon path
-        }
-
-        # Loop over each subscription and send the notification
-        for subscription in subscriptions_collection.find():
+        # Send notifications to Apple subscriptions
+        for subscription in apple_subscriptions_collection.find():
             try:
-                dynamic_subscription = {
-                    "endpoint": str(subscription.get('endpoint')),
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
                     "keys": {
-                        "p256dh": str(subscription['keys'].get('p256dh')),  # Ensure p256dh is a string
-                        "auth": str(subscription['keys'].get('auth'))  # Ensure auth is a string
-                        }
+                        "p256dh": subscription['keys']['p256dh'],
+                        "auth": subscription['keys']['auth']
                     }
-
-                  # Check if the endpoint contains 'web.push' (iOS Safari)
-                if 'web.push' in dynamic_subscription['endpoint']:
-                    # Serialize the dynamic subscription without expirationTime
-                    dynamic_subscription_json = json.dumps(dynamic_subscription)
-                
-                    # Load it back into a Python dictionary after dumping
-                    dynamic_subscription = json.loads(dynamic_subscription_json)
-                
-                    # Now manually add the expirationTime as None
-                    dynamic_subscription['expirationTime'] = None
-                    webpush(
-                        subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
-                        data=json.dumps(payload),  # Payload serialized to JSON
-                        vapid_private_key=VAPID_PRIVATE_KEY,
-                        vapid_claims=VAPID_CLAIMS
-                    )
-                else:
-                    # For Chrome and other browsers, no special handling required
-                    webpush(
-                        subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
-                        data=json.dumps(payload),  # Payload serialized to JSON
-                        vapid_private_key=VAPID_PRIVATE_KEY,
-                        vapid_claims=VAPID_CLAIMS
-                    )
-                    
+                }
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims={"sub": "mailto:your-email@example.com"}
+                )
+                print(f"Notification sent to Apple subscription: {subscription['endpoint']}")
             except WebPushException as ex:
-                print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
+                print(f"Failed to send notification to Apple subscription: {subscription['endpoint']}: {ex}")
 
-        return {"message": "Notification sent to all subscribers."}
+        # Send notifications to Android subscriptions
+        for subscription in android_subscriptions_collection.find():
+            try:
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
+                    "keys": {
+                        "p256dh": subscription['keys']['p256dh'],
+                        "auth": subscription['keys']['auth']
+                    }
+                }
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims={"sub": "mailto:your-email@example.com"}
+                )
+                print(f"Notification sent to Android subscription: {subscription['endpoint']}")
+            except WebPushException as ex:
+                print(f"Failed to send notification to Android subscription: {subscription['endpoint']}: {ex}")
+
+        return {"message": "Notifications sent to all Apple and Android subscribers."}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
