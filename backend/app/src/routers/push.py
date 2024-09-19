@@ -57,22 +57,22 @@ async def send_notification():
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
             try:
-                    dynamic_subscription = {
-                        "endpoint": str(subscription.get('endpoint')),
-                        "keys": {
-                            "p256dh": str(subscription['keys'].get('p256dh')),  # Ensure p256dh is a string
-                            "auth": str(subscription['keys'].get('auth'))  # Ensure auth is a string
-                            }
+                dynamic_subscription = {
+                    "endpoint": str(subscription.get('endpoint')),
+                    "keys": {
+                        "p256dh": str(subscription['keys'].get('p256dh')),  # Ensure p256dh is a string
+                        "auth": str(subscription['keys'].get('auth'))  # Ensure auth is a string
                         }
+                    }
             
-                    # Serialize the dynamic subscription without expirationTime
-                    dynamic_subscription_json = json.dumps(dynamic_subscription)
+                # Serialize the dynamic subscription without expirationTime
+                dynamic_subscription_json = json.dumps(dynamic_subscription)
             
-                    # Load it back into a Python dictionary after dumping
-                    dynamic_subscription = json.loads(dynamic_subscription_json)
+                # Load it back into a Python dictionary after dumping
+                dynamic_subscription = json.loads(dynamic_subscription_json)
             
-                    # Now manually add the expirationTime as None
-                    dynamic_subscription['expirationTime'] = None
+                # Now manually add the expirationTime as None
+                dynamic_subscription['expirationTime'] = None
                 
                 webpush(
                         subscription_info=dynamic_subscription,  # Pass subscription_info directly as a dict
