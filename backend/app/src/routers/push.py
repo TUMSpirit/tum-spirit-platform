@@ -65,33 +65,13 @@ async def send_notification():
                         "auth": "hSSZxvlU7V0GVgnpRmi9KQ"
                     }
                 }
-                subscription_info = {
-                    "endpoint": subscription['endpoint'],
-                    "expirationTime": None,  # Use None if not present
-                    "keys": {
-                        "p256dh": subscription['keys']['p256dh'],  # Dynamically use p256dh from the subscription
-                        "auth": subscription['keys']['auth']  # Dynamically use auth from the subscription
-                    }
-                }
-                 # Check if the endpoint contains 'web.push' (iOS Safari)
-                if 'web.push' in subscription_info['endpoint']:
-                    # iOS Safari requires JSON strings, so use json.dumps for payload
-                    print("Sending notification to Safari (iOS):", json.dumps(subscription_info))
-                    webpush(
+                
+                webpush(
                         subscription_info=hardcoded_subscription,  # Pass subscription_info directly as a dict
-                        data=json.dumps(payload),  # Payload serialized to JSON
-                        vapid_private_key=VAPID_PRIVATE_KEY,
-                        vapid_claims=VAPID_CLAIMS
-                    )
-                else:
-                    # For Chrome and other browsers, avoid json.dumps for payload
-                    print("Sending notification to Chrome or other browsers:", subscription_info)
-                    webpush(
-                        subscription_info=subscription_info,  # Pass subscription_info directly as a dict
                         data=json.dumps(payload),  # Payload serialized to JSON for all browsers
                         vapid_private_key=VAPID_PRIVATE_KEY,
                         vapid_claims=VAPID_CLAIMS
-                    )
+                )
             except WebPushException as ex:
                 print(f"Failed to send notification to {subscription['endpoint']}: {ex}")
 
