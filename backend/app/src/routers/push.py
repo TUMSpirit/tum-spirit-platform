@@ -58,7 +58,7 @@ async def send_notification():
         # Loop over each subscription and send the notification
         for subscription in subscriptions_collection.find():
             try:
-                subscription_info = {
+                hardcoded_subscription = {
                     "endpoint": subscription['endpoint'],
                     "expirationTime": None,  # Use None if not present
                     "keys": {
