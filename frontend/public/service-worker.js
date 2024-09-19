@@ -1,4 +1,5 @@
 self.addEventListener('push', function(event) {
+    console.log("tester");
     const data = event.data ? event.data.json() : {};
 
     const options = {
