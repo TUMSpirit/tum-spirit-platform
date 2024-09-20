@@ -18,6 +18,7 @@ team_collection = db["teams"]
 task_log_collection = db["scheduler_log"]
 chat_collection= db["chat"]
 kanban_collection= db["kanban"]
+archived_kanban_collection=db["archived_kanban"]
 
 # Initialize APScheduler
 scheduler = BackgroundScheduler()
@@ -99,16 +100,27 @@ def get_combined_chats_and_kanban(
         kanban_cursor = kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
         kanban_items = list(kanban_cursor)
 
-        # Extract title and description from kanban tasks as raw text
+        # Extract title and description from kanban tasks
         kanban_contents = [
             f"{item.get('title', '')} {item.get('description', '')}".strip()
             for item in kanban_items
         ]
         kanban_count = len(kanban_items)
 
-        # Combine both chat messages and kanban task contents into a flat list
-        combined_contents = message_contents + kanban_contents
-        total_count = message_count + kanban_count
+        # Query for archived kanban tasks (only title and description)
+        archived_kanban_cursor = archived_kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
+        archived_kanban_items = list(archived_kanban_cursor)
+
+        # Extract title and description from archived kanban tasks
+        archived_kanban_contents = [
+            f"{item.get('title', '')} {item.get('description', '')}".strip()
+            for item in archived_kanban_items
+        ]
+        archived_kanban_count = len(archived_kanban_items)
+
+        # Combine chat messages, kanban tasks, and archived kanban tasks
+        combined_contents = message_contents + kanban_contents + archived_kanban_contents
+        total_count = message_count + kanban_count + archived_kanban_count
 
         return {
             "combined_contents": combined_contents,
@@ -160,7 +172,7 @@ def start_scheduler():
     #scheduler.add_job(daily_task, CronTrigger(hour=1, minute=3), id="daily_task")
 
     # Schedule monthly task on the 15th of each month at midnight
-    scheduler.add_job(monthly_task, CronTrigger(day=20, hour=23, minute=32), id="monthly_task")
+    scheduler.add_job(monthly_task, CronTrigger(day=20, hour=23, minute=38), id="monthly_task")
     # Schedule weekly task every Monday at midnight
     #scheduler.add_job(weekly_task, CronTrigger(hour=2, minute=0, day_of_week="mon"))
 
