@@ -107,7 +107,9 @@ const Chat = () => {
         const handleMessageResponse = (data) => {
             console.log('Message received:', data);
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
+                if(privatChatId === data.privatChatId){
                 setMessages(prevMessages => [...prevMessages, data]);
+                }
                 const chatId = privateChatId ? privateChatId : 'Team';
 
                 // Get the current username based on currentTab CHECK THE CODE IMPORTANT
