@@ -87,7 +87,7 @@ def get_combined_chats_and_kanban(
         messages_cursor = chat_collection.find(chat_query)
         messages = list(messages_cursor)  # Convert cursor to list
 
-        # Extract message content into a list
+        # Extract message content into a list (chat)
         message_contents = [message['content'] for message in messages]
         message_count = len(messages)
 
@@ -99,18 +99,15 @@ def get_combined_chats_and_kanban(
         kanban_cursor = kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
         kanban_items = list(kanban_cursor)
 
-        # Extract title and description from kanban tasks
+        # Extract title and description from kanban tasks as raw text
         kanban_contents = [
-            f"Title: {item.get('title', 'No Title')}, Description: {item.get('description', 'No Description')}"
+            f"{item.get('title', '')} {item.get('description', '')}".strip()
             for item in kanban_items
         ]
         kanban_count = len(kanban_items)
 
-        # Combine chat messages and kanban tasks
-        combined_contents = {
-            "messages": message_contents,
-            "kanban_contents": kanban_contents
-        }
+        # Combine both chat messages and kanban task contents into a flat list
+        combined_contents = message_contents + kanban_contents
         total_count = message_count + kanban_count
 
         return {
@@ -146,7 +143,8 @@ def monthly_task():
     for user_id in user_ids:
         userString = get_combined_chats_and_kanban(last_run, user_id)
         print(userString["combined_contents"])
-        analyze_big5(user_id, userString["combined_contents"])
+        print(userString["total_count"])
+        #analyze_big5(user_id, userString["combined_contents"])
 
 def schedule_task(task_name: str, team_name: str, execution_time: datetime):
     now = datetime.now(timezone.utc)
