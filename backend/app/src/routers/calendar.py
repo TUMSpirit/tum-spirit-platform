@@ -1,3 +1,4 @@
+import gridfs
 import shutil
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
 from typing import Annotated, Any, List, Optional, Union
@@ -38,6 +39,9 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['calendar']
 file_collection = db['files']
+
+# Initialize GridFS
+fs = gridfs.GridFS(db)
 
 def validate_object_id(v: Any) -> ObjectId:
     if isinstance(v, ObjectId):
@@ -266,7 +270,6 @@ def delete_calendar_entry(entry_id: str, current_user: User = Depends(get_curren
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @router.post("/files/upload", response_model=FileReference, tags=["files"])
 async def upload_file(files: List[UploadFile], current_user: User = Depends(get_current_user)):
     if not files:
@@ -274,21 +277,33 @@ async def upload_file(files: List[UploadFile], current_user: User = Depends(get_
 
     try:
         file = files[0]
+        # Read file data
         file_data = await file.read()
-        file_size = len(file_data)  # Calculate file size in bytes
 
+        # Store the file using GridFS
+        gridfs_file_id = fs.put(
+            file_data, 
+            filename=file.filename, 
+            contentType=file.content_type,
+            uploaded_by=current_user["username"],
+            team_id=current_user["team_id"],
+            timestamp=datetime.now()
+        )
+
+        # Create a file record in the file collection
         file_record = {
             "team_id": current_user["team_id"],
             "filename": file.filename,
             "contentType": file.content_type,
-            "fileData": file_data,
-            "size": file_size,  # Store file size
+            "gridfs_file_id": gridfs_file_id,  # Store reference to the GridFS file ID
+            "size": len(file_data),
             "uploaded_by": current_user["username"],
             "timestamp": datetime.now()
         }
 
         result = file_collection.insert_one(file_record)
         file_ref = FileReference(file_id=str(result.inserted_id), filename=file.filename)
+
         return file_ref
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
