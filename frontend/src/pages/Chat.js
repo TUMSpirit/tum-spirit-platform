@@ -107,7 +107,7 @@ const Chat = () => {
         const handleMessageResponse = (data) => {
             console.log('Message received:', data);
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
-                if(privateChatId === data.privatChatId){
+                if(privateChatId === data.privateChatId){
                 setMessages(prevMessages => [...prevMessages, data]);
                 }
                 const chatId = privateChatId ? privateChatId : 'Team';
