@@ -145,7 +145,8 @@ def monthly_task():
    # Trigger analysis for each user
     for user_id in user_ids:
         userString = get_combined_chats_and_kanban(last_run, user_id)
-        analyze_big5(user_id, userString["combined_messages"])
+        print(userString["combined_contents"])
+        analyze_big5(user_id, userString["combined_contents"])
 
 def schedule_task(task_name: str, team_name: str, execution_time: datetime):
     now = datetime.now(timezone.utc)
@@ -161,7 +162,7 @@ def start_scheduler():
     #scheduler.add_job(daily_task, CronTrigger(hour=1, minute=3), id="daily_task")
 
     # Schedule monthly task on the 15th of each month at midnight
-    scheduler.add_job(monthly_task, CronTrigger(day=20, hour=13, minute=30), id="monthly_task")
+    scheduler.add_job(monthly_task, CronTrigger(day=20, hour=11, minute=17), id="monthly_task")
     # Schedule weekly task every Monday at midnight
     #scheduler.add_job(weekly_task, CronTrigger(hour=2, minute=0, day_of_week="mon"))
 
