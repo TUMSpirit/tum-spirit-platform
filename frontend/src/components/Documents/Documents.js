@@ -244,7 +244,12 @@ const FileTable = () => {
                 formData.append('files', file.originFileObj);
             }
         });
-
+    
+        // Log FormData for debugging
+        for (let pair of formData.entries()) {
+            console.log(pair[0]+ ', ' + pair[1]); 
+        }
+    
         try {
             await axios.post('/api/files/upload', formData, {
                 headers: {
@@ -267,6 +272,7 @@ const FileTable = () => {
             message.error('Error uploading files');
         }
     };
+
 
     const handleUploadModalCancel = () => {
         setIsUploadModalVisible(false);
