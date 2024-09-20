@@ -331,19 +331,16 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
         if not file_record:
             raise HTTPException(status_code=404, detail="File not found")
 
-        # Extract file data and content type
-        file_data = file_record.get("fileData")
-        content_type = file_record.get("contentType")
-        filename = file_record.get("filename")
+        gridfs_file_id = file_record["gridfs_file_id"]
 
-        if file_data is None or content_type is None or filename is None:
-            raise HTTPException(status_code=500, detail="File metadata missing")
+        # Retrieve the file from GridFS
+        gridfs_file = fs.get(gridfs_file_id)
 
         # Return the file as a streaming response
         return StreamingResponse(
-            io.BytesIO(file_data),  # Streaming the file data
-            media_type=content_type,
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+            io.BytesIO(gridfs_file.read()), 
+            media_type=gridfs_file.contentType,
+            headers={"Content-Disposition": f'attachment; filename="{gridfs_file.filename}"'}
         )
     except Exception as e:
         print(f"Error downloading file {file_id}: {e}")
