@@ -280,7 +280,20 @@ const FileTable = () => {
     };
 
     const handleFileChange = ({ fileList }) => {
-        setFileListUpload(fileList);
+        // Maximum file size in bytes (10 MB)
+        const maxSize = 10 * 1024 * 1024;
+    
+        // Filter out files that are larger than 10 MB
+        const filteredFileList = fileList.filter(file => {
+            if (file.size > maxSize) {
+                message.error(`${file.name} is larger than 10MB and cannot be uploaded.`);
+                return false;
+            }
+            return true;
+        });
+    
+        // Update the state with the filtered file list
+        setFileListUpload(filteredFileList);
     };
 
     const handleDeleteModalCancel = () => {
