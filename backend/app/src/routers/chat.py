@@ -227,9 +227,9 @@ def delete_message(message_id: str, current_user: User = Depends(get_current_use
 @router.get("/chat/get-messages", tags=["chat"], response_model=List[Message])
 def get_messages(
     current_user: User = Depends(get_current_user),
-    private_chat_id: Optional[str] = Header(None),
-    skip: int = Query(0, description="Number of messages to skip for pagination"),
-    limit: int = Query(25, description="Number of messages to fetch per request"),
+    private_chat_id: Optional[str] = None,
+    skip: Optional[int] = 0,
+    limit: Optional[int] = 500,
 ):
     try:
         team_id = ObjectId(current_user["team_id"])
@@ -237,7 +237,7 @@ def get_messages(
 
         # Set query based on whether it's a private chat or team chat
         if private_chat_id:
-            query = {'privateChatId': private_chat_id}
+            query = {'teamId': team_id, 'privateChatId': private_chat_id}
         else:
             query = {'teamId': team_id, 'privateChatId': None}
 

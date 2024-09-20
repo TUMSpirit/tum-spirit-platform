@@ -13,6 +13,7 @@ const ChatBody = ({
     id,
     currentTab,
     setCurrentTab,
+    chatContainerRef,
     socket,
     messages,
     lastMessageRef,
@@ -29,15 +30,13 @@ const ChatBody = ({
     onlineStatus,
     getUnreadMessages,
     loading,
-    fetchMessages, // Pass fetchMessages to ChatBody to trigger manual fetching
-    hasMoreMessages, // Track if more messages can be loaded
-    setMessagePage // Add onlineStatus prop
+    hasMoreMessages
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [currentResultIndex, setCurrentResultIndex] = useState(-1);
     const authHeader = useAuthHeader();
-    const chatContainerRef = useRef(null);
+    //const chatContainerRef = useRef(null);
     const { setSubHeaderComponent } = useSubHeader();
 
 
@@ -334,12 +333,12 @@ const ChatBody = ({
         return text;
     };
 
-    useEffect(() => {
+    /*useEffect(() => {
         // Scroll to bottom of chat container on new messages
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [messages]);*/
 
 
     useEffect(() => {
@@ -391,12 +390,12 @@ const ChatBody = ({
             ref={chatContainerRef}
             className="flex-grow overflow-y-auto w-full px-4 chat-container-component pb-5 bg-chat-background border-t-2 border-chat-grid relative"
             style={{ borderColor: "rgb(229, 231, 235)", height: "100px" }}>
-            {loading ? (
+            {loading? (
                 <div className="flex justify-center items-center h-full">
-                    <Spin size="large" />  {/* Spinner shown while loading */}
+                    <Spin size="medium" />  {/* Spinner shown while loading */}
                 </div>
             ) : (
-                filteredMessages.map((message, index) => {
+                messages.map((message, index) => {
                     if (message.deleted) {
                         return null;
                     }
@@ -405,7 +404,7 @@ const ChatBody = ({
                     const messageStyle = getMessageStyle(message.content);
                     const messageMarginTop = index === 0 ? "mt-6" : "";
                     const messageMarginBottom = "mb-6";
-                    const isReplyingTo = filteredMessages.find(m => m.id === message.replyingTo);
+                    const isReplyingTo = messages.find(m => m.id === message.replyingTo);
                     const reactions = message.reactions ? Object.values(message.reactions) : [];
                     const avatarColor = getAvatarColor(message.senderId);
 
