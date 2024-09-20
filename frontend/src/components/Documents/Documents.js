@@ -51,38 +51,39 @@ const FileTable = () => {
         fetchFiles();
     }, []);
 
-    
-    const downloadFile = async (fileId) => {
-        setIsLoading(true);
+        const downloadFile = async (fileId) => {
+        setIsLoading(true);  // Show loading spinner
         try {
             const response = await axios.get(`/api/files/download/${fileId}`, {
                 responseType: 'blob',
                 headers: {
                     "Authorization": authHeader()
+                },
+                onDownloadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    console.log(`Download progress: ${percentCompleted}%`);
+                    // You can use percentCompleted to update a progress bar or message
                 }
             });
-
+    
             const contentType = response.headers['content-type'];
             const contentDisposition = response.headers['content-disposition'];
-
             const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
             const filename = filenameMatch ? filenameMatch[1] : 'downloaded-file';
-
+    
             const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', filename);
-
             document.body.appendChild(link);
             link.click();
-
+    
             document.body.removeChild(link);
             window.URL.revokeObjectURL(url);
-            setIsLoading(false);
         } catch (error) {
-            console.error('Error downloading file:', error);
             message.error('Error downloading file');
-            setIsLoading(false);
+        } finally {
+            setIsLoading(false);  // Hide loading spinner
         }
     };
 
