@@ -22,6 +22,19 @@ from .src.routers import timeline
 from .src.routers import notification
 from .src.routers import chat
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+
+# Define the middleware to limit upload size
+class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        content_length = request.headers.get('content-length')
+        max_size = 10 * 1024 * 1024  # 10 MB limit
+        if content_length and int(content_length) > max_size:
+            return JSONResponse({"error": "File too large"}, status_code=413)
+        return await call_next(request)
+
+
 # from .src.routers import chat
 
 # Define the lifespan context manager
@@ -40,6 +53,9 @@ def application_setup() -> FastAPI:
     # Start FastApi App
     application = FastAPI(lifespan=lifespan)
 
+
+    application.add_middleware(LimitUploadSizeMiddleware)
+    
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
     #application.include_router(celery.router, prefix="/api")
