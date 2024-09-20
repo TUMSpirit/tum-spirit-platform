@@ -274,35 +274,21 @@ async def upload_file(files: List[UploadFile], current_user: User = Depends(get_
 
     try:
         file = files[0]
-        # Save file temporarily to disk to handle larger files
-        temp_file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
+        file_data = await file.read()
+        file_size = len(file_data)  # Calculate file size in bytes
 
-        with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        # Get file size from the file itself
-        file_size = os.path.getsize(temp_file_path)
-
-        # Read the file back if you need to store it in MongoDB, or store path instead
-        with open(temp_file_path, "rb") as f:
-            file_data = f.read()  # Read file if you want to store it as binary in MongoDB
-
-        # Insert file metadata and data into MongoDB
         file_record = {
             "team_id": current_user["team_id"],
             "filename": file.filename,
             "contentType": file.content_type,
-            "fileData": file_data,  # Store binary data
+            "fileData": file_data,
             "size": file_size,  # Store file size
+            "uploaded_by": current_user["username"],
             "timestamp": datetime.now()
         }
 
         result = file_collection.insert_one(file_record)
         file_ref = FileReference(file_id=str(result.inserted_id), filename=file.filename)
-
-        # Optionally remove the temp file after processing if needed
-        os.remove(temp_file_path)
-
         return file_ref
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
