@@ -237,7 +237,7 @@ const Chat = () => {
         //setMessagePage(0);
         //setHasMoreMessages(true);
         console.log('Fetching messages...');
-        fetchMessages(true, 0, newPrivateChatId);
+        await fetchMessages(true, 0, newPrivateChatId);
         console.log('Messages fetched');
     };
 
