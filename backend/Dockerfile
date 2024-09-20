@@ -35,4 +35,4 @@ COPY app /app/app
 EXPOSE 8000
 
 # Run Uvicorn 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--limit-max-request-size", "10485760"]
