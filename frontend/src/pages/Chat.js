@@ -12,8 +12,8 @@ import ghost from '../assets/images/android_512x512.png';
 
 const Chat = () => {
 
-    const {currentUser, onlineStatus, socket, updateLastLoggedIn} = useSocket(); 
-    const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages} = useUnreadMessage();
+    const { currentUser, onlineStatus, socket, updateLastLoggedIn } = useSocket();
+    const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages } = useUnreadMessage();
     const [messages, setMessages] = useState([]);
     const [currentTab, setCurrentTab] = useState('1');
     const [editingMessage, setEditingMessage] = useState(null);
@@ -30,7 +30,9 @@ const Chat = () => {
     const [currentUserAvatarColor, setCurrentUserAvatarColor] = useState('#FFFFFF');
     const [messagePage, setMessagePage] = useState(0);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [initialLoad, setInitialLoad] = useState(true); // To differentiate between initial load and old messages loading
     const [loading, setLoading] = useState(false);
+    const chatContainerRef = useRef(null);
 
     const fetchTeamMembers = async () => {
         if (currentUser && teamMembers.length === 0) {
@@ -51,45 +53,44 @@ const Chat = () => {
         }
     };
 
-  const fetchMessages = async (reset = false) => {
-        if (!currentUser || !hasMoreMessages || loading) return; // Prevent fetching if already loading or no more messages
-        
-        setLoading(true);
-        try {
-            const headers = { 'Authorization': authHeader() };
-            if (privateChatId) {
-                headers['Private-Chat-Id'] = privateChatId;
-            }
-
-            const response = await axios.get(`/api/chat/get-messages`, {
-                params: {
-                    skip: messagePage * 75, // Skip messages based on the current page
-                    limit: 75, // Limit the number of messages per request
-                },
-                headers: { 'Authorization': authHeader() }
-            });
-
-            const fetchedMessages = response.data;
-            
-            // Reverse the fetched messages so the oldest is at the top and newest is at the bottom
-            const reversedMessages = fetchedMessages.reverse();
+    const fetchMessages = async (reset = false, page = 0, privateChatId = null) => {
+        if (currentUser && hasMoreMessages) {
+            setLoading(true);
+            try {
+                const headers = { 'Authorization': authHeader() };
+                
+                // Set the query parameters: skip, limit, and optionally privateChatId
+                let params = {
+                    skip: page * 25, // Pagination: Skip the appropriate number of messages
+                    limit: 500,       // Limit: Fetch 25 messages per request
+                };
+                if (privateChatId) {
+                    params['private_chat_id'] = privateChatId; // Add privateChatId to the request if available
+                }
     
-            // If reset, replace the messages, otherwise append older messages at the beginning
-            setMessages(prevMessages => reset ? reversedMessages : [...reversedMessages, ...prevMessages]);
-            
-            // If no more messages, set hasMoreMessages to false
-            if (fetchedMessages.length === 0) {
-                setHasMoreMessages(false);
+                // Make the GET request to the backend
+                const response = await axios.get('/api/chat/get-messages', {
+                    params: params,
+                    headers: headers,
+                });
+    
+                // Reverse the message order (assuming the API sends the newest messages first)
+                let fetchedMessages = response.data.reverse();
+    
+                // Append or reset the message state based on the reset flag
+                setMessages(prevMessages => reset ? fetchedMessages : [...fetchedMessages, ...prevMessages]);
+    
+                // If fewer than 25 messages are fetched, set hasMoreMessages to false
+                if (fetchedMessages.length < 25) {
+                    setHasMoreMessages(false);
+                }
+            } catch (error) {
+                console.error('Failed to fetch messages:', error);
+            } finally {
+                setLoading(false);  // Stop loading when the fetch completes
             }
-        } catch (error) {
-            console.error('Failed to fetch messages:', error);
-        } finally {
-            setLoading(false); // Stop loading after fetching messages
         }
     };
-
-
-
 
     const markReadWithTeam = () => {
         markAsRead("Team");
@@ -98,12 +99,12 @@ const Chat = () => {
     useEffect(() => {
         setTimeout(markReadWithTeam, 1800);
         updateLastLoggedIn("Team");
-       // setUnreadMessages(currentTab);
+        // setUnreadMessages(currentTab);
     }, []);
 
     useEffect(() => {
         if (!currentUser) return;
-        fetchMessages(true);
+        //fetchMessages(true);
         fetchTeamMembers();
 
         const handleMessageResponse = (data) => {
@@ -117,33 +118,18 @@ const Chat = () => {
                 let chatUser = "";
                 console.log(currentUserChat);
                 console.log(chatId);
-                if(teamMembers[parseInt(currentTab) - 2]){
-                     chatUser = teamMembers[parseInt(currentTab) - 2].username;
-                }else{
-                     chatUser = undefined;
-                }
-        
-        
-               // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
-               if (chatUser===currentUserChat) {
-                  markAsRead(chatId);
-                  chatUser? updateLastLoggedIn(chatUser):updateLastLoggedIn("Team");
+                if (teamMembers[parseInt(currentTab) - 2]) {
+                    chatUser = teamMembers[parseInt(currentTab) - 2].username;
+                } else {
+                    chatUser = undefined;
                 }
 
-                /*if (data.senderId !== currentUser.username) {
-                    const title = "New Message!";
-                    const options = {
-                      body: data.senderId + " sent a message in the chat",
-                      image_url: ghost,
-                      image: ghost,
-                      icon: ghost,
-                      icon_url: ghost,
-                      vibrate: [300, 100, 400]
-                    };
-                    navigator.serviceWorker.ready.then(async function (serviceWorker) {
-                      await serviceWorker.showNotification(title, options);
-                    });
-                  }*/
+
+                // Check if the chatId matches the current tab's username or if current tab is 0 and chatId is "Team"
+                if (chatUser === currentUserChat) {
+                    markAsRead(chatId);
+                    chatUser ? updateLastLoggedIn(chatUser) : updateLastLoggedIn("Team");
+                }
             }
         };
 
@@ -183,14 +169,14 @@ const Chat = () => {
         const handleTyping = (data) => {
             if (data.privateChatId && data.privateChatId === privateChatId) {
                 setTypingUser(data);
-              } else if (data.teamId && data.teamId === currentUser.team_id && !privateChatId) {
+            } else if (data.teamId && data.teamId === currentUser.team_id && !privateChatId) {
                 setTypingUser(data);
-              }
+            }
         };
 
         const handleStopTyping = (data) => {
-            if ((data.privateChatId && data.privateChatId === privateChatId) || 
-            (data.teamId && data.teamId === currentUser.team_id && !privateChatId)) {
+            if ((data.privateChatId && data.privateChatId === privateChatId) ||
+                (data.teamId && data.teamId === currentUser.team_id && !privateChatId)) {
                 setTypingUser(null);
             }
         };
@@ -216,40 +202,12 @@ const Chat = () => {
         };
     }, [currentUser, messagePage, privateChatId, currentTab]);
 
-
-  /*  useEffect(() => {
-        socket.on('updateUserStatus', ({ data }) => {
-            for (const username in data) {
-                data[username] = 'online'
-            }
-            setOnlineStatus(data);
-        });
-    
-        return () => {
-            // socket.off('currentOnlineUsers');
-            socket.off('updateUserStatus');
-        };
-    }, [socket]);
-    
-    useEffect(() => {
-        const handleNewMessage = () => {
-            console.log("trigger increment");
-            incrementNotifications('Team');
-        };
-
-        socket.on('newMessage', handleNewMessage);
-
-        return () => {
-            socket.off('newMessage', handleNewMessage);
-        };
-    }, [socket, incrementNotifications]);*/
-
-     const handleTabChange = async (key) => {
+    const handleTabChange = async (key) => {
         console.log('Current Tab:', currentTab);
         console.log('Selected Tab:', key);
-    
+        let newPrivateChatId = null;
         const currTab = currentTab;
-    
+
         if (key !== '1') {
             console.log('Switching to Private Chat:', teamMembers[parseInt(key) - 2].username);
             await updateLastLoggedIn(teamMembers[parseInt(key) - 2].username);
@@ -257,12 +215,12 @@ const Chat = () => {
             console.log('Switching to Team Chat');
             await updateLastLoggedIn("Team");
         }
-    
+
         setCurrentTab(key);
-    
+
         if (key !== '1') {
             const memberUsername = teamMembers[parseInt(key) - 2].username;
-            const newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
+            newPrivateChatId = getPrivateChatId(currentUser.username, memberUsername);
             console.log('New Private Chat ID:', newPrivateChatId);
             markAsRead(newPrivateChatId);
             setPrivateChatId(newPrivateChatId);
@@ -273,14 +231,58 @@ const Chat = () => {
             markAsRead("Team");
             socket.emit('joinTeam', currentUser.team_id);
         }
-    
-        setMessagePage(1);
+
+        setMessagePage(0);
         setHasMoreMessages(true);
+        //setMessagePage(0);
+        //setHasMoreMessages(true);
         console.log('Fetching messages...');
-        fetchMessages(true);
+        fetchMessages(true, 0, newPrivateChatId);
         console.log('Messages fetched');
     };
 
+    /*const handleScroll = () => {
+        const chatContainer = chatContainerRef.current;
+        if (!chatContainer || loading || !hasMoreMessages) return;
+
+        // If the user scrolls to the top of the chat, fetch older messages
+        if (chatContainer.scrollTop === 0) {
+            const currentHeight = chatContainer.scrollHeight;
+
+            setMessagePage(prevPage => {
+                const newPage = prevPage + 1; // Increment the page
+                fetchMessages(false, newPage, privateChatId); // Fetch more messages using the updated page
+
+                // After fetching, adjust scroll position to maintain user's view position
+                setTimeout(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight - currentHeight;
+                }, 100); // Small delay to allow the new messages to load
+
+                return newPage; // Update the state with the new page
+            });
+        }
+    };*/
+
+    useEffect(() => {
+        fetchMessages(true); // Fetch initial messages on load
+    }, []);
+
+    // Scroll to bottom on new message or initial load
+    /*useEffect(() => {
+        if (initialLoad) {
+            if (lastMessageRef.current) {
+                lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+            setInitialLoad(false);
+        }
+    }, [messages]);*/
+
+    useEffect(() => {
+        // Scroll to bottom of chat container on new messages
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     const getPrivateChatId = (user1, user2) => [user1, user2].sort().join('-');
 
@@ -290,6 +292,7 @@ const Chat = () => {
                 id="chat-body"
                 currentTab={currentTab}
                 setCurrentTab={handleTabChange}
+                chatContainerRef={chatContainerRef}
                 messages={messages}
                 onRemoveReaction={setMessages}
                 lastMessageRef={lastMessageRef}
@@ -306,10 +309,8 @@ const Chat = () => {
                 currentUserAvatarColor={currentUserAvatarColor}
                 onlineStatus={onlineStatus}
                 getUnreadMessages={getUnreadMessages}// Pass online status to ChatBody
-                loading={loading}
-                fetchMessages={fetchMessages} // Pass fetchMessages to ChatBody to trigger manual fetching
-                hasMoreMessages={hasMoreMessages} // Track if more messages can be loaded
-                setMessagePage={setMessagePage} // Control pagination
+                loading={loading}// Pass fetchMessages to ChatBody to trigger manual fetching
+                hasMoreMessages={hasMoreMessages} // Track if more messages can be loaded // Control pagination
             />
             <ChatFooter
                 socket={socket}
