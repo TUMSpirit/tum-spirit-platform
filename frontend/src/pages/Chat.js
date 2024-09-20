@@ -55,7 +55,6 @@ const Chat = () => {
 
     const fetchMessages = async (reset = false, page = 0, privateChatId = null) => {
         if (currentUser && hasMoreMessages) {
-            setLoading(true);
             try {
                 const headers = { 'Authorization': authHeader() };
                 
@@ -86,8 +85,6 @@ const Chat = () => {
                 }
             } catch (error) {
                 console.error('Failed to fetch messages:', error);
-            } finally {
-                setLoading(false);  // Stop loading when the fetch completes
             }
         }
     };
