@@ -203,6 +203,7 @@ const Chat = () => {
     }, [currentUser, messagePage, privateChatId, currentTab]);
 
     const handleTabChange = async (key) => {
+        setLoading(true);
         console.log('Current Tab:', currentTab);
         console.log('Selected Tab:', key);
         let newPrivateChatId = null;
@@ -239,6 +240,7 @@ const Chat = () => {
         console.log('Fetching messages...');
         await fetchMessages(true, 0, newPrivateChatId);
         console.log('Messages fetched');
+        setLoading(false);
     };
 
     /*const handleScroll = () => {
