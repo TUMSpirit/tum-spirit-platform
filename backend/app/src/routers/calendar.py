@@ -277,37 +277,24 @@ async def upload_file(files: List[UploadFile], current_user: User = Depends(get_
 
     try:
         file = files[0]
-        # Read file data
         file_data = await file.read()
+        file_size = len(file_data)  # Calculate file size in bytes
 
-        # Store the file using GridFS
-        gridfs_file_id = fs.put(
-            file_data, 
-            filename=file.filename, 
-            contentType=file.content_type,
-            uploaded_by=current_user["username"],
-            team_id=current_user["team_id"],
-            timestamp=datetime.now()
-        )
-
-        # Create a file record in the file collection
         file_record = {
             "team_id": current_user["team_id"],
             "filename": file.filename,
             "contentType": file.content_type,
-            "gridfs_file_id": gridfs_file_id,  # Store reference to the GridFS file ID
-            "size": len(file_data),
+            "fileData": file_data,
+            "size": file_size,  # Store file size
             "uploaded_by": current_user["username"],
             "timestamp": datetime.now()
         }
 
         result = file_collection.insert_one(file_record)
         file_ref = FileReference(file_id=str(result.inserted_id), filename=file.filename)
-
         return file_ref
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.delete("/files/delete/{file_id}", tags=["files"])
 async def delete_file(file_id: str, current_user: User = Depends(get_current_user)):
@@ -331,16 +318,19 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
         if not file_record:
             raise HTTPException(status_code=404, detail="File not found")
 
-        gridfs_file_id = file_record["gridfs_file_id"]
+        # Extract file data and content type
+        file_data = file_record.get("fileData")
+        content_type = file_record.get("contentType")
+        filename = file_record.get("filename")
 
-        # Retrieve the file from GridFS
-        gridfs_file = fs.get(gridfs_file_id)
+        if file_data is None or content_type is None or filename is None:
+            raise HTTPException(status_code=500, detail="File metadata missing")
 
         # Return the file as a streaming response
         return StreamingResponse(
-            io.BytesIO(gridfs_file.read()), 
-            media_type=gridfs_file.contentType,
-            headers={"Content-Disposition": f'attachment; filename="{gridfs_file.filename}"'}
+            io.BytesIO(file_data),  # Streaming the file data
+            media_type=content_type,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
         )
     except Exception as e:
         print(f"Error downloading file {file_id}: {e}")
