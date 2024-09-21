@@ -176,7 +176,7 @@ def create_kanban_card(
 
 
 @router.post("/avatar/upload-documents", tags=["avatar"])
-async def upload_document_for_teams(
+def upload_document_for_teams(
     files: List[UploadFile], 
     project_id: Optional[str] = None,  # Allow project_id as an optional field
     current_user: User = Depends(is_admin)
