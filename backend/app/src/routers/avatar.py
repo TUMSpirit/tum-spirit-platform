@@ -152,13 +152,20 @@ def create_kanban_card(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/avatar/broadcast-message", tags=["avatar"])
-def broadcast_message(
-    content: str, 
+@router.post("/avatar/upload-documents", tags=["avatar"])
+async def upload_document_for_teams(
+    files: List[UploadFile], 
     project_id: Optional[str] = None,  # Allow project_id as an optional field
     current_user: User = Depends(is_admin)
 ):
+    if not files:
+        raise HTTPException(status_code=400, detail="File is required")
+
     try:
+        file = files[0]
+        file_data = await file.read()
+        file_size = len(file_data)  # Calculate file size in bytes
+
         # If a project_id is provided, filter teams by that project ID from the teams collection
         if project_id:
             # Convert the provided project_id to an ObjectId
@@ -177,27 +184,23 @@ def broadcast_message(
             team_ids = [team["team_id"] for team in teams_filtered]
             print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
 
-        messages = []
+        uploaded_files = []
 
-        # Broadcast the message to the relevant teams
+        # Upload the document for the relevant teams
         for team_id in team_ids:
-            message = {
-                "teamId": ObjectId(team_id),
-                "content": content,
-                "senderId": 'Spirit',  # Avatar name as the sender
-                "timestamp": datetime.now(timezone.utc),
-                "replyingTo": None,
-                "reactions": {},  # Set reactions to an empty object
-                "isGif": False,  # Set isGif to boolean false
-                "privateChatId": None
+            file_record = {
+                "team_id": ObjectId(team_id),
+                "filename": file.filename,
+                "contentType": file.content_type,
+                "fileData": file_data,
+                "size": file_size,  # Store file size
+                "uploaded_by": 'Spirit',  # Avatar name as uploader
+                "timestamp": datetime.now(timezone.utc)
             }
-            result = chat_collection.insert_one(message)
-            messages.append(result.inserted_id)
 
-        return {"message": "Broadcast successful", "message_ids": [str(m) for m in messages]}
+            result = file_collection.insert_one(file_record)
+            uploaded_files.append(str(result.inserted_id))
+
+        return {"message": "Files uploaded", "file_ids": uploaded_files}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
