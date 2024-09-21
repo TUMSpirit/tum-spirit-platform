@@ -12,7 +12,7 @@ const ImprintModal = ({ isVisible, setIsVisible }) => {
   const onAcceptOrDecline = async (accepted) => {
     try {
       // Send the accept_study status to the backend (true for accept, false for decline)
-      await axios.post('/user/accept-study', { accept_study: accepted });
+      await axios.post('/api/accept-study', { accept_study: accepted });
       console.log(`Terms ${accepted ? 'accepted' : 'declined'}`);
       setIsVisible(false); // Close the modal
     } catch (error) {
