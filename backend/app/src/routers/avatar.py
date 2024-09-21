@@ -60,19 +60,41 @@ class Message(BaseModel):
         populate_by_name = True
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
-            
+
+
 @router.post("/avatar/broadcast-message", tags=["avatar"])
-def broadcast_message(content: str, current_user: User = Depends(is_admin)):
+def broadcast_message(
+    content: str, 
+    project_id: Optional[str] = None,  # Allow project_id as an optional field
+    current_user: User = Depends(is_admin)
+):
     try:
-        teams = get_distinct_team_ids()  # Assuming you have a teams collection
+        # If a project_id is provided, filter teams by that project ID from the teams collection
+        if project_id:
+            # Convert the provided project_id to an ObjectId
+            project_object_id = ObjectId(project_id)
+
+            # Fetch teams associated with the given project_id
+            teams_filtered = teams_collection.find({"project_id": project_object_id})
+            team_ids = [team["team_id"] for team in teams_filtered]
+            print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
+
+            if not team_ids:
+                raise HTTPException(status_code=404, detail="404: No teams found for the specified project")
+        else:
+            # If no project_id is provided, use all teams from the teams collection
+            teams_filtered = teams_collection.find({})
+            team_ids = [team["team_id"] for team in teams_filtered]
+            print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
+
         messages = []
-        
-        
-        for teamId in teams:
+
+        # Broadcast the message to the relevant teams
+        for team_id in team_ids:
             message = {
-                "teamId": ObjectId(teamId),
+                "teamId": ObjectId(team_id),
                 "content": content,
-                "senderId": 'Spirit',
+                "senderId": 'Spirit',  # Avatar name as the sender
                 "timestamp": datetime.now(timezone.utc),
                 "replyingTo": None,
                 "reactions": {},  # Set reactions to an empty object
@@ -81,8 +103,9 @@ def broadcast_message(content: str, current_user: User = Depends(is_admin)):
             }
             result = chat_collection.insert_one(message)
             messages.append(result.inserted_id)
-        
+
         return {"message": "Broadcast successful", "message_ids": [str(m) for m in messages]}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
