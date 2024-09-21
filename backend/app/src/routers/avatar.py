@@ -153,6 +153,7 @@ def create_kanban_card(
 @router.post("/avatar/upload-document-avatar", tags=["avatar"])
 async def upload_document_for_teams(
     files: List[UploadFile], 
+    project_id: Optional[str] = None,  # Single project_id as an optional field
     current_user: User = Depends(is_admin)
 ):
     if not files:
@@ -163,10 +164,23 @@ async def upload_document_for_teams(
         file_data = await file.read()
         file_size = len(file_data)  # Calculate file size in bytes
 
-        teams = get_distinct_team_ids()  # Assuming this function fetches all team IDs
+        # Fetch all team IDs from users collection
+        teams = get_distinct_team_ids()
+
+        # If a project_id is provided, filter teams by project ID
+        if project_id:
+            # Filter the teams using the project_id from the teams collection
+            teams = teams_collection.find({"team_id": {"$in": teams}, "project_id": project_id})
+            team_ids = [team["team_id"] for team in teams]
+
+            if not team_ids:
+                raise HTTPException(status_code=404, detail="No teams found for the specified project")
+        else:
+            team_ids = teams  # If no project_id, use all teams
+
         uploaded_files = []
 
-        for team_id in teams:
+        for team_id in team_ids:
             file_record = {
                 "team_id": team_id,
                 "filename": file.filename,
@@ -180,7 +194,8 @@ async def upload_document_for_teams(
             result = file_collection.insert_one(file_record)
             uploaded_files.append(str(result.inserted_id))
 
-        return {"message": "Files uploaded for all teams", "file_ids": uploaded_files}
+        return {"message": "Files uploaded", "file_ids": uploaded_files}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
