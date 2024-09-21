@@ -165,19 +165,22 @@ async def upload_document_for_teams(
         file_data = await file.read()
         file_size = len(file_data)  # Calculate file size in bytes
 
-        # Fetch all team IDs from users collection
-        teams = get_distinct_team_ids()
+        # Fetch all team IDs from the user collection
+        all_team_ids = get_distinct_team_ids()
+        print(f"Fetched team IDs from users collection: {all_team_ids}")  # Debug log
 
-        # If a project_id is provided, filter teams by project ID
+        # If a project_id is provided, filter teams by that project ID from teams collection
         if project_id:
-            # Filter the teams using the project_id from the teams collection
-            teams = teams_collection.find({"team_id": {"$in": teams}, "project_id": project_id})
-            team_ids = [team["team_id"] for team in teams]
+            # Fetch teams associated with the given project_id
+            teams_filtered = teams_collection.find({"project_id": project_id, "team_id": {"$in": all_team_ids}})
+            team_ids = [team["team_id"] for team in teams_filtered]
+            print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
 
             if not team_ids:
-                raise HTTPException(status_code=404, detail="No teams found for the specified project")
+                raise HTTPException(status_code=404, detail="404: No teams found for the specified project")
         else:
-            team_ids = teams  # If no project_id, use all teams
+            team_ids = all_team_ids  # If no project_id, use all teams
+            print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
 
         uploaded_files = []
 
@@ -199,4 +202,5 @@ async def upload_document_for_teams(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
