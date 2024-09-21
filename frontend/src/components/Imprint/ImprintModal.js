@@ -24,6 +24,7 @@ const ImprintModal = ({ isVisible, setIsVisible }) => {
       setIsVisible(false); // Close the modal
     } catch (error) {
       console.error('Error updating accept_study:', error);
+      message.error('Problems with connecting to the backend to update your study acceptance');
     }
   };
 
