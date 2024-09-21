@@ -454,7 +454,7 @@ async def update_last_active(chat_data: ChatUsername, current_user: User = Depen
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/user/accept-study", response_model=dict)
+@router.post("/accept-study", response_model=dict)
 async def update_accept_study(
     accept_study_update: AcceptStudyUpdate, 
     current_user: User = Depends(get_current_user)
