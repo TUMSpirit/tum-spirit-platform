@@ -175,10 +175,10 @@ def create_kanban_card(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/avatar/upload-documents", tags=["avatar"])
-def upload_document_for_teams(
+@router.post("/avatar/upload-document-avatar", tags=["avatar"])
+async def upload_document_for_teams(
     files: List[UploadFile], 
-    project_id: Optional[str] = None,  # Allow project_id as an optional field
+    project_id: Optional[str] = None,  # Single project_id as an optional field
     current_user: User = Depends(is_admin)
 ):
     if not files:
@@ -189,30 +189,28 @@ def upload_document_for_teams(
         file_data = await file.read()
         file_size = len(file_data)  # Calculate file size in bytes
 
-        # If a project_id is provided, filter teams by that project ID from the teams collection
-        if project_id:
-            # Convert the provided project_id to an ObjectId
-            project_object_id = ObjectId(project_id)
+        # Fetch all team IDs from the user collection
+        all_team_ids = get_distinct_team_ids()
+        print(f"Fetched team IDs from users collection: {all_team_ids}")  # Debug log
 
+        # If a project_id is provided, filter teams by that project ID from teams collection
+        if project_id:
             # Fetch teams associated with the given project_id
-            teams_filtered = teams_collection.find({"project_id": project_object_id})
+            teams_filtered = teams_collection.find({"project_id": project_id, "team_id": {"$in": all_team_ids}})
             team_ids = [team["team_id"] for team in teams_filtered]
             print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
 
             if not team_ids:
                 raise HTTPException(status_code=404, detail="404: No teams found for the specified project")
         else:
-            # If no project_id is provided, use all teams from the teams collection
-            teams_filtered = teams_collection.find({})
-            team_ids = [team["team_id"] for team in teams_filtered]
+            team_ids = all_team_ids  # If no project_id, use all teams
             print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
 
         uploaded_files = []
 
-        # Upload the document for the relevant teams
         for team_id in team_ids:
             file_record = {
-                "team_id": ObjectId(team_id),
+                "team_id": team_id,
                 "filename": file.filename,
                 "contentType": file.content_type,
                 "fileData": file_data,
@@ -227,3 +225,4 @@ def upload_document_for_teams(
         return {"message": "Files uploaded", "file_ids": uploaded_files}
 
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
