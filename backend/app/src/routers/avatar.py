@@ -76,7 +76,7 @@ def broadcast_message(
 
             # Fetch teams associated with the given project_id
             teams_filtered = teams_collection.find({"project_id": project_object_id})
-            team_ids = [team["team_id"] for team in teams_filtered]
+            team_ids = [team["_id"] for team in teams_filtered]
             print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
 
             if not team_ids:
@@ -84,7 +84,7 @@ def broadcast_message(
         else:
             # If no project_id is provided, use all teams from the teams collection
             teams_filtered = teams_collection.find({})
-            team_ids = [team["team_id"] for team in teams_filtered]
+            team_ids = [team["_id"] for team in teams_filtered]
             print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
 
         messages = []
@@ -198,7 +198,7 @@ async def upload_document_for_teams(
             project_object_id = ObjectId(project_id)
             # Fetch teams associated with the given project_id
             teams_filtered = teams_collection.find({"project_id": project_object_id})
-            team_ids = [team["team_id"] for team in teams_filtered]
+            team_ids = [team["_id"] for team in teams_filtered]
             print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
 
             if not team_ids:
