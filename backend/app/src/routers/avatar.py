@@ -28,6 +28,7 @@ chat_collection= db['chat']
 calendar_collection = db['calendar']
 kanban_collection = db['kanban']
 file_collection = db['files']
+teams_collection = db['teams']
 
 
 def validate_object_id(v: Any) -> ObjectId:
