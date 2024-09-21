@@ -195,8 +195,9 @@ async def upload_document_for_teams(
 
         # If a project_id is provided, filter teams by that project ID from teams collection
         if project_id:
+            project_object_id = ObjectId(project_id)
             # Fetch teams associated with the given project_id
-            teams_filtered = teams_collection.find({"project_id": project_id, "team_id": {"$in": all_team_ids}})
+            teams_filtered = teams_collection.find({"project_id": project_object_id})
             team_ids = [team["team_id"] for team in teams_filtered]
             print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
 
