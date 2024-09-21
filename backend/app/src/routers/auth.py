@@ -329,7 +329,6 @@ async def create_users(user_data: List[CreateUser], current_user: User = Depends
                 "username": user.username,
                 "password": hashed_password,
                 "role": user.role,
-                "project_id": ObjectId(user.team_id),
                 "team_id": ObjectId(user.team_id),
                 "avatar_color": user.avatar_color,
                 "accept_study": False,
