@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Modal, Button, Checkbox } from 'antd';
 import axios from 'axios';  // Assuming you are using axios for API calls
+import { useAuthHeader } from 'react-auth-kit';
 
 const ImprintModal = ({ isVisible, setIsVisible }) => {
   const [isCheckedAccept, setIsCheckedAccept] = useState(false); // State for accept checkbox
   const [isCheckedDecline, setIsCheckedDecline] = useState(false); // State for decline checkbox
+  const authHeader = useAuthHeader();
 
   const onClose = () => {
     setIsVisible(false);
@@ -13,7 +15,7 @@ const ImprintModal = ({ isVisible, setIsVisible }) => {
   const onAcceptOrDecline = async (accepted) => {
     try {
       // Send the accept_study status to the backend (true for accept, false for decline)
-      await axios.post('/api/accept-study', { accept_study: accepted });
+      await axios.post('/api/accept-study', { accept_study: accepted }, {});
       console.log(`Terms ${accepted ? 'accepted' : 'declined'}`);
       setIsVisible(false); // Close the modal
     } catch (error) {
