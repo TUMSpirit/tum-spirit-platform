@@ -35,7 +35,6 @@ class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
             return JSONResponse({"error": "File too large"}, status_code=413)
         return await call_next(request)
 
-
 # Define the lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):

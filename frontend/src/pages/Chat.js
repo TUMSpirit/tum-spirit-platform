@@ -55,7 +55,6 @@ const Chat = () => {
 
     const fetchMessages = async (reset = false, page = 0, privateChatId = null) => {
         if (currentUser && hasMoreMessages) {
-            setLoading(true);
             try {
                 const headers = { 'Authorization': authHeader() };
                 
@@ -86,8 +85,6 @@ const Chat = () => {
                 }
             } catch (error) {
                 console.error('Failed to fetch messages:', error);
-            } finally {
-                setLoading(false);  // Stop loading when the fetch completes
             }
         }
     };
@@ -110,7 +107,9 @@ const Chat = () => {
         const handleMessageResponse = (data) => {
             console.log('Message received:', data);
             if (data.teamId === currentUser.team_id || (data.privateChatId && data.privateChatId.includes(currentUser.username))) {
+                if(privateChatId === data.privateChatId){
                 setMessages(prevMessages => [...prevMessages, data]);
+                }
                 const chatId = privateChatId ? privateChatId : 'Team';
 
                 // Get the current username based on currentTab CHECK THE CODE IMPORTANT
@@ -203,6 +202,7 @@ const Chat = () => {
     }, [currentUser, messagePage, privateChatId, currentTab]);
 
     const handleTabChange = async (key) => {
+        setLoading(true);
         console.log('Current Tab:', currentTab);
         console.log('Selected Tab:', key);
         let newPrivateChatId = null;
@@ -237,8 +237,9 @@ const Chat = () => {
         //setMessagePage(0);
         //setHasMoreMessages(true);
         console.log('Fetching messages...');
-        fetchMessages(true, 0, newPrivateChatId);
+        await fetchMessages(true, 0, newPrivateChatId);
         console.log('Messages fetched');
+        setLoading(false);
     };
 
     /*const handleScroll = () => {

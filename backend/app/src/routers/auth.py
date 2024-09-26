@@ -129,6 +129,8 @@ class TeamUserClean(BaseModel):
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
 
+class AcceptStudyUpdate(BaseModel):
+    accept_study: bool
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -327,9 +329,9 @@ async def create_users(user_data: List[CreateUser], current_user: User = Depends
                 "username": user.username,
                 "password": hashed_password,
                 "role": user.role,
-                "project_id": ObjectId(user.team_id),
                 "team_id": ObjectId(user.team_id),
                 "avatar_color": user.avatar_color,
+                "accept_study": False,
             })
 
         # Insert users into the database
@@ -450,7 +452,38 @@ async def update_last_active(chat_data: ChatUsername, current_user: User = Depen
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.post("/accept-study", response_model=dict)
+async def update_accept_study(
+    accept_study_update: AcceptStudyUpdate, 
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update the 'accept_study' field for the current user.
     
+    Args:
+        accept_study_update (AcceptStudyUpdate): The accept/decline status from the frontend.
+        current_user (User): The current authenticated user.
+
+    Returns:
+        dict: A message confirming the update.
+    """
+    try:
+        # Update the user's accept_study field in the database
+        result = user_collection.update_one(
+            {"_id": ObjectId(current_user["_id"])},
+            {"$set": {"accept_study": accept_study_update.accept_study}}
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {"message": "Study acceptance status updated successfully"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
+
 @router.get("/missed-chats")
 async def get_missed_chats(current_user: User = Depends(get_current_user)):
     # Extract missed messages timestamps and privateChatIDs

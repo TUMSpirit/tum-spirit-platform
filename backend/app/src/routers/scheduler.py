@@ -16,8 +16,9 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 team_collection = db["teams"]
 task_log_collection = db["scheduler_log"]
-chat_collection= db["chats"]
+chat_collection= db["chat"]
 kanban_collection= db["kanban"]
+archived_kanban_collection=db["archived_kanban"]
 
 # Initialize APScheduler
 scheduler = BackgroundScheduler()
@@ -71,7 +72,8 @@ def get_last_run_time(task_name: str) -> str:
         default_time = datetime(1970, 1, 1, tzinfo=timezone.utc)
         return default_time.isoformat()
 
-def get_combined_messages_and_kanban(
+
+def get_combined_chats_and_kanban(
     since: str,
     user_id: str
 ) -> Dict[str, List]:
@@ -87,7 +89,8 @@ def get_combined_messages_and_kanban(
         messages_cursor = chat_collection.find(chat_query)
         messages = list(messages_cursor)  # Convert cursor to list
 
-        # Extract message content into a list
+
+        # Extract message content into a list (chat)
         message_contents = [message['content'] for message in messages]
         message_count = len(messages)
 
@@ -101,17 +104,24 @@ def get_combined_messages_and_kanban(
 
         # Extract title and description from kanban tasks
         kanban_contents = [
-            f"Title: {item.get('title', 'No Title')}, Description: {item.get('description', 'No Description')}"
+            f"{item.get('title', '')} {item.get('description', '')}".strip()
             for item in kanban_items
         ]
         kanban_count = len(kanban_items)
+        # Query for archived kanban tasks (only title and description)
+        archived_kanban_cursor = archived_kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
+        archived_kanban_items = list(archived_kanban_cursor)
 
-        # Combine chat messages and kanban tasks
-        combined_contents = {
-            "messages": message_contents,
-            "kanban_contents": kanban_contents
-        }
-        total_count = message_count + kanban_count
+        # Extract title and description from archived kanban tasks
+        archived_kanban_contents = [
+            f"{item.get('title', '')} {item.get('description', '')}".strip()
+            for item in archived_kanban_items
+        ]
+        archived_kanban_count = len(archived_kanban_items)
+
+        # Combine chat messages, kanban tasks, and archived kanban tasks
+        combined_contents = message_contents + kanban_contents + archived_kanban_contents
+        total_count = message_count + kanban_count + archived_kanban_count
 
         return {
             "combined_contents": combined_contents,
@@ -144,8 +154,10 @@ def monthly_task():
     
    # Trigger analysis for each user
     for user_id in user_ids:
-        userString = get_combined_messages(last_run, user_id)
-        analyze_big5(user_id, userString["combined_messages"])
+        userString = get_combined_chats_and_kanban(last_run, user_id)
+        print(userString["combined_contents"])
+        print(userString["total_count"])
+        #analyze_big5(user_id, userString["combined_contents"])
 
 def schedule_task(task_name: str, team_name: str, execution_time: datetime):
     now = datetime.now(timezone.utc)
@@ -161,7 +173,7 @@ def start_scheduler():
     #scheduler.add_job(daily_task, CronTrigger(hour=1, minute=3), id="daily_task")
 
     # Schedule monthly task on the 15th of each month at midnight
-    #scheduler.add_job(monthly_task, CronTrigger(day=9, hour=13, minute=30), id="monthly_task")
+    scheduler.add_job(monthly_task, CronTrigger(day=20, hour=23, minute=38), id="monthly_task")
     # Schedule weekly task every Monday at midnight
     #scheduler.add_job(weekly_task, CronTrigger(hour=2, minute=0, day_of_week="mon"))
 

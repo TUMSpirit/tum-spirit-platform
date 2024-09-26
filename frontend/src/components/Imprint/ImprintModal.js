@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, Button, Checkbox } from 'antd';
+import { Modal, Button, Checkbox, message } from 'antd';
 import styled from 'styled-components';
 import ghost from "../../assets/images/ghost.png";
+import axios from 'axios';  // Assuming you are using axios for API calls
+import { useAuthHeader } from 'react-auth-kit';
 
 const LegendWrapper = styled.div`
   background-color: #f0f2f5; /* Light gray background */
@@ -12,20 +14,42 @@ const LegendWrapper = styled.div`
 `;
 
 const ImprintModal = ({ isVisible, setIsVisible }) => {
-  const [isChecked, setIsChecked] = useState(false); // State to track if checkbox is checked
+  const [isCheckedAccept, setIsCheckedAccept] = useState(false); // State for accept checkbox
+  const [isCheckedDecline, setIsCheckedDecline] = useState(false); // State for decline checkbox
+  const authHeader = useAuthHeader();
 
   const onClose = () => {
     setIsVisible(false);
   };
 
-  const onAccept = () => {
-    // Logic when terms are accepted
-    console.log('Terms accepted');
-    setIsVisible(false);
+  const onAcceptOrDecline = async (accepted) => {
+    try {
+      // Send the accept_study status to the backend (true for accept, false for decline)
+      await axios.post('/api/accept-study', { accept_study: accepted },{
+        headers: {
+             "Authorization": authHeader()
+        }
+    });
+      console.log(`Terms ${accepted ? 'accepted' : 'declined'}`);
+      setIsVisible(false); // Close the modal
+    } catch (error) {
+      console.error('Error updating accept_study:', error);
+      message.error('Problems with connecting to the backend to update your study acceptance');
+    }
   };
 
-  const handleCheckboxChange = (e) => {
-    setIsChecked(e.target.checked); // Update the checkbox state
+  const handleAcceptCheckboxChange = (e) => {
+    setIsCheckedAccept(e.target.checked); // Update accept checkbox state
+    if (e.target.checked) {
+      setIsCheckedDecline(false); // Uncheck decline if accept is checked
+    }
+  };
+
+  const handleDeclineCheckboxChange = (e) => {
+    setIsCheckedDecline(e.target.checked); // Update decline checkbox state
+    if (e.target.checked) {
+      setIsCheckedAccept(false); // Uncheck accept if decline is checked
+    }
   };
 
   return (
@@ -37,14 +61,23 @@ const ImprintModal = ({ isVisible, setIsVisible }) => {
           Close
         </Button>,
         <Button
+          key="decline"
+          type="primary"
+          onClick={() => onAcceptOrDecline(false)}
+          disabled={!isCheckedDecline} // Disable button until decline checkbox is checked
+          className={`${isCheckedDecline ? 'bg-red-500' : 'bg-gray-300'} text-white hover:bg-red-600`}
+        >
+          Decline
+        </Button>,
+        <Button
           key="accept"
           type="primary"
-          onClick={onAccept}
-          disabled={!isChecked} // Disable button until the checkbox is checked
-          className={`${isChecked ? 'bg-green-500' : 'bg-gray-300'} text-white hover:bg-green-600`}
+          onClick={() => onAcceptOrDecline(true)}
+          disabled={!isCheckedAccept} // Disable button until accept checkbox is checked
+          className={`${isCheckedAccept ? 'bg-green-500' : 'bg-gray-300'} text-white hover:bg-green-600`}
         >
           Accept
-        </Button>
+        </Button>,
       ]}
       width="80%"
       bodyStyle={{ fontFamily: 'Josefin Sans, sans-serif', padding: '0.5rem', maxWidth: '100%' }}
@@ -146,8 +179,11 @@ const ImprintModal = ({ isVisible, setIsVisible }) => {
         </p>
         {/* Checkbox to confirm reading and acceptance */}
         <div className="mt-6">
-          <Checkbox onChange={handleCheckboxChange}>
+          <Checkbox checked={isCheckedAccept} onChange={handleAcceptCheckboxChange}>
             I have read and accept the terms and conditions.
+          </Checkbox>
+          <Checkbox checked={isCheckedDecline} onChange={handleDeclineCheckboxChange} className="ml-4">
+            I decline the terms and conditions.
           </Checkbox>
         </div>
       </div>

@@ -28,6 +28,7 @@ chat_collection= db['chat']
 calendar_collection = db['calendar']
 kanban_collection = db['kanban']
 file_collection = db['files']
+teams_collection = db['teams']
 
 
 def validate_object_id(v: Any) -> ObjectId:
@@ -59,19 +60,41 @@ class Message(BaseModel):
         populate_by_name = True
         arbitrary_types_allowed = True  # required for the _id
         json_encoders = {ObjectId: str}
-            
+
+
 @router.post("/avatar/broadcast-message", tags=["avatar"])
-def broadcast_message(content: str, current_user: User = Depends(is_admin)):
+def broadcast_message(
+    content: str, 
+    project_id: Optional[str] = None,  # Allow project_id as an optional field
+    current_user: User = Depends(is_admin)
+):
     try:
-        teams = get_distinct_team_ids()  # Assuming you have a teams collection
+        # If a project_id is provided, filter teams by that project ID from the teams collection
+        if project_id:
+            # Convert the provided project_id to an ObjectId
+            project_object_id = ObjectId(project_id)
+
+            # Fetch teams associated with the given project_id
+            teams_filtered = teams_collection.find({"project_id": project_object_id})
+            team_ids = [team["_id"] for team in teams_filtered]
+            print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
+
+            if not team_ids:
+                raise HTTPException(status_code=404, detail="404: No teams found for the specified project")
+        else:
+            # If no project_id is provided, use all teams from the teams collection
+            teams_filtered = teams_collection.find({})
+            team_ids = [team["_id"] for team in teams_filtered]
+            print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
+
         messages = []
-        
-        
-        for teamId in teams:
+
+        # Broadcast the message to the relevant teams
+        for team_id in team_ids:
             message = {
-                "teamId": ObjectId(teamId),
+                "teamId": ObjectId(team_id),
                 "content": content,
-                "senderId": 'Spirit',
+                "senderId": 'Spirit',  # Avatar name as the sender
                 "timestamp": datetime.now(timezone.utc),
                 "replyingTo": None,
                 "reactions": {},  # Set reactions to an empty object
@@ -80,8 +103,9 @@ def broadcast_message(content: str, current_user: User = Depends(is_admin)):
             }
             result = chat_collection.insert_one(message)
             messages.append(result.inserted_id)
-        
+
         return {"message": "Broadcast successful", "message_ids": [str(m) for m in messages]}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -116,6 +140,8 @@ def broadcast_message(content: str, current_user: User = Depends(is_admin)):
      #   raise HTTPException(status_code=500, detail=str(e))
 
 
+from bson import ObjectId  # Ensure ObjectId is imported
+
 @router.post("/avatar/create-kanban-card", tags=["avatar"])
 def create_kanban_card(
     title: str,
@@ -123,16 +149,36 @@ def create_kanban_card(
     priority: str = "",
     deadline: int = 0,
     milestone: str = "",
-    current_user: User = Depends(is_admin)):
-    
+    project_id: Optional[str] = None,  # Allow project_id as an optional field
+    current_user: User = Depends(is_admin)
+):
     try:
-        teams = get_distinct_team_ids()  # Assuming you have a teams collection
+        # If a project_id is provided, filter teams by that project ID from the teams collection
+        if project_id:
+            # Convert the provided project_id to an ObjectId
+            project_object_id = ObjectId(project_id)
+
+            # Fetch teams associated with the given project_id
+            teams_filtered = teams_collection.find({"project_id": project_object_id})
+            team_ids = [team["_id"] for team in teams_filtered]
+            print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
+
+            if not team_ids:
+                raise HTTPException(status_code=404, detail="404: No teams found for the specified project")
+        else:
+            # If no project_id is provided, use all teams from the teams collection
+            teams_filtered = teams_collection.find({})
+            team_ids = [team["_id"] for team in teams_filtered]
+            print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
+
         cards = []
-        for teamId in teams:
+
+        # Create a Kanban card for the relevant teams
+        for team_id in team_ids:
             card = {
-                'team_id': teamId,
+                'team_id': ObjectId(team_id),
                 'title': title,
-                'column': "backlog",  # Assuming "title" is also the name of the column (adjust if needed)
+                'column': "backlog",  # Assuming the initial column is 'backlog'
                 'description': description,
                 'priority': priority,
                 'deadline': deadline,
@@ -140,19 +186,22 @@ def create_kanban_card(
                 'milestone': milestone,
                 'sharedUsers': [],
                 'created_by': 'Spirit',
-                'timestamp': datetime.now()  # Associate the card with the provided board ID
-                 # Track which user created the card
+                'timestamp': datetime.now(timezone.utc)  # Track the time the card was created
             }
             result = kanban_collection.insert_one(card)
             cards.append(result.inserted_id)
-        
-        return {"message": "Kanban card created", "message_ids": [str(m) for m in cards]}
+
+        return {"message": "Kanban card created", "card_ids": [str(m) for m in cards]}
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @router.post("/avatar/upload-document-avatar", tags=["avatar"])
 async def upload_document_for_teams(
     files: List[UploadFile], 
+    project_id: Optional[str] = None,  # Single project_id as an optional field
     current_user: User = Depends(is_admin)
 ):
     if not files:
@@ -163,10 +212,27 @@ async def upload_document_for_teams(
         file_data = await file.read()
         file_size = len(file_data)  # Calculate file size in bytes
 
-        teams = get_distinct_team_ids()  # Assuming this function fetches all team IDs
+        # Fetch all team IDs from the user collection
+        all_team_ids = get_distinct_team_ids()
+        print(f"Fetched team IDs from users collection: {all_team_ids}")  # Debug log
+
+        # If a project_id is provided, filter teams by that project ID from teams collection
+        if project_id:
+            project_object_id = ObjectId(project_id)
+            # Fetch teams associated with the given project_id
+            teams_filtered = teams_collection.find({"project_id": project_object_id})
+            team_ids = [team["_id"] for team in teams_filtered]
+            print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
+
+            if not team_ids:
+                raise HTTPException(status_code=404, detail="404: No teams found for the specified project")
+        else:
+            team_ids = all_team_ids  # If no project_id, use all teams
+            print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
+
         uploaded_files = []
 
-        for team_id in teams:
+        for team_id in team_ids:
             file_record = {
                 "team_id": team_id,
                 "filename": file.filename,
@@ -180,7 +246,7 @@ async def upload_document_for_teams(
             result = file_collection.insert_one(file_record)
             uploaded_files.append(str(result.inserted_id))
 
-        return {"message": "Files uploaded for all teams", "file_ids": uploaded_files}
+        return {"message": "Files uploaded", "file_ids": uploaded_files}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
