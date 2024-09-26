@@ -213,14 +213,20 @@ It also serves as a baseline for all teams working together during the lecture, 
                 setIsTextFading(false);
             }, 500);
         } else {
+            setImprintVisible(true); // Open Impressum modal
+            updateSettings('is_first_login', false);
+            setIsFadingOut(true);
+        }
+    };
+
+    useEffect(() => {
+        if (!imprintVisible && isFadingOut) {
             setIsFadingOut(true);
             setTimeout(() => {
                 navigate('/');
-                setImprintVisible(true); // Open Impressum modal
-                updateSettings('is_first_login', false);
-            }, 500);
+            }, 500);// Navigate after the modal is closed
         }
-    };
+    }, [imprintVisible, isFadingOut]);
 
     return (
         <div style={{
