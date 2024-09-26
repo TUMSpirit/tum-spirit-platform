@@ -9,6 +9,7 @@ import teamScreen from "../assets/images/team_screen.png";
 import ImprintModal from '../components/Imprint/ImprintModal';
 import { Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from "../context/SocketProvider";
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'; // Import from react-zoom-pan-pinch
 
 const TypeWriterDialog = () => {
@@ -26,7 +27,7 @@ const TypeWriterDialog = () => {
     const [ghostOverlayVisible, setGhostOverlayVisible] = useState(false); // Ghost overlay visibility
     const [screenWidth, setScreenWidth] = useState(window.innerWidth); // Track screen width
     const [fadeClass, setFadeClass] = useState('fade-in');
-    //updateSettings('is_first_login', false);
+    const { updateSettings } = useSocket();
     // To store zoom API instance
 
     // Responsive zoom and pan settings
@@ -216,7 +217,7 @@ It also serves as a baseline for all teams working together during the lecture, 
             setTimeout(() => {
                 navigate('/');
                 setImprintVisible(true); // Open Impressum modal
-                updateUserSettings('is_first_login', false); //
+                updateSettings('is_first_login', false);
             }, 500);
         }
     };
