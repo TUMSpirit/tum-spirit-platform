@@ -12,6 +12,7 @@ from .src.routers import project
 from .src.routers import milestone
 from .src.routers import team
 from .src.routers import tki
+from .src.routers import clicks
 
 from .src.routers import ai
 from .src.routers import avatar
@@ -22,7 +23,18 @@ from .src.routers import timeline
 from .src.routers import notification
 from .src.routers import chat
 
-# from .src.routers import chat
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+
+# Define the middleware to limit upload size
+class LimitUploadSizeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        content_length = request.headers.get('content-length')
+        max_size = 10 * 1024 * 1024  # 10 MB limit
+        if content_length and int(content_length) > max_size:
+            return JSONResponse({"error": "File too large"}, status_code=413)
+        return await call_next(request)
+
 
 # Define the lifespan context manager
 @asynccontextmanager
@@ -40,6 +52,9 @@ def application_setup() -> FastAPI:
     # Start FastApi App
     application = FastAPI(lifespan=lifespan)
 
+
+    application.add_middleware(LimitUploadSizeMiddleware)
+    
     # Mapping api routes with '/api' prefix
     application.include_router(auth.router, prefix="/api")
     #application.include_router(celery.router, prefix="/api")
@@ -49,6 +64,7 @@ def application_setup() -> FastAPI:
     application.include_router(milestone.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
     application.include_router(tki.router, prefix="/api")
+    application.include_router(clicks.router, prefix="/api")
 
     application.include_router(chat.router, prefix="/api")
     application.include_router(avatar.router, prefix="/api")

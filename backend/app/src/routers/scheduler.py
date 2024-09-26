@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from typing import Dict, List
+from fastapi import HTTPException
 from pymongo import ASCENDING, MongoClient
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
@@ -14,9 +16,12 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 team_collection = db["teams"]
 task_log_collection = db["scheduler_log"]
+chat_collection= db["chats"]
+kanban_collection= db["kanban"]
 
 # Initialize APScheduler
 scheduler = BackgroundScheduler()
+
 
 def create_team(team_name: str):
     try:
@@ -65,6 +70,55 @@ def get_last_run_time(task_name: str) -> str:
         # Return a default past time as ISO format in case of error
         default_time = datetime(1970, 1, 1, tzinfo=timezone.utc)
         return default_time.isoformat()
+
+def get_combined_messages_and_kanban(
+    since: str,
+    user_id: str
+) -> Dict[str, List]:
+    try:
+        # Convert ISO 8601 string to datetime object
+        since_datetime = datetime.fromisoformat(since.replace("Z", "+00:00"))
+
+        # Query for chat messages
+        chat_query = {
+            'senderId': user_id,
+            'timestamp': {'$gte': since_datetime}
+        }
+        messages_cursor = chat_collection.find(chat_query)
+        messages = list(messages_cursor)  # Convert cursor to list
+
+        # Extract message content into a list
+        message_contents = [message['content'] for message in messages]
+        message_count = len(messages)
+
+        # Query for kanban tasks (only title and description)
+        kanban_query = {
+            'created_by': user_id,
+            'timestamp': {'$gte': since_datetime}
+        }
+        kanban_cursor = kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
+        kanban_items = list(kanban_cursor)
+
+        # Extract title and description from kanban tasks
+        kanban_contents = [
+            f"Title: {item.get('title', 'No Title')}, Description: {item.get('description', 'No Description')}"
+            for item in kanban_items
+        ]
+        kanban_count = len(kanban_items)
+
+        # Combine chat messages and kanban tasks
+        combined_contents = {
+            "messages": message_contents,
+            "kanban_contents": kanban_contents
+        }
+        total_count = message_count + kanban_count
+
+        return {
+            "combined_contents": combined_contents,
+            "total_count": total_count
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 def daily_task():
     print("Running daily task")

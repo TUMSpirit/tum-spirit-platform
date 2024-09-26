@@ -176,7 +176,7 @@ const ChatFooter = ({
         const value = e.target.value;
         setMessage(value);
     
-        if (value.startsWith("/")) {
+        /*if (value.startsWith("/")) {
             const search = value.toLowerCase();
             const filteredCommands = commands.filter(command =>
                 command.toLowerCase().startsWith(search)
@@ -184,7 +184,7 @@ const ChatFooter = ({
             setShowCommands(filteredCommands.length > 0);
         } else {
             setShowCommands(false);
-        }
+        }*/
     
         if (!isTyping) {
             setIsTyping(true);

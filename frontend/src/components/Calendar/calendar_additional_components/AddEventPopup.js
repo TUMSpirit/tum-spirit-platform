@@ -73,6 +73,7 @@ const AddEventPopup = ({
     const [isLocationHelpOpen, setIsLocationHelpOpen] = useState(false)
     const [form] = Form.useForm();
     const formRef = useRef(null);
+    const [isMensaModalVisible, setIsMensaModalVisible] = useState(false);
 
     const getInitialFormValues = () => {
         return {
@@ -91,9 +92,9 @@ const AddEventPopup = ({
     const [selectedFiles, setSelectedFiles] = useState([]); // State to track selected files
 
     const handleFileSelection = (value) => {
-      setSelectedFiles(value);
+        setSelectedFiles(value);
     };
-  
+
 
     const { mutateAsync: createEntry } = useCreateEntries()
     const { mutateAsync: updateEntry } = useUpdateEntries()
@@ -179,6 +180,17 @@ const AddEventPopup = ({
         setIsUpdateEventOpen(false);
         //form.resetFields();
     }
+
+    // Function to open the Mensa Meal Plan modal
+    const openMensaPlan = () => {
+        setIsMensaModalVisible(true);
+    };
+
+    // Function to close the Mensa Meal Plan modal
+    const handleMensaModalCancel = () => {
+        setIsMensaModalVisible(false);
+    };
+
     //---------------------------------- helper functions -------------------------------------
     const transformMonth = (m) => {
         return (parseInt(m) - 1).toString().padStart(2, '0')
@@ -305,7 +317,7 @@ const AddEventPopup = ({
     return (
 
 
-        <Modal open={isCreateEventOpen || isUpdateEventOpen} closeIcon={false} title={"Details"}
+        <Modal open={isCreateEventOpen || isUpdateEventOpen} title={"Details"} onCancel={onCancel}
             className={'modal-addEvent'}
             footer={[
                 isUpdateEventOpen && (<Button data-testid='deleteEventButton' type='primary' onClick={() => onDelete(event.id)} icon={<DeleteOutlined />} />),
@@ -473,11 +485,33 @@ const AddEventPopup = ({
                                         <span style={{ marginLeft: 8 }}>Milestone</span>
                                     </Col>
                                 </Row>
+                                <Row >
+                                    <Button icon={<QuestionCircleOutlined />}
+                                        style={{ marginTop: 16 }} onClick={openMensaPlan}>
+                                    Lunch Meeting?
+                                    </Button>
+                                </Row>
                             </Form.Item>
                         </Row>
                     </Col>
                 </Row>
             </Form>
+            <Modal
+                title="Mensa Meal Plan"
+                open={isMensaModalVisible}
+                onCancel={handleMensaModalCancel}
+                footer={null}  // No footer to keep it clean
+                width={800}    // Adjust as needed
+                bodyStyle={{ height: '600px', padding: 0 }}  // Adjust height
+            >
+                {/* Iframe for the mensa meal plan */}
+                <iframe
+                    src="https://www.studierendenwerk-muenchen-oberbayern.de/mensa/speiseplan/speiseplan_422_-de.html#heute"  // Replace with actual mensa meal plan URL
+                    width="100%"
+                    height="100%"
+                    title="Mensa Meal Plan"
+                />
+            </Modal>
         </Modal>);
 
 };
