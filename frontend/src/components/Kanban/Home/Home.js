@@ -1,10 +1,11 @@
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import React, { useState, useEffect } from "react";
 import { Row, Col, Button, Input, Tag, Badge, Typography, Select, message, Tabs } from "antd";
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, FilterOutlined } from '@ant-design/icons';
 import axios from "axios";
 import { useAuthHeader } from 'react-auth-kit';
-import Archive from "../Archive/Archive"; 
+import Archive from "../Archive/Archive";
+import { Collapse } from 'antd';
 
 import AddModal from "../Modals/AddModal";
 import Task from "../Task";
@@ -12,6 +13,7 @@ import { useSubHeader } from '../../../layout/SubHeaderContext';
 import { useSocket } from "../../../context/SocketProvider";
 
 
+const { Panel } = Collapse;
 const { TabPane } = Tabs;
 const { Search } = Input;
 const { Text } = Typography;
@@ -57,7 +59,7 @@ const KanbanColumn = ({ columnId, column, editModal, openModal, users }) => (
                     {column.items.map((task, index) => (
                         <Draggable key={task._id.toString()} draggableId={task._id.toString()} index={index}>
                             {(provided) => (
-                                <Task provided={provided} task={task} editModal={editModal} users={users}/>
+                                <Task provided={provided} task={task} editModal={editModal} users={users} />
                             )}
                         </Draggable>
                     ))}
@@ -83,7 +85,7 @@ const Home = () => {
     const [filteredTasks, setFilteredTasks] = useState([]);
     const [activeTab, setActiveTab] = useState('board');
     const authHeader = useAuthHeader();
-    const {setSubHeaderComponent} = useSubHeader();
+    const { setSubHeaderComponent } = useSubHeader();
 
     // Map currentUser to match team members format
     const currentUser = {
@@ -96,7 +98,7 @@ const Home = () => {
 
 
 
-       // Fetch team members
+    // Fetch team members
     const fetchTeamMembers = async () => {
         try {
             const response = await axios.get('/api/get-team-members', {
@@ -169,7 +171,7 @@ const Home = () => {
             message.error('Error updating task');
         }
     };
-    
+
     const archiveTask = async (taskId) => {
         try {
             const response = await axios.put(`/api/kanban/archive-task/${taskId}`, {}, {
@@ -314,35 +316,52 @@ const Home = () => {
 
     const updateFilteredTasks = (tasks, searchTerm = '', tags = [], milestones = []) => {
         let filteredTasks = tasks;
-    
-        // Filter by search term
+
+        // Apply search term filtering
         if (searchTerm.trim()) {
             const lowercasedSearchTerm = searchTerm.toLowerCase();
-            filteredTasks = tasks.filter(task =>
+            filteredTasks = filteredTasks.filter(task =>
                 task.title.toLowerCase().includes(lowercasedSearchTerm) ||
                 task.description.toLowerCase().includes(lowercasedSearchTerm)
             );
         }
-    
-        // Filter by tags
+
+        // Apply tags filtering
         if (tags.length > 0) {
             const tagTitles = new Set(tags.map(tag => tag));
-    
-            filteredTasks = tasks.filter(task =>
+            filteredTasks = filteredTasks.filter(task =>
                 task.tags.some(tag => tagTitles.has(tag.title))
             );
         }
-    
-        // Filter by milestones
+
+        // Apply milestones filtering
         if (milestones.length > 0) {
-            filteredTasks = tasks.filter(task => milestones.includes(task.milestone));
+            filteredTasks = filteredTasks.filter(task => milestones.includes(task.milestone));
         }
-    
+
         setFilteredTasks(filteredTasks);
         const updatedBoard = createBoard(filteredTasks);
         setBoard(updatedBoard);
     };
-    
+
+    const getActiveFilterCount = () => {
+        let activeFilterCount = 0;
+
+        if (searchTerm.trim()) {
+            activeFilterCount++;
+        }
+
+        if (selectedTags.length > 0) {
+            activeFilterCount++;
+        }
+
+        if (selectedMilestones.length > 0) {
+            activeFilterCount++;
+        }
+
+        return activeFilterCount;
+    };
+
 
     const onDragEnd = async (result, board, setBoard) => {
         const { destination, source, draggableId } = result;
@@ -418,7 +437,66 @@ const Home = () => {
                         <Row gutter={[16, 16]} align="middle" justify="end">
                             {activeTab === 'board' && (
                                 <>
-                                    <Col xs={24} sm={12} md={8}>
+                                    {/* Collapse the filters only on mobile screens */}
+                                    <Col xs={24} sm={0} className="filter-collapse-mobile">
+                                        <Collapse
+                                            accordion
+                                            bordered={false}
+                                            expandIcon={({ isActive }) => (
+                                                <FilterOutlined rotate={isActive ? 90 : 0} style={{ fontSize: '20px', color: '#2576CA' }} />
+                                            )}
+                                            style={{ background: '#f0f2f5', borderRadius: '8px', marginBottom: '8px' }}  // Reduce margin on mobile
+                                        >
+                                            <Panel header={`Filters (${getActiveFilterCount()})`} key="1">
+                                                <Row gutter={[8, 8]} style={{ padding: '8px 0' }}>  {/* Reduced gutter and padding for mobile */}
+                                                    <Col xs={24} sm={12} md={8}>
+                                                        <Select
+                                                            mode="multiple"
+                                                            style={{ width: '100%' }}
+                                                            placeholder="Select tags"
+                                                            onChange={handleTagChange}
+                                                            value={selectedTags}
+                                                        >
+                                                            {tags.map((tag) => (
+                                                                <Option key={tag.title} value={tag.title} style={{ color: tagColorMap[tag.title] }}>
+                                                                    <Tag color={tag.color}>{tag.title}</Tag>
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </Col>
+
+                                                    <Col xs={24} sm={12} md={8}>
+                                                        <Select
+                                                            mode="multiple"
+                                                            style={{ width: '100%' }}
+                                                            placeholder="Select milestones"
+                                                            onChange={handleMilestonesChange}
+                                                            value={selectedMilestones}
+                                                        >
+                                                            {milestonesData.map((milestone) => (
+                                                                <Option key={milestone} value={milestone}>
+                                                                    {milestone}
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </Col>
+
+                                                    <Col xs={24} sm={12} md={8}>
+                                                        <Search
+                                                            placeholder="Search tasks"
+                                                            allowClear
+                                                            enterButton="Search"
+                                                            onSearch={handleSearch}
+                                                            style={{ width: '100%' }}
+                                                        />
+                                                    </Col>
+                                                </Row>
+                                            </Panel>
+                                        </Collapse>
+                                    </Col>
+
+                                    {/* Show filters directly on larger screens */}
+                                    <Col xs={0} sm={12} md={8}>
                                         <Select
                                             mode="multiple"
                                             style={{ width: '100%' }}
@@ -433,8 +511,8 @@ const Home = () => {
                                             ))}
                                         </Select>
                                     </Col>
-    
-                                    <Col xs={24} sm={12} md={8}>
+
+                                    <Col xs={0} sm={12} md={8}>
                                         <Select
                                             mode="multiple"
                                             style={{ width: '100%' }}
@@ -449,8 +527,8 @@ const Home = () => {
                                             ))}
                                         </Select>
                                     </Col>
-    
-                                    <Col xs={24} sm={12} md={8}>
+
+                                    <Col xs={0} sm={12} md={8}>
                                         <Search
                                             placeholder="Search tasks"
                                             allowClear
@@ -466,14 +544,14 @@ const Home = () => {
                 </Row>
             )
         });
-    
+
         return () => setSubHeaderComponent(null); // Clear subheader when unmounting
     }, [activeTab, selectedMilestones, selectedTags]);
-    
+
 
     return (
         <>
-          {activeTab === 'board' && (
+            {activeTab === 'board' && (
                 <DragDropContext onDragEnd={(result) => onDragEnd(result, board, setBoard)}>
                     <Row gutter={[16, 16]} className="kanban-board">
                         {Object.entries(board).map(([columnId, column]) => (

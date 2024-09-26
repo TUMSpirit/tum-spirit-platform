@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { Modal, Button, Checkbox, message } from 'antd';
+import styled from 'styled-components';
+import ghost from "../../assets/images/ghost.png";
 import axios from 'axios';  // Assuming you are using axios for API calls
 import { useAuthHeader } from 'react-auth-kit';
+
+const LegendWrapper = styled.div`
+  background-color: #f0f2f5; /* Light gray background */
+  border: 1px solid #d9d9d9; /* Border for the legend */
+  border-radius: 5px;
+  padding: 16px; /* Spacing inside the legend */
+  margin-bottom: 24px;
+`;
 
 const ImprintModal = ({ isVisible, setIsVisible }) => {
   const [isCheckedAccept, setIsCheckedAccept] = useState(false); // State for accept checkbox
@@ -70,19 +80,24 @@ const ImprintModal = ({ isVisible, setIsVisible }) => {
         </Button>,
       ]}
       width="80%"
-      bodyStyle={{ fontFamily: 'Josefin Sans, sans-serif', padding: '2rem', maxWidth: '100%' }}
+      bodyStyle={{ fontFamily: 'Josefin Sans, sans-serif', padding: '0.5rem', maxWidth: '100%' }}
       style={{ maxWidth: '100%', margin: '0 auto' }}
     >
       <div className="text-base leading-relaxed space-y-6 w-full">
-        <h3 className="font-bold text-2xl mb-6">Information</h3>
+        <div className="flex items-center mb-6">
+          <h3 className="font-bolder text-xl m-0">Welcome to the TUMSpirit Crew!</h3>
+          <img src={ghost} alt="Ghost" className="ml-2" style={{ width: '35px', height: '35px' }} />
+        </div>
         <p className="w-full">
-          Dear interested reader,
-          <br />
-          We would like to ask you if you are willing to take part in a scientific study. In this information document, you will find all the essential information about the study. Please read this information carefully. We will additionally talk to you about the study and answer your questions.
-          <br />
-          At our facility, 30 individuals are planned to participate in the study. This study is planned and conducted by <strong className="font-semibold">TUM Chair of Ergonomics</strong>. Our institution finances the study itself. The study was submitted to the responsible ethics committee. The ethics committee raised no objections.
-          <br />
-          Your participation in this study is voluntary. If you do not want to participate or if you later withdraw your consent, you will not face any disadvantages as a result. You also do not have to justify your decision. If you have further questions about the study now or later, please feel free to contact us. To do so, please turn to <a href="mailto:jonas.bender@tum.de" className="text-blue-600 underline">Jonas Bender</a>.
+          <LegendWrapper className="p-4">
+            Dear interested reader,
+            <br />
+            We would like to ask you if you are willing to take part in a scientific study. In this information document, you will find all the essential information about the study. Please read this information carefully. We will additionally talk to you about the study and answer your questions.
+            <br />
+            At our facility, 30 individuals are planned to participate in the study. This study is planned and conducted by <strong className="font-semibold">TUM Chair of Ergonomics</strong>. Our institution finances the study itself. The study was submitted to the responsible ethics committee. The ethics committee raised no objections.
+            <br />
+            Your participation in this study is voluntary. If you do not want to participate or if you later withdraw your consent, you will not face any disadvantages as a result. You also do not have to justify your decision. If you have further questions about the study now or later, please feel free to contact us. To do so, please turn to <a href="mailto:jonas.bender@tum.de" className="text-blue-600 underline">Jonas Bender</a>.
+          </LegendWrapper>
         </p>
         <h4 className="font-bold text-xl mt-6 mb-4">Why is this study being conducted?</h4>
         <p className="w-full">

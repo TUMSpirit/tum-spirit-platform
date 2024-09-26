@@ -23,6 +23,7 @@ archived_kanban_collection=db["archived_kanban"]
 # Initialize APScheduler
 scheduler = BackgroundScheduler()
 
+
 def create_team(team_name: str):
     try:
         print(f"Creating team: {team_name}")
@@ -88,6 +89,7 @@ def get_combined_chats_and_kanban(
         messages_cursor = chat_collection.find(chat_query)
         messages = list(messages_cursor)  # Convert cursor to list
 
+
         # Extract message content into a list (chat)
         message_contents = [message['content'] for message in messages]
         message_count = len(messages)
@@ -106,7 +108,6 @@ def get_combined_chats_and_kanban(
             for item in kanban_items
         ]
         kanban_count = len(kanban_items)
-
         # Query for archived kanban tasks (only title and description)
         archived_kanban_cursor = archived_kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
         archived_kanban_items = list(archived_kanban_cursor)

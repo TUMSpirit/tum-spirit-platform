@@ -7,6 +7,8 @@ import { Typography } from 'antd';
 import Chatbot from "../components/AiChat/chat-bubble";
 import { useUnreadMessage } from '../context/UnreadMessageContext'; // Import the custom hook
 import { useSocket } from '../context/SocketProvider'; // Import the useSocket hook
+import axios from 'axios';
+import { useAuthHeader } from 'react-auth-kit';
 
 
 
@@ -18,6 +20,7 @@ function Sidenav({ color }) {
   const { unreadMessages } = useUnreadMessage();
   const [totalCount, setTotalCount] = useState(0);
   const { projectInformation } = useSocket(); // Access projectInformation from the socket context
+  const authHeader = useAuthHeader();
 
   const calendar = [
     <svg
@@ -177,6 +180,47 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
+  const [clickCount, setClickCount] = useState(0); // Track the number of clicks
+  const LOCAL_STORAGE_KEY = "clickTracking"; // Key for localStorage
+
+  // Initialize click data (from localStorage if it exists)
+  const [clickData, setClickData] = useState(() => {
+    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return savedData ? JSON.parse(savedData) : { home: 0, calendar: 0, chat: 0, statistics: 0, kanban: 0, team: 0, documents: 0 };
+  });
+
+  // Handle click on menu items and update the click data
+  const handleClick = (menuItem) => {
+    const newClickData = { ...clickData, [menuItem]: clickData[menuItem] + 1 };
+    setClickData(newClickData);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newClickData)); // Persist in localStorage
+
+    // Increment the click count
+    setClickCount(prevCount => prevCount + 1);
+
+    // If we've reached 5 clicks, send the data to the backend
+    if (clickCount + 1 === 5) {
+      sendClickDataToBackend(newClickData);
+      setClickCount(0); // Reset the counter after sending
+    }
+  };
+
+  // Send the click data to the backend
+  const sendClickDataToBackend = async (data) => {
+    try {
+      await axios.post('/api/track-clicks', data,
+      {
+        headers: {
+          Authorization: authHeader(),  // Use the authHeader function to get the token
+        },
+      });
+      localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear localStorage after successful sync
+      setClickData({ home: 0, calendar: 0, chat: 0, statistics: 0, kanban: 0,team: 0, documents: 0 }); // Reset local state
+    } catch (err) {
+      console.error('Error sending click data:', err);
+    }
+  };
+
   useEffect(() => {
     setTotalCount(unreadMessages.reduce((total, [_, count]) => total + count, 0));
   }, [unreadMessages]);
@@ -229,7 +273,7 @@ function Sidenav({ color }) {
       <hr/>
       <Menu theme="light" mode="inline" defaultSelectedKeys={[page]}>
 
-        <Menu.Item key="home">
+        <Menu.Item key="home" onClick={() => handleClick('home')}>
           <NavLink to="/">
             <span
               className="icon"
@@ -242,7 +286,7 @@ function Sidenav({ color }) {
             <span className="label">Home</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="calendar">
+        <Menu.Item key="calendar" onClick={() => handleClick('calendar')}>
           <NavLink to="/calendar">
             <span
               className="icon"
@@ -256,7 +300,7 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
 
-        <Menu.Item key="chat">
+        <Menu.Item key="chat" onClick={() => handleClick('chat')}>
           <NavLink to="/chat">
             <span
               className="icon"
@@ -272,7 +316,7 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
 
-        <Menu.Item key="kanban">
+        <Menu.Item key="kanban" onClick={() => handleClick('kanban')}>
           <NavLink to="/kanban">
             <span
               className="icon"
@@ -285,7 +329,7 @@ function Sidenav({ color }) {
             <span className="label">Kanban</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="team">
+        <Menu.Item key="team" onClick={() => handleClick('team')}>
           <NavLink to="/team">
             <span
               className="icon"
@@ -298,7 +342,7 @@ function Sidenav({ color }) {
             <span className="label">Team</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="documents">
+        <Menu.Item key="documents" onClick={() => handleClick('documents')}>
           <NavLink to="/documents">
             <span
               className="icon"
@@ -311,7 +355,7 @@ function Sidenav({ color }) {
             <span className="label">Documents</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="dashboard">
+        <Menu.Item key="dashboard" onClick={() => handleClick('statistics')}>
           <NavLink to="/dashboard">
             <span
               className="icon"

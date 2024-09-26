@@ -296,6 +296,7 @@ const FileTable = () => {
         // Update the state with the filtered file list
         setFileListUpload(filteredFileList);
     };
+    
 
     const handleDeleteModalCancel = () => {
         setIsDeleteModalVisible(false);

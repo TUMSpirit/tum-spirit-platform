@@ -36,6 +36,7 @@ body {
   z-index: 99;
   height: 100vh;
   margin: 0;
+  overflow: scroll;
   /*padding: 33px 20px;*/
 }
 
@@ -132,12 +133,12 @@ body {
   background-color: #1890ff;
 }
 
-.layout-dashboard .ant-layout-sider.sider-primary .ant-menu-item.ant-menu-item-selected .active .icon,
+/*.layout-dashboard .ant-layout-sider.sider-primary .ant-menu-item.ant-menu-item-selected .active .icon,
 .layout-dashboard .ant-layout-sider.sider-primary .ant-menu-item .active .icon,
 .layout-dashboard .ant-layout-sider.sider-primary .ant-menu-submenu.ant-menu-item-selected .active .icon,
 .layout-dashboard .ant-layout-sider.sider-primary .ant-menu-submenu .active .icon {
-  /* background-color: #1890ff;*/
-}
+ background-color: #1890ff;
+}*/
 
 .layout-dashboard .ant-layout-sider.sider-primary .ant-menu-item .icon,
 .layout-dashboard .ant-layout-sider.sider-primary .ant-menu-submenu .icon {
@@ -1325,10 +1326,10 @@ span.ismobile {
     overflow: scroll;
   }
 
-  .ant-row {
-    /*margin-left: -12px;
-    margin-right: -12px;*/
-  }
+ /* .ant-row {
+    margin-left: -12px;
+    margin-right: -12px;
+  }*/
 
   span.ismobile {
     display: inline-block;
@@ -3465,4 +3466,14 @@ span.ant-badge-status-dot.ant-badge-status-processing {
       max-width: none;
       padding: 15px;
   }
+}
+
+.fade-in {
+  opacity: 0.9;
+  transition: opacity 1s ease-in;
+}
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 1s ease-out;
 }
