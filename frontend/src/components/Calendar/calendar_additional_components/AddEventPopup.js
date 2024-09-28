@@ -145,7 +145,7 @@ const AddEventPopup = ({
     const sendCalendarNotification = async (eventData) => {
         try {
             // Format the event start date and time using moment.js
-            moment(eventData.start).format('MMM D, h:mm a');
+            const formattedDate = moment(eventData.start).format('MMM D, h:mm a');
             
             // Construct the message with formatted date and event title
             const notificationPayload = {
