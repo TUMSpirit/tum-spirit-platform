@@ -57,6 +57,7 @@ const ChatFooter = ({
     const [fileList, setFileList] = useState([]);
     const emojiPickerRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const inputRef = useRef(null);
 
     const toggleGifPicker = () => {
         setShowGifPicker(!showGifPicker);
@@ -94,12 +95,12 @@ const ChatFooter = ({
                 }
             }
         )
-        .then(response => {
-            console.log(response.data.message);  // Handle success message
-        })
-        .catch(error => {
-            console.error('Error triggering notification:', error);
-        });
+            .then(response => {
+                console.log(response.data.message);  // Handle success message
+            })
+            .catch(error => {
+                console.error('Error triggering notification:', error);
+            });
     };
 
     const handleSendMessage = (e) => {
@@ -163,6 +164,7 @@ const ChatFooter = ({
         };
     }, []);
 
+
     const onEmojiClick = (emojiData) => {
         setMessage(currentMessage => currentMessage + emojiData.emoji);
         setShowEmojiPicker(false);
@@ -175,7 +177,7 @@ const ChatFooter = ({
     const handleChange = (e) => {
         const value = e.target.value;
         setMessage(value);
-    
+
         /*if (value.startsWith("/")) {
             const search = value.toLowerCase();
             const filteredCommands = commands.filter(command =>
@@ -185,15 +187,15 @@ const ChatFooter = ({
         } else {
             setShowCommands(false);
         }*/
-    
+
         if (!isTyping) {
             setIsTyping(true);
-    
+
             // Emit the typing event only for the appropriate chat (private or team)
             const typingContext = privateChatId ? { user: currentUser.username, privateChatId } : { user: currentUser.username, teamId: currentUser.team_id };
             socket.emit('typing', typingContext);
         }
-    
+
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
             // Emit stop typing event only for the appropriate chat
@@ -251,6 +253,18 @@ const ChatFooter = ({
     };
 
     useEffect(() => {
+        if (replyingTo && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [replyingTo]);
+
+    useEffect(() => {
+        if (editingMessage && inputRef.current) {
+            inputRef.current.focus(); // Move the cursor to the input field
+        }
+    }, [editingMessage]);
+
+    useEffect(() => {
         if (editingMessage) {
             setMessage(editingMessage.content);
         }
@@ -260,8 +274,9 @@ const ChatFooter = ({
         <div className={`chat-component-input bottom-0 left-0 right-0 p-4 bg-white border-t-2 border-gray-200`}>
             <div className="container mx-auto max-w-full">
                 <form className="flex items-center justify-between gap-2 md:gap-4 w-full px-2 md:px-4"
-                      onSubmit={handleSendMessage}>
+                    onSubmit={handleSendMessage}>
                     <Input
+                        ref={inputRef}
                         className="flex-grow mx-2 md:mx-5 bg-chat-input-bar border-1 focus:outline-none rounded-lg p-2"
                         placeholder={getPlaceholderText()}
                         value={message}
@@ -274,8 +289,15 @@ const ChatFooter = ({
                                     </div>
                                 </Tooltip>
                                 {showEmojiPicker && (
-                                   <div ref={emojiPickerRef} style={{width:"260px"}} className="absolute bottom-12 right-0 z-20 w-full max-w-xs">
-                                        <Picker onEmojiClick={onEmojiClick} />
+                                    <div ref={emojiPickerRef} style={{ width: "260px" }} className="absolute bottom-12 right-0 z-20 w-full max-w-xs">
+                                        <Picker onEmojiClick={onEmojiClick}
+                                            searchDisabled={true}
+                                            skinTonePickerLocation={"PREVIEW"}
+                                            previewConfig={{
+                                                defaultEmoji: "", // Provide a default emoji code
+                                                defaultCaption: "", // Remove the caption by setting it to an empty string
+                                                showPreview: false // Ensure the preview is shown
+                                            }} />
                                     </div>
                                 )}
                                 <Tooltip title="GIFs">
@@ -303,19 +325,19 @@ const ChatFooter = ({
                                 ))}
                         </div>
                     )}
-                        <Button
-                            type="primary"
-                            shape="circle"
-                            icon={<SendOutlined/>}
-                            className="bg-blue-600 text-white"
-                            style={{
-                                padding: '25px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                            onClick={handleSendMessage}
-                        />
+                    <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<SendOutlined />}
+                        className="bg-blue-600 text-white"
+                        style={{
+                            padding: '25px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        onClick={handleSendMessage}
+                    />
                 </form>
             </div>
             <Modal
