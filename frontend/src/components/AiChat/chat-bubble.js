@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { CloseOutlined, MessageOutlined } from "@ant-design/icons";
-import { Button, FloatButton, Input } from "antd";
+import { CloseOutlined, MessageOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Button, FloatButton, Input, Tooltip } from "antd";
 import logo from "../../assets/images/ghost.png";
 import { v4 as uuidv4 } from "uuid";
 import axios from 'axios';
@@ -151,8 +151,15 @@ const Chatbot = ({ opened, setOpened }) => {
               <CloseOutlined style={{ fontSize: 20, color: "white" }} />
             </button>
           </div>
+
+          {/* Info Box */}
+          <div style={{ background: "#f0f0f0", padding: 10, textAlign: "center", borderRadius: "0 0 2px 2px" }}>
+            <InfoCircleOutlined style={{ marginRight: 8 }} />
+            Please note: Messages are sent to ChatGPT. Avoid sharing personal information.
+          </div>
+
           <div
-            style={{ height: 390, overflow: "auto", flex: "1", padding: 12 }}
+            style={{ height: 340, overflow: "auto", flex: "1", padding: 12 }}
           >
             {messages.map((message, index) => (
               <div key={index} style={{ margin: 5 }}>
