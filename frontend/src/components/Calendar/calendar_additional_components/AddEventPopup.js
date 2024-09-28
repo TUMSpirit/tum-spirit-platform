@@ -33,6 +33,8 @@ import {
 } from "../requests/requestFunc";
 import TextArea from "antd/es/input/TextArea";
 import axios from 'axios';
+import { useAuthHeader } from 'react-auth-kit';
+
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
 const fallbackImgRoomfinder = require('../img/Room not found.png')
@@ -74,6 +76,7 @@ const AddEventPopup = ({
     const [form] = Form.useForm();
     const formRef = useRef(null);
     const [isMensaModalVisible, setIsMensaModalVisible] = useState(false);
+    const authHeader = useAuthHeader();
 
     const getInitialFormValues = () => {
         return {
@@ -103,6 +106,7 @@ const AddEventPopup = ({
     const { mutateAsync: uploadFile } = useUploadFile()
 
     //---------------------------------- form functions ---------------------------------------
+
     const fillNewEvent = (fieldsValue) => {
         console.log('fieldsValue: ', fieldsValue)
         console.log('formdata: ', formData.isOnSite)
@@ -137,35 +141,62 @@ const AddEventPopup = ({
 
         return newEvent;
     }
-    const onSubmit = async (fieldsValue) => {
-        const newEvent = fillNewEvent(fieldsValue); //get rid of id
-        if (newEvent.start > newEvent.end) {
-            message.error('End Date must be greater than Start Date')
-        }
 
-        else {
-            if (isCreateEventOpen) {
-                console.log('new event', newEvent)
-                const createdEvent = await createEntry(newEvent)
-                console.log('created event', createdEvent)
-                if (fieldsValue['files']) {
-                    uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id })
-                }
-
-            } else {
-                const createdEvent = await updateEntry(newEvent)
-                if (fieldsValue['files']) {
-                    console.log('updated event id', createdEvent._id)
-                    uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id })
-                }
-            }
-
-            form.resetFields()
-            setIsCreateEventOpen(false);
-            setIsUpdateEventOpen(false);
-            //form.resetFields();
+    const sendCalendarNotification = async (eventData) => {
+        try {
+            // Extract user IDs from the participants of the event
+            const participantIds = eventData.users.map(user => user.id);
+    
+            const notificationPayload = {
+                username: currentUser.name,
+                message: `New event created: ${eventData.title}`,
+                event_id: eventData.id,
+                participant_ids: participantIds  // Pass participant IDs
+            };
+    
+            // Send the notification via your FastAPI endpoint
+            await axios.post('/api/notifications/calendar-notification', notificationPayload, {
+                    headers: {
+                        "Authorization": authHeader()
+                    }
+                });
+        } catch (error) {
+            console.error("Failed to send calendar notification", error);
         }
     }
+
+    const onSubmit = async (fieldsValue) => {
+        const newEvent = fillNewEvent(fieldsValue); // Get rid of id
+        if (newEvent.start > newEvent.end) {
+            message.error('End Date must be greater than Start Date');
+        } else {
+            let createdEvent;
+            if (isCreateEventOpen) {
+                console.log('new event', newEvent);
+                createdEvent = await createEntry(newEvent);
+                console.log('created event', createdEvent);
+                if (fieldsValue['files']) {
+                    uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id });
+                }
+            } else {
+                createdEvent = await updateEntry(newEvent);
+                if (fieldsValue['files']) {
+                    console.log('updated event id', createdEvent._id);
+                    uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id });
+                }
+            }
+    
+            // Send calendar notification
+            if (createdEvent) {
+                await sendCalendarNotification(createdEvent);
+            }
+    
+            form.resetFields();
+            setIsCreateEventOpen(false);
+            setIsUpdateEventOpen(false);
+        }
+    };
+    
 
     const onCancel = () => {
         form.resetFields()
@@ -488,7 +519,7 @@ const AddEventPopup = ({
                                 <Row >
                                     <Button icon={<QuestionCircleOutlined />}
                                         style={{ marginTop: 16 }} onClick={openMensaPlan}>
-                                    Lunch Meeting?
+                                        Lunch Meeting?
                                     </Button>
                                 </Row>
                             </Form.Item>
