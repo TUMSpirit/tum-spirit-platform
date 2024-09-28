@@ -54,19 +54,19 @@ const renderLegend = (part) => {
       return (
         <LegendWrapper className="space-y-4 sm:space-y-0 sm:flex sm:justify-around">
           <div className="sm:inline-block">
-            <LegendText>1 - Trifft gar nicht zu</LegendText>
+            <LegendText>1 - Does not apply at all</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>2 - Trifft wenig zu</LegendText>
+            <LegendText>2 - Applies a little</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>3 - Mittelmäßig</LegendText>
+            <LegendText>3 - Moderately applies</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>4 - Trifft überwiegend zu</LegendText>
+            <LegendText>4 - Mostly applies</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>5 - Trifft völlig zu</LegendText>
+            <LegendText>5 - Fully applies</LegendText>
           </div>
         </LegendWrapper>
       );
@@ -74,19 +74,19 @@ const renderLegend = (part) => {
       return (
         <LegendWrapper className="space-y-4 sm:space-y-0 sm:flex sm:justify-around">
           <div className="sm:inline-block">
-            <LegendText>1 - Gar nicht</LegendText>
+            <LegendText>1 - Not at all</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>2 - Ein wenig</LegendText>
+            <LegendText>2 - A little</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>3 - Mittelmäßig</LegendText>
+            <LegendText>3 - Moderately</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>4 - Erheblich</LegendText>
+            <LegendText>4 - Considerably</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>5 - Völlig</LegendText>
+            <LegendText>5 - Fully</LegendText>
           </div>
         </LegendWrapper>
       );
@@ -94,19 +94,19 @@ const renderLegend = (part) => {
       return (
         <LegendWrapper className="space-y-4 sm:space-y-0 sm:flex sm:justify-around">
           <div className="sm:inline-block">
-            <LegendText>1 - In sehr geringem Umfang</LegendText>
+            <LegendText>1 - To a very small extent</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>2 - In geringem Umfang</LegendText>
+            <LegendText>2 - To a small extent</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>3 - In mittelmäßigem Umfang</LegendText>
+            <LegendText>3 - To a moderate extent</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>4 - In großem Umfang</LegendText>
+            <LegendText>4 - To a large extent</LegendText>
           </div>
           <div className="sm:inline-block">
-            <LegendText>5 - In sehr großem Umfang</LegendText>
+            <LegendText>5 - To a very large extent</LegendText>
           </div>
         </LegendWrapper>
       );
@@ -127,16 +127,16 @@ const PreFormPage = ({ onStart, onSkip }) => (
         style={{ maxWidth: '100%', padding: "0 10%" }}
       />
     </AvatarWrapper>
-    <Title level={3}>Bist du bereit für einen kleinen Test?</Title>
+    <Title level={3}>Are you ready for a short test?</Title>
     <Text type="secondary">
-      Dieser Test hilft uns, deine Teamdynamik besser zu verstehen und dich optimal zu unterstützen.
+      This test helps us better understand your team dynamics and support you optimally.
     </Text>
     <div style={{ marginTop: '20px' }}>
       <StartTestButton type="primary" onClick={onStart}>
-        Test starten
+        Start Test
       </StartTestButton>
       <Button style={{ marginLeft: '10px' }} onClick={onSkip}>
-        Test überspringen
+        Skip Test
       </Button>
     </div>
   </div>
@@ -156,57 +156,58 @@ const TKIForm = ({ visible, onClose }) => {
   const [stepAnswers, setStepAnswers] = useState({}); // Store answers for each step
   const [answeredQuestions, setAnsweredQuestions] = useState(0);
 
-  const questions = [
+  const questionsENG = [
     // Part 1: Communication and Innovation (1-26)
-    { id: 1, part: 1, question: "In der Regel geben wir Informationen an alle Mitglieder des Teams weiter, anstatt sie für uns zu behalten." },
-    { id: 2, part: 1, question: "Wir werden bei der Entwicklung neuer Ideen prompt und bereitwillig unterstützt." },
-    { id: 3, part: 1, question: "Wir alle beeinflussen einander." },
-    { id: 4, part: 1, question: "Dem Team gelingt es immer, seine Fähigkeiten auch in Leistung umzusetzen." },
-    { id: 5, part: 1, question: "Wir stehen in regelmäßigem Kontakt miteinander." },
-    { id: 6, part: 1, question: "In unserem Team nehmen wir uns die Zeit, die wir brauchen, um neue Ideen zu entwickeln." },
-    { id: 7, part: 1, question: "Die Teammitglieder fühlen sich gegenseitig akzeptiert und verstanden." },
-    { id: 8, part: 1, question: "Jede Ansicht wird angehört, auch wenn es die Meinung einer Minderheit ist." },
-    { id: 9, part: 1, question: "Es gibt niemals Spannungen zwischen Personen im Team." },
-    { id: 10, part: 1, question: "Das Team ist Veränderungen gegenüber aufgeschlossen und empfänglich." },
-    { id: 11, part: 1, question: "Personen im Team arbeiten zusammen, um neue Ideen zu entwickeln und zu verwirklichen." },
-    { id: 12, part: 1, question: "Ein Teil dieses Teams zu sein ist für die Teammitglieder das Wichtigste bei der Arbeit." },
-    { id: 13, part: 1, question: "Wir haben eine 'wir sitzen in einem Boot'-Einstellung." },
-    { id: 14, part: 1, question: "Wir stehen in häufigem gegenseitigen Austausch." },
-    { id: 15, part: 1, question: "Das Team ist in seinem Bereich wesentlich besser als irgendein anderes Team." },
-    { id: 16, part: 1, question: "Wir halten uns über arbeitsrelevante Themen gegenseitig auf dem Laufenden." },
-    { id: 17, part: 1, question: "Die Mitglieder des Teams stellen Ressourcen zur Verfügung und teilen diese auch bereitwillig, um bei der Realisierung neuer Ideen zu helfen." },
-    { id: 18, part: 1, question: "Die Beziehungen zwischen den Personen im Team sind gleichbleibend harmonisch." },
-    { id: 19, part: 1, question: "Bei uns herrscht ein ständiges Geben und Nehmen." },
-    { id: 20, part: 1, question: "Wir halten als Team zusammen." },
-    { id: 21, part: 1, question: "Die Personen im Team suchen ständig nach neuen Wegen, Probleme zu betrachten." },
-    { id: 22, part: 1, question: "Mit Leichtigkeit erreicht das Team durchweg die höchsten Ziele." },
-    { id: 23, part: 1, question: "Es gibt im Team echtes Bemühen, Informationen innerhalb der ganzen Arbeitsgruppe zu teilen." },
-    { id: 24, part: 1, question: "Das Team bewegt sich ständig auf die Entwicklung neuer Antworten zu." },
-    { id: 25, part: 1, question: "Die Teammitglieder geben praktische Unterstützung für neue Ideen und deren Verwirklichung." },
-    { id: 26, part: 1, question: "Die Teammitglieder treffen sich häufig, um sowohl informelle als auch formelle Gespräche zu führen." },
+    { id: 1, part: 1, question: "We generally share information within the team rather than keeping it to ourselves." },
+    { id: 2, part: 1, question: "Assistance in developing new ideas is readily available." },
+    { id: 3, part: 1, question: "We all influence each other." },
+    { id: 4, part: 1, question: "The team always succeeds in turning skills into performance." },
+    { id: 5, part: 1, question: "We keep in regular contact with each other." },
+    { id: 6, part: 1, question: "In this team, we take the time needed to develop new ideas." },
+    { id: 7, part: 1, question: "People feel understood and accepted by each other." },
+    { id: 8, part: 1, question: "Everyone’s view is listened to, even if it is in a minority." },
+    { id: 9, part: 1, question: "People in the team never experience tensions among each other." },
+    { id: 10, part: 1, question: "The team is open and responsive to change." },
+    { id: 11, part: 1, question: "People in the team cooperate in order to help develop and apply new ideas." },
+    { id: 12, part: 1, question: "Being part of this team is the most important thing about work for the team members." },
+    { id: 13, part: 1, question: "We have a 'we are in it together' attitude." },
+    { id: 14, part: 1, question: "We interact frequently." },
+    { id: 15, part: 1, question: "The team is significantly better than any other team in its area." },
+    { id: 16, part: 1, question: "People keep each other informed about work-related issues in the team." },
+    { id: 17, part: 1, question: "Members of the team provide and share resources to help in the application of new ideas." },
+    { id: 18, part: 1, question: "Relationships between people in the team are constantly harmonious." },
+    { id: 19, part: 1, question: "There is a lot of give and take." },
+    { id: 20, part: 1, question: "We keep in touch with each other as a team." },
+    { id: 21, part: 1, question: "People in this team are always searching for fresh, new ways of looking at problems." },
+    { id: 22, part: 1, question: "The team always achieves the highest goals easily." },
+    { id: 23, part: 1, question: "There are real attempts to share information throughout the team." },
+    { id: 24, part: 1, question: "This team is always moving towards the development of new answers." },
+    { id: 25, part: 1, question: "Team members provide practical support for new ideas and their application." },
+    { id: 26, part: 1, question: "Members of the team meet frequently to talk both formally and informally." },
 
     // Part 2: Goals (27-37)
-    { id: 27, part: 2, question: "Wie genau sind Sie sich im Klaren über die Ziele Ihres Teams?" },
-    { id: 28, part: 2, question: "Was denken Sie, inwieweit sind diese Ziele nützlich und angemessen?" },
-    { id: 29, part: 2, question: "Inwieweit stimmen Sie persönlich mit diesen Zielen überein?" },
-    { id: 30, part: 2, question: "Was denken Sie, inwieweit stimmen die anderen Teammitglieder mit diesen Zielen überein?" },
-    { id: 31, part: 2, question: "Was denken Sie, inwieweit sind die Ziele Ihres Teams den anderen Teammitgliedern klar und deutlich gegenwärtig?" },
-    { id: 32, part: 2, question: "Was denken Sie, inwieweit können die Ziele Ihres Teams auch tatsächlich erreicht werden?" },
-    { id: 33, part: 2, question: "Was denken Sie, inwieweit sind diese Ziele für Sie persönlich von Bedeutung?" },
-    { id: 34, part: 2, question: "Was denken Sie, inwieweit sind diese Ziele für Ihr Unternehmen von Bedeutung?" },
-    { id: 35, part: 2, question: "Was denken Sie, inwieweit sind diese Ziele von gesellschaftlicher Bedeutung?" },
-    { id: 36, part: 2, question: "Was denken Sie, inwieweit sind diese Ziele realistisch und erreichbar?" },
-    { id: 37, part: 2, question: "Was denken Sie, inwieweit fühlen sich die Mitglieder Ihres Teams diesen Zielen verpflichtet?" },
+    { id: 27, part: 2, question: "How clear are you about what your team objectives are?" },
+    { id: 28, part: 2, question: "To what extent do you think they are useful and appropriate objectives?" },
+    { id: 29, part: 2, question: "How far are you in agreement with these objectives?" },
+    { id: 30, part: 2, question: "To what extent do you think other team members agree with these objectives?" },
+    { id: 31, part: 2, question: "To what extent do you think your team’s objectives are clearly understood by other members of the team?" },
+    { id: 32, part: 2, question: "To what extent do you think your team’s objectives can actually be achieved?" },
+    { id: 33, part: 2, question: "How worthwhile do you think these objectives are to you?" },
+    { id: 34, part: 2, question: "How worthwhile do you think these objectives are to the organization?" },
+    { id: 35, part: 2, question: "How worthwhile do you think these objectives are to the wider society?" },
+    { id: 36, part: 2, question: "To what extent do you think these objectives are realistic and can be attained?" },
+    { id: 37, part: 2, question: "To what extent do you think members of your team are committed to these objectives?" },
 
     // Part 3: Task Style (38-44)
-    { id: 38, part: 3, question: "Stellen Ihre Teamkollegen Ihnen nützliche und praktische Unterstützung zur Verfügung, die es Ihnen ermöglicht, Ihre Arbeit so gut als möglich zu verrichten?" },
-    { id: 39, part: 3, question: "Geben Sie und Ihre Kollegen aufeinander Acht, damit die Arbeit einen hohen Standard behält?" },
-    { id: 40, part: 3, question: "Sind die Teammitglieder bereit, die Grundlagen der eigenen Arbeit in Frage zu stellen?" },
-    { id: 41, part: 3, question: "Ist das Team bereit, potentielle Schwachstellen seiner Arbeit kritisch zu bewerten, um das bestmögliche Endergebnis zu erzielen?" },
-    { id: 42, part: 3, question: "Bauen die Teammitglieder gegenseitig auf ihren Ideen auf, um das bestmögliche Ergebnis zu erhalten?" },
-    { id: 43, part: 3, question: "Ist es den Teammitgliedern ein echtes Anliegen, dass das Team den höchstmöglichen Leistungsstandard erreicht?" },
-    { id: 44, part: 3, question: "Gibt es im Team klare Kriterien, die von den Mitgliedern angestrebt werden, um als gesamtes Team das Optimale zu erreichen?" }
+    { id: 38, part: 3, question: "Do your team colleagues provide useful ideas and practical help to enable you to do the job to the best of your ability?" },
+    { id: 39, part: 3, question: "Do you and your colleagues monitor each other so as to maintain a higher standard of work?" },
+    { id: 40, part: 3, question: "Are team members prepared to question the basis of what the team is doing?" },
+    { id: 41, part: 3, question: "Does the team critically appraise potential weaknesses in what it is doing in order to achieve the best possible outcome?" },
+    { id: 42, part: 3, question: "Do members of the team build on each other’s ideas in order to achieve the best possible outcome?" },
+    { id: 43, part: 3, question: "Is there a real concern among team members that the team should achieve the highest standards of performance?" },
+    { id: 44, part: 3, question: "Does the team have clear criteria which members try to meet in order to achieve excellence as a team?" }
   ];
+
 
   const dimensionMapping = {
     1: ['partizipative_sicherheit', 'informationsverteilung'],    // Example question 1 maps to synergy and informationSharing
@@ -281,9 +282,9 @@ const TKIForm = ({ visible, onClose }) => {
 
 
   const parts = [
-    { part: 1, title: "Kommunikation", totalQuestions: 26 },
-    { part: 2, title: "Ziele", totalQuestions: 11 },
-    { part: 3, title: "Aufgabenstil", totalQuestions: 7 }
+    { part: 1, title: "Communication", totalQuestions: 26 },
+    { part: 2, title: "Goals", totalQuestions: 11 },
+    { part: 3, title: "Task style", totalQuestions: 7 }
   ];
 
 
@@ -301,7 +302,7 @@ const TKIForm = ({ visible, onClose }) => {
       });
 
       // If the request succeeds
-      message.success("TKI erfolgreich abgesendet!");
+      message.success("TKI submitted successfully!");
       form.resetFields(); // Reset the form after successful submission
       updateSettings('trigger_tki_test', false);
       setModalVisible(false);
@@ -312,10 +313,10 @@ const TKIForm = ({ visible, onClose }) => {
       // Handle error responses
       if (error.response) {
         // Server responded with a status other than 2xx
-        message.error("Fehler beim Absenden des TKI: ${error.response.data?.detail || error.message}");
+        message.error("Error submitting TKI: ${error.response.data?.detail || error.message}}");
       } else {
         // Network or other errors
-        message.error("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+        message.error("An error occurred. Please try again");
       }
     } finally {
       setLoading(false); // Always remove the loading state at the end
@@ -429,7 +430,7 @@ const TKIForm = ({ visible, onClose }) => {
   // Calculate answered questions count
   const calculateAnsweredQuestions = (allValues) => {
     let count = 0;
-    questions.forEach(q => {
+    questionsENG.forEach(q => {
       if (allValues[`question_${q.id}`] !== undefined) {
         count++;
       }
@@ -452,7 +453,7 @@ const TKIForm = ({ visible, onClose }) => {
         setCurrentStep(currentStep + 1); // Move to next step
       })
       .catch(() => {
-        message.info('Bitte füllen Sie alle erforderlichen Felder aus, bevor Sie fortfahren.');
+        message.info('Please fill out all required fields before proceeding.');
       });
   };
 
@@ -468,7 +469,7 @@ const TKIForm = ({ visible, onClose }) => {
         setCurrentStep(part - 1); // Move to selected step
       })
       .catch(() => {
-        message.info('Bitte füllen Sie alle erforderlichen Felder aus, bevor Sie fortfahren.');
+        message.info('Please fill out all required fields before proceeding.');
       });
   };
 
@@ -483,7 +484,7 @@ const TKIForm = ({ visible, onClose }) => {
     return (
       <>
         {renderLegend(part)} {/* Display the legend based on the current part */}
-        {questions
+        {questionsENG
           .filter((q) => q.part === part)
           .map((item) => (
             <Form.Item
@@ -526,7 +527,7 @@ const TKIForm = ({ visible, onClose }) => {
 
   return (
     <Modal open={isModalVisible} footer={null} width={800} centered onCancel={() => setModalVisible(false)}>
-      <Title level={3} className="text-center mb-5">TKI Questionnaire</Title>
+      <Title level={3} className="text-center mb-5">Team Questionnaire</Title>
 
       {/* Steps without navigation type but clickable */}
       <Steps current={currentStep} size="small" className="mb-5">
@@ -535,7 +536,7 @@ const TKIForm = ({ visible, onClose }) => {
             key={p.part}
             title={p.title}
             onClick={() => handlePartChange(p.part)}
-            description={`${questions.filter(q => q.part === p.part && formValues[`question_${q.id}`] !== undefined).length} / ${p.totalQuestions} beantwortet`}
+            description={`${questionsENG.filter(q => q.part === p.part && formValues[`question_${q.id}`] !== undefined).length} / ${p.totalQuestions} answered`}
           />
         ))}
       </Steps>
@@ -545,19 +546,20 @@ const TKIForm = ({ visible, onClose }) => {
 
         <div className="flex justify-between" style={{ display: 'flex', justifyContent: currentStep > 0 ? 'space-between' : 'flex-end' }}>
           {currentStep > 0 && (
-            <Button onClick={handlePrevious}>Zurück</Button>
+            <Button onClick={handlePrevious}>Back</Button>
           )}
           {currentStep < parts.length - 1 && (
             <Button type="primary" onClick={handleNext}>
-              Weiter
+              Next
             </Button>
           )}
           {currentStep === parts.length - 1 && (
             <Button type="primary" htmlType="submit" loading={loading} onClick={onFinish}>
-              Absenden
+              Submit
             </Button>
           )}
         </div>
+
       </Form>
     </Modal>
   );
