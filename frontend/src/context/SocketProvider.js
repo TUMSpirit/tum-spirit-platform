@@ -63,7 +63,7 @@ export const SocketProvider = ({ children }) => {
       setUserSettings(response.data);
       // If the TKI test should be triggered
       if (response.data.is_first_login) {
-        updateSettings('is_first_login', false);
+        //updateSettings('is_first_login', false);
         navigate("/intro");
       }
       // Set the TKI test state, but don't open the modal here
