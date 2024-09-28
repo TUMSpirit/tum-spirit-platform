@@ -35,6 +35,9 @@ class NotificationRequest(BaseModel):
     username: str
     message: str
 
+class CalendarNotificationRequest(NoticationRequest):
+    participant_ids: List[str]  # List of participant user IDs
+
 @router.post("/subscribe")
 async def subscribe(subscription: PushSubscription, current_user: Annotated[User, Depends(get_current_user)]):
     """Save the subscription to the MongoDB collection as either Apple or Android with user_id and team_id."""
@@ -128,4 +131,75 @@ async def send_notification(notification_request: NotificationRequest, current_u
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending notification: {str(e)}")
+
+@router.post("/calendar-notification")
+async def send_calendar_notification(notification_request: CalendarNotificationRequest, current_user: Annotated[User, Depends(get_current_user)]):
+    """Send a calendar notification only to the participants of the event."""
+    payload = {
+        "title": f"New Calendar Event from {notification_request.username}",
+        "body": f"{notification_request.message}",
+        "vibrate": [100, 50, 100],
+        "tag": "calendar-event"
+    }
+
+    try:
+        # Filter subscriptions based on participant user IDs and team_id
+        apple_subscriptions = apple_subscriptions_collection.find({
+            "team_id": current_user["team_id"],
+            "user_id": {"$in": notification_request.participant_ids}
+        })
+        android_subscriptions = android_subscriptions_collection.find({
+            "team_id": current_user["team_id"],
+            "user_id": {"$in": notification_request.participant_ids}
+        })
+
+        # Send notifications to Apple subscriptions
+        for subscription in apple_subscriptions:
+            if subscription['user_id'] == current_user["_id"]:  # Skip the sender
+                continue
+            try:
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
+                    "keys": {
+                        "p256dh": subscription['keys']['p256dh'],
+                        "auth": subscription['keys']['auth']
+                    }
+                }
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims={"sub": "mailto:your-email@example.com"}
+                )
+                print(f"Calendar notification sent to Apple subscription: {subscription['endpoint']}")
+            except WebPushException as ex:
+                print(f"Failed to send calendar notification to Apple subscription: {subscription['endpoint']}: {ex}")
+
+        # Send notifications to Android subscriptions
+        for subscription in android_subscriptions:
+            if subscription['user_id'] == current_user["_id"]:  # Skip the sender
+                continue
+            try:
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
+                    "keys": {
+                        "p256dh": subscription['keys']['p256dh'],
+                        "auth": subscription['keys']['auth']
+                    }
+                }
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims={"sub": "mailto:your-email@example.com"}
+                )
+                print(f"Calendar notification sent to Android subscription: {subscription['endpoint']}")
+            except WebPushException as ex:
+                print(f"Failed to send calendar notification to Android subscription: {subscription['endpoint']}: {ex}")
+
+        return {"message": f"Calendar notifications sent to participants of {notification_request.username}."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending calendar notification: {str(e)}")
+
 
