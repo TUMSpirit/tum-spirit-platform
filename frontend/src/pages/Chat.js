@@ -304,7 +304,8 @@ const Chat = () => {
     };*/
 
     useEffect(() => {
-        fetchMessages(true); // Fetch initial messages on load
+        const fetchedMessages = await fetchMessages(true); 
+        setMessages(fetchedMessages);
     }, []);
 
     // Scroll to bottom on new message or initial load
