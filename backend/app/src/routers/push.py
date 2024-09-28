@@ -35,7 +35,7 @@ class NotificationRequest(BaseModel):
     username: str
     message: str
 
-class CalendarNotificationRequest(NoticationRequest):
+class CalendarNotificationRequest(NotificationRequest):
     participant_ids: List[str]  # List of participant user IDs
 
 @router.post("/subscribe")
