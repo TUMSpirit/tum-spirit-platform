@@ -136,7 +136,7 @@ async def send_notification(notification_request: NotificationRequest, current_u
 async def send_calendar_notification(notification_request: CalendarNotificationRequest, current_user: Annotated[User, Depends(get_current_user)]):
     """Send a calendar notification only to the participants of the event."""
     payload = {
-        "title": f"New Calendar Event from {notification_request.username}",
+        "title": f"Calendar Event from {notification_request.username}",
         "body": f"{notification_request.message}",
         "vibrate": [100, 50, 100],
         "tag": "calendar-event"
