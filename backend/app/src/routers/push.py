@@ -141,16 +141,18 @@ async def send_calendar_notification(notification_request: CalendarNotificationR
         "vibrate": [100, 50, 100],
         "tag": "calendar-event"
     }
+    
+    participant_ids = [ObjectId(pid) for pid in notification_request.participant_ids]
 
     try:
         # Filter subscriptions based on participant user IDs and team_id
         apple_subscriptions = apple_subscriptions_collection.find({
             "team_id": current_user["team_id"],
-            "user_id": {"$in": notification_request.participant_ids}
+            "user_id": {"$in": participant_ids}
         })
         android_subscriptions = android_subscriptions_collection.find({
             "team_id": current_user["team_id"],
-            "user_id": {"$in": notification_request.participant_ids}
+            "user_id": {"$in": participant_ids}
         })
 
         # Send notifications to Apple subscriptions
