@@ -155,7 +155,7 @@ const AddEventPopup = ({
             };
     
             // Send the notification via your FastAPI endpoint
-            await axios.post('/api/notifications/calendar-notification', notificationPayload, {
+            await axios.post('/api/calendar-notification', notificationPayload, {
                     headers: {
                         "Authorization": authHeader()
                     }
