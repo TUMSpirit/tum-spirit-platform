@@ -144,19 +144,22 @@ const AddEventPopup = ({
 
     const sendCalendarNotification = async (eventData) => {
         try {
-    
+            // Format the event start date and time using moment.js
+            moment(eventData.start).format('MMM D, h:mm a');
+            
+            // Construct the message with formatted date and event title
             const notificationPayload = {
                 username: currentUser.name,
-                message: `New event created: ${eventData.title}`,
+                message: `${eventData.title} on ${formattedDate}`,  // Better notification message
                 participant_ids: eventData.users  // Pass participant IDs
             };
     
             // Send the notification via your FastAPI endpoint
             await axios.post('/api/calendar-notification', notificationPayload, {
-                    headers: {
-                        "Authorization": authHeader()
-                    }
-                });
+                headers: {
+                    "Authorization": authHeader()
+                }
+            });
         } catch (error) {
             console.error("Failed to send calendar notification", error);
         }
