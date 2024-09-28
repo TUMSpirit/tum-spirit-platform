@@ -144,14 +144,11 @@ const AddEventPopup = ({
 
     const sendCalendarNotification = async (eventData) => {
         try {
-            // Extract user IDs from the participants of the event
-            const participantIds = eventData.users.map(user => user.id);
     
             const notificationPayload = {
                 username: currentUser.name,
                 message: `New event created: ${eventData.title}`,
-                event_id: eventData.id,
-                participant_ids: participantIds  // Pass participant IDs
+                participant_ids: eventData.users  // Pass participant IDs
             };
     
             // Send the notification via your FastAPI endpoint
