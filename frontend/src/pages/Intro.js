@@ -64,7 +64,9 @@ const TypeWriterDialog = () => {
         a first interactive collaboration platform for students to exchange on projects.<br>  
         Let me introduce myself... You might've seen me on your smartphone keyboard! My name is <span style="color: #7D4EBC;">Spirit</span>, the AI Avatar of this platform. I'm here to help you with any challenges you face while working on projects.|  
         
-        I'm powered by my older brother, ChatGPT, so I'll do my best to guide you through tricky situations. But wait, there's more! Since this platform is all about collaboration, I’m also here to push messages and content to keep you engaged.|  
+        I'm powered by my older brother, ChatGPT, so I'll do my best to guide you through tricky situations. 
+        But wait, there's more! Since this platform is all about collaboration, I’m also here to push messages and content to keep you engaged.<br>
+        This platform works best on <strong>Chrome</strong> and <strong>Safari</strong>. For the optimal experience, please use one of these browsers.|  
         
         There’s just one rule of thumb to help you understand what’s going on — check out this legend:<br><br>  
         <ul style="margin-left: 20px;">
