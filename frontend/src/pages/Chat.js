@@ -54,6 +54,39 @@ const Chat = () => {
     };
 
     const fetchMessages = async (reset = false, page = 0, privateChatId = null) => {
+    setLoading(true); // Start loading for message fetch
+    try {
+        const headers = { 'Authorization': authHeader() };
+        let params = {
+            skip: page * 25, // Pagination: Skip the appropriate number of messages
+            limit: 250, // Limit: Fetch 25 messages per request
+        };
+        if (privateChatId) {
+            params['private_chat_id'] = privateChatId;
+        }
+
+        const response = await axios.get('/api/chat/get-messages', {
+            params: params,
+            headers: headers,
+        });
+
+        let fetchedMessages = response.data.reverse();
+
+        // Check if there are fewer than 25 messages fetched to disable loading more
+        if (fetchedMessages.length < 25) {
+            setHasMoreMessages(false);
+        }
+
+        return fetchedMessages; // Return the fetched messages
+    } catch (error) {
+        console.error('Failed to fetch messages:', error);
+        return []; // Return an empty array in case of error
+    } finally {
+        setLoading(false); // Stop loading
+    }
+};
+    
+    /*const fetchMessages = async (reset = false, page = 0, privateChatId = null) => {
         if (currentUser && hasMoreMessages) {
             try {
                 const headers = { 'Authorization': authHeader() };
@@ -85,9 +118,11 @@ const Chat = () => {
                 }
             } catch (error) {
                 console.error('Failed to fetch messages:', error);
+            } finally {
+                setLoading(false); // Ensures loading is set to false no matter what
             }
         }
-    };
+    };*/
 
     const markReadWithTeam = () => {
         markAsRead("Team");
@@ -237,7 +272,11 @@ const Chat = () => {
         //setMessagePage(0);
         //setHasMoreMessages(true);
         console.log('Fetching messages...');
-        await fetchMessages(true, 0, newPrivateChatId);
+        //await fetchMessages(true, 0, newPrivateChatId);
+        const fetchedMessages = await fetchMessages(true, 0, newPrivateChatId); 
+
+        // Only update the state once the new messages are fetched
+        setMessages(fetchedMessages);
         console.log('Messages fetched');
         setLoading(false);
     };
