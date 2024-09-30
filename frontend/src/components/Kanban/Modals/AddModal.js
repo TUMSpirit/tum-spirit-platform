@@ -14,9 +14,8 @@ const predefinedTags = [
     { title: 'Lo-Fi', bg: '#531dab', text: '#fff' }
 ];
 
-const milestonesData = ['M1', 'M2', 'M3'];
 
-const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, handleArchiveTask, initValues, users, currentUser }) => {
+const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask, handleEditTask, handleDeleteTask, handleArchiveTask, initValues, users, currentUser, milestonesData }) => {
     const initialTaskData = {
         id: isUpdateEventOpen ? initValues._id : "",
         title: isUpdateEventOpen ? initValues.title : "",

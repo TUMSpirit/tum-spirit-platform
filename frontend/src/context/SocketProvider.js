@@ -4,6 +4,7 @@ import { useAuthHeader, useIsAuthenticated, useSignOut } from 'react-auth-kit';
 import axios from 'axios';
 import { Spin } from 'antd';
 import TKIForm from "../components/TKI/TKIForm.js"
+import NEOFFIForm from "../components/NEOFFI/NEOFFIForm.js"
 import { useNavigate } from 'react-router-dom';
 import { useUnreadMessage } from './UnreadMessageContext';
 import useNotificationPermission from './NotificationPermission';
@@ -26,6 +27,7 @@ export const SocketProvider = ({ children }) => {
   const logout = useSignOut();
   const navigate = useNavigate();
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isFFIModalOpen, setFFIModalOpen] = useState(false);
 
   //useNotificationPermission();
 
@@ -69,6 +71,9 @@ export const SocketProvider = ({ children }) => {
       // Set the TKI test state, but don't open the modal here
       if (!response.data.is_first_login && response.data.trigger_tki_test) {
         setModalOpen(true);
+      }
+      if (!response.data.is_first_login && !response.data.trigger_tki_test && response.data.trigger_neoffi_test) {
+        setFFIModalOpen(true);
       }
     } catch (error) {
       console.error('Failed to fetch current user:', error);
@@ -282,6 +287,7 @@ export const SocketProvider = ({ children }) => {
     <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, projectInformation, updateLastLoggedIn, updateSettings }}>
       {children}
       <TKIForm visible={isModalOpen} onClose={closeModal} />
+      <NEOFFIForm visible={isFFIModalOpen} onClose={setFFIModalOpen} />
     </SocketContext.Provider>
   );
 };

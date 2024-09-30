@@ -33,8 +33,6 @@ const tagColorMap = tags.reduce((map, tag) => {
     return map;
 }, {});
 
-const milestonesData = ['M1', 'M2', 'M3'];
-
 class Board {
     constructor() {
         this.backlog = { name: "backlog", items: [] };
@@ -77,9 +75,10 @@ const Home = () => {
     const [isCreateEventPopupOpen, setIsCreateEventPopupOpen] = useState(false);
     const [isUpdateEventPopupOpen, setIsUpdateEventPopupOpen] = useState(false);
     const [currentEvent, setCurrentEvent] = useState(null);
-    const { currentUser: socketCurrentUser } = useSocket();
+    const { currentUser: socketCurrentUser, projectInformation} = useSocket();
     const [users, setUsers] = useState(null);
     const [selectedTags, setSelectedTags] = useState([]);
+    const [milestonesData, setMilestonesData] = useState(projectInformation.milestones.map((milestone, index) => `M${index + 1}`));
     const [selectedMilestones, setSelectedMilestones] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredTasks, setFilteredTasks] = useState([]);
@@ -582,6 +581,7 @@ const Home = () => {
                     initValues={currentEvent}
                     users={users}
                     currentUser={currentUser}
+                    milestonesData={milestonesData}
                 />
             )}
         </>

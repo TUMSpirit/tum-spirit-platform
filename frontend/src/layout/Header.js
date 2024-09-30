@@ -22,6 +22,7 @@ import { useSignOut } from 'react-auth-kit';
 import { useNavigate } from 'react-router-dom';
 import TutorialPopup from '../components/TutorialPopup/TutorialPopup';
 import ImprintModal from '../components/Imprint/ImprintModal';
+import ErrorModal from '../components/ErrorModal/ErrorModal';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
 import { useSocket } from '../context/SocketProvider';
@@ -47,6 +48,7 @@ function Header({
   const [visible, setVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
   const [imprintVisible, setImprintVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [coins, setCoins] = useState(0);
   const [open, setOpen] = useState(false);
   const [me, setMe] = useState();
@@ -90,7 +92,7 @@ function Header({
   };
 
   const showTutorials = () => {
-    setPopupVisible(true);
+    setIsModalVisible(true);
   };
 
   const showImprint = () => {
@@ -208,6 +210,7 @@ function Header({
       <PushNotificationModal modalIsOpen={modalIsOpen} setModalIsOpen={setModalIsOpen}></PushNotificationModal>
       <ImprintModal isVisible={imprintVisible} setIsVisible={setImprintVisible}></ImprintModal>
       <TutorialPopup open={popupVisible} setVisible={setPopupVisible} coins={coins} setCoins={coins}></TutorialPopup>
+      <ErrorModal isModalVisible={isModalVisible} setIsModalVisible={setIsModalVisible}></ErrorModal>
     </>
   );
 }

@@ -42,8 +42,11 @@ PyObjectId = Annotated[
 class UserSettings(BaseModel):
     user_id: PyObjectId
     is_first_login: Optional[bool] = True
+    statistics_active: Optional[bool] = False
     test_success: Optional[bool] = False
     trigger_tki_test: Optional[bool] = False  # New flag for TKI test
+    trigger_neoffi_test: Optional[bool] = False  # New flag for TKI test
+
 
     class Config:
         populate_by_name = True
@@ -53,8 +56,11 @@ class UserSettings(BaseModel):
     # Model for updating user settings
 class UserSettingsUpdate(BaseModel):
     is_first_login: Optional[bool] = None
+    statistics_active: Optional[bool] = False
     test_success: Optional[bool] = None
     trigger_tki_test: Optional[bool] = None
+    trigger_neoffi_test: Optional[bool] = False  # New flag for TKI test
+ 
 
     class Config:
         populate_by_name = True

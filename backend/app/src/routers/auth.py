@@ -284,8 +284,10 @@ def create_user_settings(user_id: ObjectId):
     default_settings = {
         "user_id": ObjectId(user_id),
         "is_first_login": True,
+        "statistics_active": False,
         "test_success": False,
-        "trigger_tki_test": False
+        "trigger_tki_test": False,
+        "trigger_neoffi_test": False
     }
 
     # Insert the default settings into the user_settings collection

@@ -12,6 +12,7 @@ from .src.routers import project
 from .src.routers import milestone
 from .src.routers import team
 from .src.routers import tki
+from .src.routers import neoffi
 from .src.routers import clicks
 
 from .src.routers import ai
@@ -63,6 +64,7 @@ def application_setup() -> FastAPI:
     application.include_router(milestone.router, prefix="/api")
     application.include_router(team.router, prefix="/api")
     application.include_router(tki.router, prefix="/api")
+    application.include_router(neoffi.router, prefix="/api")
     application.include_router(clicks.router, prefix="/api")
 
     application.include_router(chat.router, prefix="/api")
