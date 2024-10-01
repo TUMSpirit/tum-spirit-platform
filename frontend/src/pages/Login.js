@@ -55,7 +55,7 @@ function Login(props) {
               initialValues={{ remember: true }}
               onFinish={onSubmit}
             >
-              <img id="login-logo" src={Logo} alt="Login" width="120px" />
+              <img id="login-logo" src={Logo} alt="Login" />
               <Title level={3} className="form-title">Welcome back</Title>
               <p>Login to the Dashboard</p>
 
