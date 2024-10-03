@@ -37,14 +37,14 @@ PyObjectId = Annotated[
 
 # NEO-FFI Result Schema
 class NEOFFIResult(BaseModel):
-    neuroticism: int
-    extraversion: int
-    openness: int
-    agreeableness: int
-    conscientiousness: int
+    Neuroticism: int
+    Extraversion: int
+    Openness: int
+    Agreeableness: int
+    Conscientiousness: int
     #raw_scores: dict  # If you want to store item-wise scores, use a dict {item_number: score}
     # Optional meta fields
-    additional_notes: Optional[str] = None
+    #additional_notes: Optional[str] = None
 
 @router.post("/neoffi/save", tags=["neoffi"])
 async def save_neoffi_result(result: NEOFFIResult, current_user: Annotated[User, Depends(get_current_user)]):

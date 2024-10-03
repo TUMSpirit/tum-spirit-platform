@@ -9,10 +9,10 @@ from ..utils.db import get_db
 
 metadata_collection = get_db("chat_metadata")
 
-def store_metadata(message_id, sender_id, timestamp, metadata):
+def store_metadata(message_id, team_id, sender_id, timestamp, metadata):
     record: MessageMetadata = {
-        '_id': ObjectId(),
         'message_id': message_id,
+        'team_id': team_id,
         'sender_id': sender_id,
         'timestamp': timestamp,
         'metadata': metadata

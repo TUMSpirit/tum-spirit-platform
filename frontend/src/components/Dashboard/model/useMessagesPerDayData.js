@@ -15,9 +15,8 @@ const demoData = {
 
 export const useMessagesPerDayData = () => {
   const { data, loading } = useDataFetcher({
-    url: "/api/languageAnalysis",
-    demoData,
-    filter: true,
+    url: "/api/language/get-messages-per-day",
+    demoData
   });
 
   if (loading) return { data: { data: [], labels: [] } };

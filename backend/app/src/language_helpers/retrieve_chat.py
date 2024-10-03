@@ -4,7 +4,7 @@ from datetime import datetime
 from .dto.message import Message
 
 def retrieve_chat(user_id = None, since = None):
-
+#TODO DELETE
     record: Message = {
         'id': ObjectId(),
         'sender_id': ObjectId(),

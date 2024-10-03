@@ -1,52 +1,55 @@
-import { useEffect, useState, useMemo } from "react";
-import { useFilter } from "../../context/useFilter";
+import { useEffect, useState } from "react";
 import { useAuthHeader } from "react-auth-kit";
 import axios from "axios";
 
-const demoMode = true;
+const demoMode = false;
 
-export const useDataFetcher = ({ url, demoData, filter }) => {
-  const [data, setData] = useState();
+export const useDataFetcher = ({ url, demoData }) => {
+  const [data, setData] = useState(demoMode ? demoData : undefined); // Initialize with demoData if in demo mode
+  const [loading, setLoading] = useState(!demoMode); // Initialize loading based on `demoMode`
+  const [error, setError] = useState(null); // Track errors
+
   const authHeader = useAuthHeader();
 
-  const { startDate, endDate } = useFilter();
-
-  const options = useMemo(
-    () =>
-      filter
-        ? {
-            method: "POST",
-            headers: {
-              Authorization: authHeader(),
-            },
-            body: JSON.stringify({ startDate, endDate }),
-          }
-        : {
-            method: "GET",
-            headers: {
-              Authorization: authHeader(),
-            },
-          },
-    [filter, startDate, endDate]
-  );
-
   useEffect(() => {
-    /* try {
-            const response = await axios.get(url, options);
-            setData(response.data);
-        } catch (error) {
-            console.error("Error fetching data:", error);
+    // AbortController to cancel request if the component unmounts
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      setLoading(true); // Set loading to true before fetching
+      setError(null); // Reset error state
+      try {
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: authHeader(), // Call `authHeader()` once
+          },
+          signal: controller.signal, // Attach abort signal to cancel request if needed
+        });
+
+        setData(response.data);
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log("Request canceled:", error.message);
+        } else {
+          console.error("Error fetching data:", error);
+          setError(error);
         }
-    }, [url, options]);*/
-    //TODO: add error handling!
-    fetch(url, options)
-      .then((response) => response.json())
-      .then((data) => setData(data))
-      .catch((error) => console.error(error));
-  }, [url, options]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    // Cleanup effect to cancel the request if component unmounts
+    return () => {
+      controller.abort();
+    };
+  }, []); // Include `url` and `authHeader` in dependencies
 
   return {
-    data: demoMode ? demoData : data,
-    loading: demoMode ? false : typeof data === "undefined",
+    data,
+    loading,
+    error, // Expose error for further use in your components if needed
   };
 };

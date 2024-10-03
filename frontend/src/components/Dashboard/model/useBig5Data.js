@@ -12,7 +12,7 @@ const demoData = [
 export const useBig5Data = () => {
   const { loading, data } = useDataFetcher({
     url: "/api/language/get-big5-data",
-    demoData,
+    demoData
   });
   if (loading) return { data: [] };
   return { data };

@@ -42,11 +42,11 @@ const StartTestButton = styled(Button)`
 `;
 const renderLegend = () => (
   <LegendWrapper>
-    <LegendText>0 - Strongly Disagree</LegendText>
-    <LegendText>1 - Disagree</LegendText>
-    <LegendText>2 - Neutral</LegendText>
-    <LegendText>3 - Agree</LegendText>
-    <LegendText>4 - Strongly Agree</LegendText>
+    <LegendText>1 - Strongly Disagree</LegendText>
+    <LegendText>2 - Disagree</LegendText>
+    <LegendText>3 - Neutral</LegendText>
+    <LegendText>4 - Agree</LegendText>
+    <LegendText>5 - Strongly Agree</LegendText>
   </LegendWrapper>
 );
 
@@ -237,11 +237,11 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   const authHeader = useAuthHeader();
   const { updateSettings } = useSocket();
 
-  // Save answers when user moves between steps
+  // Corrected SaveStepAnswers to properly merge values
   const saveStepAnswers = () => {
-    const currentValues = form.getFieldsValue(); // Get current form values
-    const updatedValues = { ...formValues, ...currentValues }; // Merge with existing values
-    setFormValues(updatedValues);
+    const currentValues = form.getFieldsValue(); // Get the current form values for the step
+    const updatedValues = { ...formValues, ...currentValues }; // Merge new step values with all previously saved answers
+    setFormValues(updatedValues); // Persist all answers
   };
 
   // Calculate answered questions count dynamically
@@ -256,9 +256,10 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   };
 
   // Update answered count whenever form values change
-  const handleValuesChange = (changedValues, allValues) => {
-    setFormValues(allValues);
-    setAnsweredCount(calculateAnsweredQuestions(allValues));
+  const handleValuesChange = (changedValues) => {
+    const updatedValues = { ...formValues, ...changedValues }; // Merge new values with existing values
+    setFormValues(updatedValues); // Update form values
+    calculateAnsweredQuestions(updatedValues); // Recalculate the answered count
   };
 
   const handleNext = () => {
@@ -317,7 +318,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
       const question = questionsWithSections.find(q => q.id === questionId);
       if (question) {
         // Adjust for reverse scoring
-        const finalAnswer = question.reverseScored ? (4 - answer) : answer;
+        const finalAnswer = question.reverseScored ? (6 - answer) : answer;
 
         // Add the score to the corresponding trait
         scores[question.trait] += finalAnswer;
@@ -341,7 +342,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
             rules={[{ required: true, message: 'Please select an answer.' }]}
           >
             <Radio.Group>
-              {[0, 1, 2, 3, 4].map((value) => (
+              {[1, 2, 3, 4, 5].map((value) => (
                 <Radio key={value} value={value}>
                   {value}
                 </Radio>

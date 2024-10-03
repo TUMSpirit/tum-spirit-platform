@@ -8,9 +8,10 @@ from datetime import datetime
 
 metadata_collection = get_db("users_OCEAN")
 
-def store_OCEAN(user_id, OCEAN_result: OCEANResult):
+def store_OCEAN(user_id, team_id, OCEAN_result: OCEANResult):
     record = {
         'user_id': user_id,
+        'team_id': team_id,
         'timestamp': datetime.now(),
         'result': OCEAN_result
     }

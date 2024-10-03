@@ -10,6 +10,7 @@ export const SubjectivityChart = () => {
         xData,
         yDataLabels: ["objective", "subjective"],
         datasets: [{ data: yData, label: "You" }],
+        yDataOverview: "Subjectivity"
     };
 
     return <YLabeledLineChart {...params} />;
