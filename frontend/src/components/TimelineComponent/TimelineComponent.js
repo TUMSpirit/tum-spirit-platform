@@ -9,6 +9,8 @@ import moment from 'moment';
 import axios from 'axios';
 import { useSocket } from '../../context/SocketProvider';
 import { useAuthHeader } from 'react-auth-kit';
+import Discussions from '../Discussions/Discussions';  // Import your discussion forum
+
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -82,8 +84,8 @@ const HorizontalTimeline = ({ projectId }) => {
     });
 
     if (completedMilestones >= milestones.length) {
-      setCelebrationVisible(true);
-      setShowConfetti(true);
+      //setCelebrationVisible(true);
+      //setShowConfetti(true);
       setCurrent(milestones.length - 1); // Show the last milestone
       setProgress(100); // Set progress to 100% for the last milestone
     } else {
@@ -244,6 +246,7 @@ const HorizontalTimeline = ({ projectId }) => {
               </Form.Item>
             </Form>
           </Modal>
+          <Discussions projectId={projectInformation.id} /> {/* Pass projectId to fetch project-related discussions */}
         </>
       )}
     </div>

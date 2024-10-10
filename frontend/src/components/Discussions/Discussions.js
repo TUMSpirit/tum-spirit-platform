@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, List, Avatar, Comment, Tooltip, Tag, Select, Spin, notification } from 'antd';
-import { LikeOutlined, DislikeOutlined, LikeFilled, DislikeFilled } from '@ant-design/icons';
+import { Card, Form, Input, Button, List, Avatar, Tooltip, Tag, Select, Spin, notification } from 'antd';
+import { Comment } from '@ant-design/compatible';
+import { LikeOutlined, DislikeOutlined, LikeFilled, DislikeFilled, DisconnectOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import axios from 'axios';
 import { useSocket } from '../../context/SocketProvider';
@@ -13,32 +14,32 @@ const DiscussionForum = ({ projectId }) => {
   const [discussions, setDiscussions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [likes, setLikes] = useState({});
-  const [dislikes, setDislikes] = useState({});
   const [form] = Form.useForm();
   const { currentUser } = useSocket();
   const authHeader = useAuthHeader();
 
   const categories = ['General', 'Feedback', 'Ideas', 'Bug Report'];
 
+  const fetchDiscussions = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/discussions/get/${projectId}`, {
+        headers: { Authorization: authHeader() }
+      });
+      setDiscussions(response.data);
+    } catch (error) {
+      notification.error({
+        message: 'Error',
+        description: 'Could not load discussions.',
+      });
+    }
+    setLoading(false);
+  };
+  
   useEffect(() => {
-    const fetchDiscussions = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`/api/projects/${projectId}/discussions`, {
-          headers: { Authorization: authHeader() }
-        });
-        setDiscussions(response.data);
-      } catch (error) {
-        notification.error({
-          message: 'Error',
-          description: 'Could not load discussions.',
-        });
-      }
-      setLoading(false);
-    };
-
+    if (!projectId) return;
     fetchDiscussions();
-  }, [projectId]);
+  }, []);
 
   const handleSubmit = async (values) => {
     const newDiscussion = {
@@ -46,17 +47,15 @@ const DiscussionForum = ({ projectId }) => {
       content: values.content,
       category: values.category,
       createdAt: moment().toISOString(),
-      avatar: currentUser.avatar || 'https://joeschmoe.io/api/v1/random',
-      likes: 0,
-      dislikes: 0,
+      avatar_color: currentUser.avatar_color || '#25160',
     };
 
     try {
-      await axios.post(`/api/projects/${projectId}/discussions`, newDiscussion, {
+      await axios.post(`/api/discussions/create?project_id=${projectId}`, newDiscussion, {
         headers: { Authorization: authHeader() }
       });
 
-      setDiscussions([newDiscussion, ...discussions]);
+      fetchDiscussions();
       form.resetFields();
       notification.success({
         message: 'Discussion Created',
@@ -70,14 +69,47 @@ const DiscussionForum = ({ projectId }) => {
     }
   };
 
-  const handleLike = (discussion) => {
-    const newLikes = { ...likes, [discussion.id]: (likes[discussion.id] || 0) + 1 };
-    setLikes(newLikes);
+  const handleLikeToggle = async (discussion) => {
+    const isLiked = likes[discussion._id];  // Use `id` since we're returning `id` instead of `_id` from the backend
+
+    // Optimistically update the UI
+    setLikes({
+      ...likes,
+      [discussion._id]: isLiked ? false : true,  // Toggle like (add or remove like)
+    });
+
+    try {
+      // Send the "like" action to the backend
+      const response = await axios.get(`/api/discussions/${discussion._id}/toggle-like`, {
+        headers: { Authorization: authHeader() },
+      });
+
+      // Destructure likes from the response data
+      const { likes } = response.data;
+
+      // Update the discussions with the latest likes count
+      setDiscussions((prevDiscussions) =>
+        prevDiscussions.map((d) =>
+          d._id === discussion._id ? { ...d, likes } : d
+        )
+      );
+    } catch (error) {
+      // Revert the optimistic UI update if the request fails
+      setLikes({
+        ...likes,
+        [discussion._id]: isLiked,  // Restore to the previous state
+      });
+
+      notification.error({
+        message: 'Error',
+        description: 'Could not toggle like for the discussion.',
+      });
+    }
   };
 
-  const handleDislike = (discussion) => {
-    const newDislikes = { ...dislikes, [discussion.id]: (dislikes[discussion.id] || 0) + 1 };
-    setDislikes(newDislikes);
+  const handleReply = (discussionId, content) => {
+    // Logic to handle reply submission
+    console.log("Replying to:", discussionId, content);
   };
 
   return (
@@ -107,10 +139,14 @@ const DiscussionForum = ({ projectId }) => {
           itemLayout="vertical"
           dataSource={discussions}
           renderItem={(discussion) => (
-            <li key={discussion.id}>
+            <li key={discussion._id}>
               <Comment
-                author={discussion.author}
-                avatar={<Avatar src={discussion.avatar} />}
+                author={<span>{discussion.author}</span>}
+                avatar={
+                  <Avatar style={{ backgroundColor: discussion.avatar_color || '#25160' }}>
+                    {discussion.author[0]}
+                  </Avatar>
+                }
                 content={
                   <>
                     <p>{discussion.content}</p>
@@ -118,16 +154,11 @@ const DiscussionForum = ({ projectId }) => {
                   </>
                 }
                 datetime={
-                  <Tooltip title={moment(discussion.createdAt).format('YYYY-MM-DD HH:mm:ss')}>
-                    <span>{moment(discussion.createdAt).fromNow()}</span>
-                  </Tooltip>
-                }
+                  <small>{moment.utc(discussion.createdAt).from(moment.utc())}</small>  // Format timestamp
+              }
                 actions={[
-                  <span onClick={() => handleLike(discussion)}>
-                    {likes[discussion.id] > 0 ? <LikeFilled /> : <LikeOutlined />} {likes[discussion.id] || 0}
-                  </span>,
-                  <span onClick={() => handleDislike(discussion)}>
-                    {dislikes[discussion.id] > 0 ? <DislikeFilled /> : <DislikeOutlined />} {dislikes[discussion.id] || 0}
+                  <span onClick={() => handleLikeToggle(discussion)}>
+                    {likes[discussion._id] ? <LikeFilled /> : <LikeOutlined />} {discussion.likes}
                   </span>,
                 ]}
               />

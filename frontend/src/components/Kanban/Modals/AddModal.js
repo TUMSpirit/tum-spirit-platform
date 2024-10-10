@@ -1,17 +1,22 @@
 import React, { useRef, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Avatar, Button, Modal, Form, Input, message, Select, Tag, Slider } from "antd";
+import { Comment } from '@ant-design/compatible';
+import { Avatar, Button, Modal, Form, Input, message, Select, Tag, Slider, List } from "antd";
 import { DeleteOutlined, FolderAddOutlined } from "@ant-design/icons";
+import axios from "axios";
+import { useAuthHeader } from "react-auth-kit";
+import moment from "moment";
+
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 const predefinedTags = [
-    { title: 'Planning', bg: '#f50', text: '#fff' },
-    { title: 'UI', bg: '#2db7f5', text: '#fff' },
-    { title: 'Organization', bg: '#87d068', text: '#fff' },
-    { title: 'Hi-Fi', bg: '#108ee9', text: '#fff' },
-    { title: 'Lo-Fi', bg: '#531dab', text: '#fff' }
+    { title: 'Organization', bg: '#f50', text: '#fff' },
+    { title: 'Design', bg: '#2db7f5', text: '#fff' },
+    { title: 'Prototyping', bg: '#87d068', text: '#fff' },
+    { title: 'Development', bg: '#108ee9', text: '#fff' },
+    { title: 'Testing', bg: '#531dab', text: '#fff' }
 ];
 
 
@@ -29,12 +34,17 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
     };
 
     const [taskData, setTaskData] = useState(initialTaskData);
+    const [comments, setComments] = useState([]); // State to hold comments
+    const [commentText, setCommentText] = useState(""); // State for the input fi
     const [form] = Form.useForm();
+    const authHeader = useAuthHeader(); // For auth header
+
     const formRef = useRef(null);
 
     useEffect(() => {
         if (initValues && isUpdateEventOpen) {
             form.setFieldsValue(initValues);
+            fetchComments(initValues._id);
         }
     }, [initValues, form, isUpdateEventOpen]);
 
@@ -48,9 +58,41 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
         onClose();
     };
 
+    const fetchComments = async (taskId) => {
+        try {
+            const response = await axios.get(`api/kanban/${taskId}/comments`, {
+                headers: { Authorization: authHeader() },
+            });
+            setComments(response.data);
+        } catch (error) {
+            message.error("Failed to load comments.");
+        }
+    };
+
+    const handleAddComment = async () => {
+        if (!commentText.trim()) return;
+
+        const newComment = {
+            content: commentText,
+            avatar_color: currentUser.color, // Send avatar_color from currentUser
+        };
+
+        try {
+            await axios.post(`api/kanban/${taskData.id}/comments`, newComment, {
+                headers: { Authorization: authHeader() },
+            });
+            // Refetch comments after adding a new one
+            fetchComments(taskData.id);
+            setCommentText(""); // Clear input after submitting
+        } catch (error) {
+            message.error("Failed to add comment.");
+        }
+    };
+
+
     const handleSubmit = () => {
         const taskDataFormatted = {
-            id:taskData.id,
+            id: taskData.id,
             title: taskData.title,
             column: taskData.column,
             description: taskData.description,
@@ -189,7 +231,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         value={taskData.deadline}
                         onChange={value => setTaskData({ ...taskData, deadline: value })}
                         marks={{ 0: '0', 800: '800' }}
-                   
+
                     />
                 </Form.Item>
                 <Form.Item name="milestone" label="Milestone">
@@ -246,7 +288,44 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         onChange={onChangeParticipants} style={{ width: 200 }} />
                 </Form.Item>
                 <AvatarDisplay selectedUsers={taskData.sharedUsers}></AvatarDisplay>
-        </Form>
+                <div className="comments-section">
+                    <h3>Comments</h3>
+                    <List
+                        style={{ maxHeight: '300px', overflowY: 'scroll' }}
+                        className="comment-list"
+                        itemLayout="horizontal"
+                        dataSource={comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))} // Sort by newest first
+                        renderItem={(comment) => (
+                            <Comment
+                                author={comment.username}
+                                avatar={
+                                    <Avatar style={{ backgroundColor: comment.avatar_color }}>
+                                        {comment.username[0]}
+                                    </Avatar>
+                                }
+                                content={comment.content}
+                                datetime={
+                                    <small>{moment.utc(comment.timestamp).from(moment.utc())}</small>  // Format timestamp
+                                }
+                            />
+                        )}
+                    />
+
+                    {/* Add new comment */}
+                    <Form.Item>
+                        <TextArea
+                            style={{ marginTop:'10px' }}
+                            rows={4}
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Add a comment..."
+                        />
+                    </Form.Item>
+                    <Button onClick={handleAddComment} style={{ marginTop:'-4px', marginBottom: '16px' }}>
+                        Add Comment
+                    </Button>
+                </div>
+            </Form>
         </Modal >
     );
 };

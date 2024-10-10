@@ -1,13 +1,14 @@
 # Import necessary libraries
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import openai
 from openai import OpenAI
 from datetime import datetime
 from typing import List
 import pytz
 from dotenv import load_dotenv
 import os
-from app.config import MONGO_DB,MONGO_URI
+from app.config import MONGO_DB,MONGO_URI, OPENAI_API_KEY
 from pymongo import MongoClient
 
 # Define a BaseModel for representing a single message
@@ -67,26 +68,26 @@ async def generate(messages: MessageList):
     return response
 
 
+# Endpoint to generate AI responses using OpenAI
 @router.post("/ai/generate_gpt", tags=["ai"])
 async def generate(messages: MessageList):
+    try:
+        # Initialize OpenAI client
+        openai.api_key = OPENAI_API_KEY
 
-    # Initialize OpenAI client
-    client = OpenAI(
-        base_url='http://ollama:11434/v1',
-        api_key="NO_API_KEY_NEEDED_FOR_LOCAL_SERVER",
-    )
+        # Prepare the request data using the provided messages
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Use the appropriate model (gpt-3.5-turbo)
+            messages=[{"role": msg.role, "content": msg.content} for msg in messages.messages]
+        )
 
-    # Prepare the request data using the provided messages
-    response = client.chat.completions.create(
-        model="llama3",
-        messages=messages.messages
-    )
-
-    # Print the generated response for debugging purposes (remove for production)
-    print(response.choices[0].message.content)
-
-    # Return the OpenAI response object
-    return response
+        # Extract and return the generated response
+        return {"response": response.choices[0].message["content"]}
+    
+    except Exception as e:
+        print(e)
+        # Raise an HTTP exception if there's an error
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Simple endpoint to return a "Hello World" message

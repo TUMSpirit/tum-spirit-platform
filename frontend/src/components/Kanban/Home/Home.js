@@ -21,11 +21,11 @@ const { Option } = Select;
 
 // Example tags with colors
 const tags = [
-    { title: 'Planning', color: '#f50' },
-    { title: 'UI', color: '#2db7f5' },
-    { title: 'Organization', color: '#86d068' },
-    { title: 'Hi-Fi', color: '#108ee9' },
-    { title: 'Lo-Fi', color: '#531dab' }
+    { title: 'Organization', color: '#f50' },
+    { title: 'Design', color: '#2db7f5' },
+    { title: 'Prototyping', color: '#86d068' },
+    { title: 'Development', color: '#108ee9' },
+    { title: 'Testing', color: '#531dab' }
 ];
 
 const tagColorMap = tags.reduce((map, tag) => {

@@ -1,35 +1,19 @@
-import React from 'react';
-import { useState, useEffect } from "react";
-
-import {
-  Row,
-  Col,
-  Dropdown,
-  Button,
-  Avatar,
-  Space
-} from "antd";
-
-import {
-  SolutionOutlined,
-  MenuUnfoldOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  ScheduleOutlined
-} from "@ant-design/icons";
-//import { useSubHeaderContext } from "./SubHeaderContext";
-import { useSignOut } from 'react-auth-kit';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Row, Col, Dropdown, Button, Avatar, Space, Badge } from "antd";
+import { SolutionOutlined, MenuUnfoldOutlined, SettingOutlined, LogoutOutlined, ScheduleOutlined } from "@ant-design/icons";
+import { useSignOut } from "react-auth-kit";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import TutorialPopup from '../components/TutorialPopup/TutorialPopup';
-import ImprintModal from '../components/Imprint/ImprintModal';
-import ErrorModal from '../components/ErrorModal/ErrorModal';
-import axios from 'axios';
-import { useAuthHeader } from 'react-auth-kit';
-import { useSocket } from '../context/SocketProvider';
-import { useUnreadMessage } from '../context/UnreadMessageContext';
+import { useAuthHeader } from "react-auth-kit";
+import { useSocket } from "../context/SocketProvider";
+import { useUnreadMessage } from "../context/UnreadMessageContext";
 import { useSubHeader } from "./SubHeaderContext";
-import PushNotificationModal from '../components/PushNotification/PushNotificationModal';
-
+import PushNotificationModal from "../components/PushNotification/PushNotificationModal";
+import ImprintModal from "../components/Imprint/ImprintModal";
+import ErrorModal from "../components/ErrorModal/ErrorModal";
+import OnlineUsersDropdown from "./OnlineUsersDropdown";
+import curriedAdjustHue from "polished/lib/color/adjustHue";
 
 function Header({
   placement,
@@ -43,7 +27,7 @@ function Header({
 
   const authHeader = useAuthHeader();
   const { getUnreadMessages, incrementNotifications, markAsRead, setLastVisited, unreadMessages } = useUnreadMessage();
-  const { socket } = useSocket();
+  const { socket, onlineStatus, currentUser } = useSocket();
   const [sidenavType, setSidenavType] = useState("transparent");
   const [visible, setVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -52,6 +36,7 @@ function Header({
   const [coins, setCoins] = useState(0);
   const [open, setOpen] = useState(false);
   const [me, setMe] = useState();
+  const [teamMembers, setTeamMembers] = useState([]);
   const logout = useSignOut();
   const navigate = useNavigate();
   const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -74,6 +59,19 @@ function Header({
         console.error('Failed to fetch current user:', error);
       }
     };
+    const fetchTeamMembers = async () => {
+      try {
+        const response = await axios.get("/api/get-team-members", {
+          headers: {
+            Authorization: authHeader(),
+          },
+        });
+        setTeamMembers(response.data);
+      } catch (error) {
+        console.error("Failed to fetch team members:", error);
+      }
+    };
+    fetchTeamMembers();
     fetchCurrentUser();
   }, []);
 
@@ -173,7 +171,17 @@ function Header({
             }}
           />
         </div>
+
         {me && (
+          <OnlineUsersDropdown
+            onlineStatus={onlineStatus}
+            users={teamMembers}
+            currentUser={currentUser} // Pass the users list here
+          />
+        )}
+        
+        {me && (
+
           <Dropdown
             menu={{
               items,
@@ -183,10 +191,16 @@ function Header({
             onOpenChange={handleOpenChange}
             open={open}
           >
-            <Avatar
-              className="cursor-pointer"
-              style={{ backgroundColor: me.avatar_color }}
-            >{me.username[0]}</Avatar>
+            <Badge
+              dot={onlineStatus[me.username] === "online"}
+              offset={[-5, 28]}
+              style={{ backgroundColor: onlineStatus[me.username] === "online" ? "#53C41B" : "grey", height: '10px', width: '10px' }}
+            >
+              <Avatar
+                className="cursor-pointer"
+                style={{ backgroundColor: me.avatar_color }}
+              >{me.username[0]}</Avatar>
+            </Badge>
           </Dropdown>
         )}
       </div>
@@ -216,220 +230,28 @@ function Header({
 }
 
 export default Header;
-/*
 
 
-        <Row >
-        <Col span={8} md={8} className="header-control">
-
-<Button
-                icon={<MenuUnfoldOutlined />}
-                className="sidebar-toggler"
-                onClick={() => {
-                    onPress();
-                }}
-            />
-            </Col>
-        <Col span={8} md={8} className="header-control flex-end">
-        <Row justify="end">
-                <Popover placement="bottomRight" title={text} content={content} trigger="click">
-                <Button type="primary" shape="circle" size="large" icon="download">
-                </Button>
-      </Popover>
-      </Row>
-
-    const [visible, setVisible] = useState(false);
-    const [visibleDropdown, setVisibleDropdown] = useState(false);
-    const [sidenavType, setSidenavType] = useState("transparent");
-    
-      const handleMenuClick = (e) => {
-        if (e.key === 'logout') {
-          // Hier könntest du die Abmelde-Logik einfügen
-          console.log('Benutzer abgemeldet');
-        } else if (e.key === 'settings') {
-          // Hier könntest du zur Einstellungsseite navigieren
-          console.log('Zu den Einstellungen navigiert');
-        }
-        setVisible(false);
-      };
-
-    useEffect(() => window.scrollTo(0, 0));
-
-    const showDrawer = () => setVisible(true);
-    const hideDrawer = () => setVisible(false);
-
-    const { subHeader } = useSubHeaderContext();
-  
-
-    return (
-        <>
-        <div className="flex items-center justify-end">
-      <div className="mr-auto">
-        <Button type="primary">Links</Button>
-      </div>
-      <Dropdown
-        menu={menu}
-        trigger={['click']}
-        open={visible}
-        onOpenChange={(flag) => setVisible(flag)}
+/*       
+{me && (
+  <Dropdown
+    menu={{ items: menuItems }}
+    trigger={["click"]}
+    open={open}
+  >
+    <div>
+      <Badge
+        dot={onlineStatus[me.username] === "online"}
+        offset={[-25, 30]}
+        style={{ backgroundColor: onlineStatus[me.username] === "online" ? "#53C41B" : "grey", height: '8px', width: '8px' }}
       >
         <Avatar
           className="cursor-pointer"
-          style={{ backgroundColor: '#87d068' }}
-          size="large"
-          icon={<UserOutlined />}
-        />
-      </Dropdown>
+          style={{ backgroundColor: me.avatar_color }}
+        >
+          {me.username[0]}
+        </Avatar>
+      </Badge>
     </div>
-
-
-
-        <Badge size="small" count={4}>
-            <Dropdown overlay={menu} trigger={["click"]}>
-              <a
-                href="#pablo"
-                className="ant-dropdown-link"
-                onClick={(e) => e.preventDefault()}
-              >
-                {bell}
-              </a>
-            </Dropdown>
-          </Badge>
-
-Button für Settings
-    <Button type="link" onClick={showDrawer}>
-            {logsetting}
-          </Button>
-          <Button
-            type="link"
-            className="sidebar-toggler"
-            onClick={() => onPress()}
-          >
-            {toggler}
-          </Button>
-Sign in und Search
-  <Link to="/sign-in" className="btn-sign-in">
-            {profile}
-            <span>Sign in</span>
-          </Link>
-          <Input
-            className="header-search"
-            placeholder="Type here..."
-            prefix={<SearchOutlined />}
-          />
-
-Button für Floating action
-   <div className="setting-drwer" onClick={showDrawer}>
-        {setting}
-      </div>
-
-
-
-          <Drawer
-            className="settings-drawer"
-            mask={true}
-            width={360}
-            onClose={hideDrawer}
-            placement={placement}
-            visible={visible}
-          >
-            <div layout="vertical">
-              <div className="header-top">
-                <Title level={4}>
-                  Configurator
-                  <Text className="subtitle">See our dashboard options.</Text>
-                </Title>
-              </div>
-
-              <div className="sidebar-color">
-                <Title level={5}>Sidebar Color</Title>
-                <div className="theme-color mb-2">
-                  <ButtonContainer>
-                    <Button
-                      type="primary"
-                      onClick={() => handleSidenavColor("#1890ff")}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      type="success"
-                      onClick={() => handleSidenavColor("#52c41a")}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      type="danger"
-                      onClick={() => handleSidenavColor("#d9363e")}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      type="yellow"
-                      onClick={() => handleSidenavColor("#fadb14")}
-                    >
-                      1
-                    </Button>
-
-                    <Button
-                      type="black"
-                      onClick={() => handleSidenavColor("#111")}
-                    >
-                      1
-                    </Button>
-                  </ButtonContainer>
-                </div>
-
-                <div className="sidebarnav-color mb-2">
-                  <Title level={5}>Sidenav Type</Title>
-                  <Text>Choose between 2 different sidenav types.</Text>
-                  <ButtonContainer className="trans">
-                    <Button
-                      type={sidenavType === "transparent" ? "primary" : "white"}
-                      onClick={() => {
-                        handleSidenavType("transparent");
-                        setSidenavType("transparent");
-                      }}
-                    >
-                      TRANSPARENT
-                    </Button>
-                    <Button
-                      type={sidenavType === "white" ? "primary" : "white"}
-                      onClick={() => {
-                        handleSidenavType("#fff");
-                        setSidenavType("white");
-                      }}
-                    >
-                      WHITE
-                    </Button>
-                  </ButtonContainer>
-                </div>
-                <div className="fixed-nav mb-2">
-                  <Title level={5}>Navbar Fixed </Title>
-                  <Switch onChange={(e) => handleFixedNavbar(e)} />
-                </div>
-                <div className="ant-docment">
-                  <ButtonContainer>
-                    <Button type="black" size="large">
-                      FREE DOWNLOAD
-                    </Button>
-                    <Button size="large">VIEW DOCUMENTATION</Button>
-                  </ButtonContainer>
-                </div>
-                <div className="viewstar">
-                  <a href="#pablo">{<StarOutlined />} Star</a>
-                  <a href="#pablo"> 190</a>
-                </div>
-
-                <div className="ant-thank">
-                  <Title level={5} className="mb-2">
-                    Thank you for sharing!
-                  </Title>
-                  <ButtonContainer className="social">
-                    <Button type="black">{<TwitterOutlined />}TWEET</Button>
-                    <Button type="black">{<FacebookFilled />}SHARE</Button>
-                  </ButtonContainer>
-                </div>
-              </div>
-            </div>
-          </Drawer>
- */
+  </Dropdown>
+)}*/

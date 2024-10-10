@@ -69,7 +69,7 @@ const CustomToolbar = ({
                     <Button icon={<RightOutlined />} onClick={() => onNavigate(navigate.NEXT)} type={"text"}></Button>
                 </div>
                 <div>
-                    {!isMobile && <Button type={"primary"} style={{marginRight: "10px"}} onClick={() => {setIsTimelineOpen(!isTimelineOpen)}} icon={<UnorderedListOutlined />}></Button>}
+                    {/*!isMobile && <Button type={"primary"} style={{marginRight: "10px"}} onClick={() => {setIsTimelineOpen(!isTimelineOpen)}} icon={<UnorderedListOutlined />}></Button>*/}
                     {!isMobile && <Button data-testid='openImportButton' type={"primary"} onClick={onOpenUploadImportPopup} style={{marginRight: "10px"}} icon={<UploadOutlined />}></Button>}
                     <Button data-testid='addEventButton'  type={"primary"} onClick={onOpenAddEvent}>{isMobile?<PlusOutlined/>:'+ add Event'}</Button>
                 </div>
@@ -84,7 +84,7 @@ const CustomToolbar = ({
                 </Radio.Group>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-                    <Button type={"primary"}  onClick={() => {setIsTimelineOpen(!isTimelineOpen)}} icon={<UnorderedListOutlined />}></Button>
+                   {/* <Button type={"primary"}  onClick={() => {setIsTimelineOpen(!isTimelineOpen)}} icon={<UnorderedListOutlined />}></Button>*/}
                     <Button data-testid='openImportButton' type={"primary"} onClick={onOpenUploadImportPopup}  icon={<UploadOutlined />}></Button>
                 </div>
             </Modal>

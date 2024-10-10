@@ -74,7 +74,7 @@ const ActivityFeed = () => {
         dataSource={filteredList.slice().reverse()}
         style={{marginBottom: '10px'}} // Reverse the list to show newest items on top
         renderItem={(activity) => (
-          <List.Item style={{ paddingLeft: '25px' }}>
+          <List.Item style={{ paddingLeft: '25px', paddingRight: '7px' }}>
             <List.Item.Meta
               avatar={getActivityIcon(activity.type)}
               title={
