@@ -36,7 +36,7 @@ const Chatbot = ({ opened, setOpened }) => {
       try {
         // Post request to the backend to get the bot response using axios
         const response = await axios.post(
-          "/api/ai/generate",{
+          "/api/ai/generate_gpt",{
             messages: [...messages, { role: "user", content: inputValue }],
           },
           {

@@ -54,10 +54,10 @@ class TKIResult(BaseModel):
     normen_der_bereitschaft: int
     normen_der_umsetzung: int
     unterstuetzung_fuer_innovation: int
-    aufgaben_aspekte: Optional[int] = None 
-    soziale_aspekte: Optional[int] = None 
+    aufgaben_aspekte: Optional[int] = None
+    soziale_aspekte: Optional[int] = None
     soziale_erwuenschtheit: Optional[int] = None  # Optional, as this might be added separately
-    
+    rawValues: Optional[dict] = None  # Add raw answers as an optional field
 
 @router.post("/tki/save", tags=["tki"])
 async def save_tki_result(result: TKIResult, current_user: Annotated[User, Depends(get_current_user)]):
@@ -65,10 +65,9 @@ async def save_tki_result(result: TKIResult, current_user: Annotated[User, Depen
         # Add user_id and timestamp to the result
         result_data = result.model_dump()  # Using model_dump instead of dict()
         result_data['user_id'] = current_user["_id"]
-       # result_data['team_id'] = current_user["team_id"]
         result_data['submittedAt'] = datetime.now()
 
-        # Save the result to MongoDB
+        # Save the result to MongoDB, including the raw values
         collection.insert_one(result_data)
         return {"message": "TKI successfully saved"}
     except Exception as e:

@@ -45,7 +45,9 @@ export const AddDisplay = () => {
                 open={open}
                 onOk={onOk}
                 onCancel={onCancel}
-                width={1000}
+                // Make width responsive
+                width="90%"
+                style={{ maxWidth: 600 }}
                 footer={[
                     <Button onClick={onCancel}>Cancel</Button>,
                     <Button
@@ -57,12 +59,14 @@ export const AddDisplay = () => {
                         Add
                     </Button>,
                 ]}
+                bodyStyle={{ maxHeight: "60vh", overflowY: "auto" }}
             >
-                <div className="flex">
+                <div className="flex flex-col md:flex-row">
                     <Menu
                         onSelect={onSelect}
                         style={{
-                            width: 260,
+                            width: "100%",
+                            maxWidth: 260,
                         }}
                         mode="inline"
                         items={[
@@ -78,15 +82,17 @@ export const AddDisplay = () => {
                             },
                         ]}
                     />
-                    <div className="px-6">
-                        <h1 className="text-xl font-bold mb-2">
+                    <div className="mt-4 md:mt-0 md:ml-6 px-4 md:px-6">
+                        <h1 className="text-lg md:text-xl font-bold mb-2">
                             {
                                 stateGraphOptions.find(
                                     (el) => el.key === currentSelection
                                 )?.label
                             }
                         </h1>
-                        <p>{getHelpContent(currentSelection)}</p>
+                        <p className="text-sm md:text-base">
+                            {getHelpContent(currentSelection)}
+                        </p>
                     </div>
                 </div>
             </Modal>

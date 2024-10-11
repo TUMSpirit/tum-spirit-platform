@@ -290,36 +290,34 @@ const TKIForm = ({ visible, onClose }) => {
 
   const onFinish = async (values) => {
     setLoading(true);
-    //const allValues = { ...formValues, ...values };
+  
+    // Calculate results
     const results = calculateResults(formValues);
-
+  
+    // Add the raw answers to the payload
+    const payload = {
+      ...results,
+      rawValues: formValues  // Include raw answers
+    };
+  
     try {
-      const response = await axios.post("/api/tki/save", results, {
+      const response = await axios.post("/api/tki/save", payload, {
         headers: {
           Authorization: authHeader(),
-          'Content-Type': 'application/json', // Ensure JSON content type
+          'Content-Type': 'application/json',
         },
       });
-
-      // If the request succeeds
+  
+      // Handle successful submission
       message.success("TKI submitted successfully!");
-      form.resetFields(); // Reset the form after successful submission
+      form.resetFields();
       updateSettings('trigger_tki_test', false);
       setModalVisible(false);
-
-      //onClose(); // Close the modal after submission
-
+  
     } catch (error) {
-      // Handle error responses
-      if (error.response) {
-        // Server responded with a status other than 2xx
-        message.error("Error submitting TKI: ${error.response.data?.detail || error.message}}");
-      } else {
-        // Network or other errors
-        message.error("An error occurred. Please try again");
-      }
+      message.error(`Error submitting TKI: ${error.response?.data?.detail || error.message}`);
     } finally {
-      setLoading(false); // Always remove the loading state at the end
+      setLoading(false);
     }
   };
 
