@@ -2,6 +2,7 @@
   "name": "tum-spirit-dashboard",
   "version": "1.0.0",
   "private": true,
+  "homepage": "/",
   "dependencies": {
     "@ant-design/compatible": "^5.1.3",
     "@ant-design/icons": "^4.8.0",

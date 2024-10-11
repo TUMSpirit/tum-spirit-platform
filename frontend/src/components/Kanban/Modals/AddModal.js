@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Comment } from '@ant-design/compatible';
-import { Avatar, Button, Modal, Form, Input, message, Select, Tag, Slider, List } from "antd";
-import { DeleteOutlined, FolderAddOutlined } from "@ant-design/icons";
+import { Avatar, Space, Button, Modal, Form, Input, message, Select, Tag, Slider, List } from "antd";
+import { DeleteOutlined, FolderAddOutlined, EditOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useAuthHeader } from "react-auth-kit";
 import moment from "moment";
@@ -35,7 +35,9 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
 
     const [taskData, setTaskData] = useState(initialTaskData);
     const [comments, setComments] = useState([]); // State to hold comments
-    const [commentText, setCommentText] = useState(""); // State for the input fi
+    const [commentText, setCommentText] = useState(""); // For adding new comments
+    const [editCommentText, setEditCommentText] = useState(""); // State for the input field
+    const [editingComment, setEditingComment] = useState(null); // State to track which comment is being edited
     const [form] = Form.useForm();
     const authHeader = useAuthHeader(); // For auth header
 
@@ -83,12 +85,59 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
             });
             // Refetch comments after adding a new one
             fetchComments(taskData.id);
-            setCommentText(""); // Clear input after submitting
+            setCommentText("");
+            //commentListRef.current.scrollTop = 0;
         } catch (error) {
             message.error("Failed to add comment.");
         }
     };
 
+    const handleDeleteComment = (commentId) => {
+        Modal.confirm({
+            title: 'Are you sure you want to delete this comment?',
+            content: 'This action cannot be undone.',
+            okText: 'Yes',
+            okType: 'danger',
+            cancelText: 'No',
+            onOk: async () => {
+                try {
+                    await axios.delete(`api/kanban/comments/${commentId}`, {
+                        headers: { Authorization: authHeader() },
+                    });
+                    message.success("Comment deleted successfully.");
+                    fetchComments(taskData.id); // Refetch comments after deletion
+                } catch (error) {
+                    message.error("Failed to delete comment.");
+                }
+            },
+        });
+    };
+
+    const handleEditComment = (comment) => {
+        setEditingComment(comment);
+        setEditCommentText(comment.content); // Set the content of the comment being edited in the edit textarea
+    };
+
+    const saveEditedComment = async () => {
+        if (!editingComment) return;
+
+        try {
+            await axios.put(`api/kanban/comments/${editingComment._id}`, { content: editCommentText }, {
+                headers: { Authorization: authHeader() },
+            });
+            message.success("Comment updated successfully.");
+            fetchComments(taskData.id); // Refetch comments after saving
+            setEditingComment(null); // Exit editing mode
+            setEditCommentText(""); // Clear the edit text
+        } catch (error) {
+            message.error("Failed to update comment.");
+        }
+    };
+
+    const cancelEdit = () => {
+        setEditingComment(null);
+        setEditCommentText(""); // Clear the edit textarea when canceling
+    };
 
     const handleSubmit = () => {
         const taskDataFormatted = {
@@ -288,10 +337,13 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         onChange={onChangeParticipants} style={{ width: 200 }} />
                 </Form.Item>
                 <AvatarDisplay selectedUsers={taskData.sharedUsers}></AvatarDisplay>
+                {/* Comments section */}
                 <div className="comments-section">
                     <h3>Comments</h3>
                     <List
-                        style={{ maxHeight: '300px', overflowY: 'scroll' }}
+                        style={{
+                            maxHeight: '300px', overflowY: 'scroll', boxShadow: 'inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7)', // Modern inset shadow
+                        }}
                         className="comment-list"
                         itemLayout="horizontal"
                         dataSource={comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))} // Sort by newest first
@@ -303,10 +355,54 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                                         {comment.username[0]}
                                     </Avatar>
                                 }
-                                content={comment.content}
-                                datetime={
-                                    <small>{moment.utc(comment.timestamp).from(moment.utc())}</small>  // Format timestamp
+                                content={
+                                    editingComment && editingComment._id === comment._id ? (
+                                        <>
+                                            <TextArea
+                                                rows={2}
+                                                value={editCommentText} // Use editCommentText for the editing textarea
+                                                onChange={(e) => setEditCommentText(e.target.value)}
+                                            />
+                                            <Space style={{ marginTop: '4px' }}>
+                                                <Button
+                                                    type="primary"
+                                                    onClick={saveEditedComment}
+                                                >
+                                                    Save
+                                                </Button>
+                                                <Button
+                                                    onClick={cancelEdit}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </Space>
+                                        </>
+                                    ) : (
+                                        <p>{comment.content}</p>
+                                    )
                                 }
+                                datetime={
+                                    <small>{moment.utc(comment.timestamp).fromNow()}</small>
+                                }
+                                actions={[
+                                    comment.user_id === currentUser.id && ( // Show delete and edit text options only for the logged-in user
+                                        <div>
+                                            <Button
+                                                type="text"
+                                                size="small"
+                                                icon={<EditOutlined />}
+                                                onClick={() => handleEditComment(comment)}
+                                                style={{ float: 'right', marginRight: 8 }} />
+                                            <Button
+                                                type="text"
+                                                size="small"
+                                                icon={<DeleteOutlined />}
+                                                onClick={() => handleDeleteComment(comment._id)} // Pass comment id
+                                                danger
+                                                style={{ float: 'right' }} />
+                                        </div>
+                                    ),
+                                ]}
                             />
                         )}
                     />
@@ -314,14 +410,19 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                     {/* Add new comment */}
                     <Form.Item>
                         <TextArea
-                            style={{ marginTop:'10px' }}
+                            style={{ marginTop: '10px' }}
                             rows={4}
-                            value={commentText}
+                            value={commentText} // Add comment text is separate
                             onChange={(e) => setCommentText(e.target.value)}
                             placeholder="Add a comment..."
+                            disabled={!!editingComment} // Disable if editing mode is active
                         />
                     </Form.Item>
-                    <Button onClick={handleAddComment} style={{ marginTop:'-4px', marginBottom: '16px' }}>
+                    <Button
+                        onClick={handleAddComment}
+                        style={{ marginTop: '-4px', marginBottom: '16px' }}
+                        disabled={!!editingComment} // Disable if editing mode is active
+                    >
                         Add Comment
                     </Button>
                 </div>

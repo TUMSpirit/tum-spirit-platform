@@ -346,12 +346,31 @@ def get_task_comments(task_id: str, current_user: Annotated[User, Depends(get_cu
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.put("/kanban/comments/{comment_id}")
+def update_comment(comment_id: str, content: dict, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        comment = comments_collection.find_one({"_id": ObjectId(comment_id), "user_id": current_user["_id"]})
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found or unauthorized.")
+
+        # Update the comment content
+        comments_collection.update_one(
+            {"_id": ObjectId(comment_id)},
+            {"$set": {"content": content['content']}}
+        )
+
+        return {"message": "Comment updated successfully."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # Route to delete a comment by its ID
 @router.delete("/kanban/comments/{comment_id}", response_model=dict, tags=["kanban"])
 def delete_comment(comment_id: str, current_user: Annotated[User, Depends(get_current_user)]):
     try:
-        comment = comments_collection.find_one({"_id": ObjectId(comment_id), "user_id": current_user["_id"]})
+        comment = comments_collection.find_one({"_id": ObjectId(comment_id), "user_id": ObjectId(current_user["_id"])})
         if not comment:
             raise HTTPException(status_code=404, detail="Comment not found or you are not authorized to delete this comment")
 

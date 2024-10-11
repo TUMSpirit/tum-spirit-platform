@@ -234,6 +234,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [answeredCount, setAnsweredCount] = useState([]);
+  const [startTime, setStartTime] = useState(null); // State to track when the test starts
   const authHeader = useAuthHeader();
   const { updateSettings } = useSocket();
 
@@ -281,10 +282,17 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   const handleFinish = async () => {
     saveStepAnswers(); // Save answers before submitting
     setLoading(true);
+  
     const results = calculateResults(formValues);
-
+  
+    const endTime = Date.now(); // Capture the end time
+    const elapsedTimeInSeconds = Math.floor((endTime - startTime) / 1000); // Calculate elapsed time in seconds
+  
     try {
-      await axios.post("/api/neoffi/save", results, {
+      await axios.post("/api/neoffi/save", { 
+        ...results, 
+        time_taken: elapsedTimeInSeconds // Include time taken in the payload
+      }, {
         headers: {
           Authorization: authHeader(),
           'Content-Type': 'application/json'
@@ -300,7 +308,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
       setLoading(false);
     }
   };
-
+  
   const calculateResults = (values) => {
     const scores = {
       Neuroticism: 0,
@@ -362,7 +370,9 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
 
   const startTest = () => {
     setPreModalVisible(false);
-    setModalVisible(true); // Open the main modal
+    setModalVisible(true);
+    setStartTime(Date.now()); // Set the start time when the user begins the test
+    // Open the main modal
   };
 
   return (

@@ -70,9 +70,17 @@ class DiscussionBase(BaseModel):
     author: str
     content: str
     category: str
+        
+# Model for the Reply
+class Reply(BaseModel):
+    author: str
+    content: str
+    createdAt: datetime
+    avatar_color: str
 
 # Pydantic model for discussion creation
 class DiscussionCreate(BaseModel):
+    title: str
     author: str
     content: str
     category: str
@@ -85,6 +93,7 @@ class DiscussionModel(DiscussionCreate):
     createdAt: datetime
     likes: int = 0
     liked_by: List[PyObjectId] # type: ignore
+    replies: List[Reply]
 
     class Config:
         populate_by_name = True
@@ -113,14 +122,16 @@ def toggle_like(
         if not discussion:
             raise HTTPException(status_code=404, detail="Discussion not found")
 
-        # Add 1 like to the discussion
-        discussion_collection.update_one(
-            {"_id": ObjectId(discussion_id)},
-            {
-                "$inc": {"likes": 1}
-               # "$addToSet": {"liked_by": current_user["_id"]}  # Add current user to liked_by
-            }
-        )
+        if current_user["_id"] in discussion.get("liked_by", []):
+            discussion_collection.update_one(
+                {"_id": ObjectId(discussion_id)},
+                {"$pull": {"liked_by": ObjectId(current_user["_id"])}, "$inc": {"likes": -1}}
+            )
+        else:
+            discussion_collection.update_one(
+                {"_id": ObjectId(discussion_id)},
+                {"$addToSet": {"liked_by": ObjectId(current_user["_id"])}, "$inc": {"likes": 1}}
+            )     
 
         # Fetch the updated discussion
         updated_discussion = discussion_collection.find_one({"_id": ObjectId(discussion_id)})
@@ -154,6 +165,7 @@ def create_discussion(
     try:
         # Create a discussion record with the necessary fields
         record = {
+            'title': discussion_entry.title,
             'project_id': ObjectId(project_id),  # Store as ObjectId in the database
             'author': discussion_entry.author,
             'content': discussion_entry.content,
@@ -161,7 +173,8 @@ def create_discussion(
             'avatar_color': discussion_entry.avatar_color,
             'createdAt': datetime.now(),
             'likes': 0,
-            'liked_by':[]
+            'liked_by':[],
+            'replies':[]
         }
 
         # Insert the discussion into MongoDB
@@ -197,7 +210,7 @@ def delete_discussion(discussion_id: str, current_user: Annotated[User, Depends(
             'team_id': current_user["team_id"],
             'title': "Discussion",
             'description': f"{current_user['username']} deleted a discussion.",
-            'type': "discussion_deleted",
+            'type': "kanban_deleted",
             'timestamp': datetime.now()
         }
         add_notification(notification)
@@ -205,3 +218,18 @@ def delete_discussion(discussion_id: str, current_user: Annotated[User, Depends(
         return {"message": "Discussion deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Add a reply to a specific discussion
+@router.post("/discussions/{discussion_id}/reply")
+async def add_reply(discussion_id: str, reply: Reply):
+    new_reply = reply.model_dump()
+    
+    result = discussion_collection.update_one(
+        {"_id": ObjectId(discussion_id)},
+        {"$push": {"replies": new_reply}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Discussion not found")
+    return {"message": "Reply added successfully"}

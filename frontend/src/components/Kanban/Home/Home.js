@@ -78,7 +78,7 @@ const Home = () => {
     const { currentUser: socketCurrentUser, projectInformation} = useSocket();
     const [users, setUsers] = useState(null);
     const [selectedTags, setSelectedTags] = useState([]);
-    const [milestonesData, setMilestonesData] = useState(projectInformation.milestones.map((milestone, index) => `M${index + 1}`));
+    const [milestonesData, setMilestonesData] = useState(projectInformation.milestones?projectInformation.milestones.map((milestone, index) => `M${index + 1}`):[]);
     const [selectedMilestones, setSelectedMilestones] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredTasks, setFilteredTasks] = useState([]);
