@@ -204,38 +204,43 @@ const DiscussionForum = ({ projectId }) => {
       <Row gutter={16}>
         <Col xs={24} md={8}>
           <Menu mode="inline" style={{ height: '100%' }}>
-            {categories.map((category, index) => (
-              <SubMenu key={index} title={category}>
-                {discussions
-                  .filter((discussion) => discussion.category === category)
-                  .map((discussion) => (
-                    <Menu.Item
-                      key={discussion._id}
-                      onClick={() => onSelectDiscussion(discussion)}
-                      style={{
-                        background: selectedDiscussion && selectedDiscussion._id === discussion._id ? '#DCEDFF' : 'transparent',
-                        cursor: 'pointer',
-                        paddingLeft:'25px',
-                        height:"auto"
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between'}}>
-                        <div>
-                          <strong>{discussion.title}</strong>
-                          <div style={{ fontSize: '12px', color: '#888' }}>
-                            {discussion.author} - {moment.utc(discussion.createdAt).fromNow()}
+            {categories.map((category, index) => {
+              // Calculate the number of discussions in the current category
+              const categoryDiscussionCount = discussions.filter(
+                (discussion) => discussion.category === category).length;
+              return (
+                <SubMenu key={index} title={`${category} (${categoryDiscussionCount})`}>
+                  {discussions
+                    .filter((discussion) => discussion.category === category)
+                    .map((discussion) => (
+                      <Menu.Item
+                        key={discussion._id}
+                        onClick={() => onSelectDiscussion(discussion)}
+                        style={{
+                          background: selectedDiscussion && selectedDiscussion._id === discussion._id ? '#DCEDFF' : 'transparent',
+                          cursor: 'pointer',
+                          paddingLeft: '25px',
+                          height: "auto"
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <div>
+                            <strong>{discussion.title}</strong>
+                            <div style={{ fontSize: '12px', color: '#888' }}>
+                              {discussion.author} - {moment.utc(discussion.createdAt).fromNow()}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'blue', margin: '5px' }}>
+                            <Badge color={"blue"} count={discussion.likes} showZero>
+                              <LikeOutlined />
+                            </Badge>
                           </div>
                         </div>
-                        <div style={{ fontSize: '12px', color: 'blue', margin:'5px'}}>
-                          <Badge color={"blue"} count={discussion.likes} showZero>
-                            <LikeOutlined />
-                          </Badge>
-                        </div>
-                      </div>
-                    </Menu.Item>
-                  ))}
-              </SubMenu>
-            ))}
+                      </Menu.Item>
+                    ))}
+                </SubMenu>
+              );
+            })}
           </Menu>
         </Col>
         <Col xs={24} md={16}>
@@ -263,7 +268,7 @@ const DiscussionForum = ({ projectId }) => {
                     </span>,
                   ]}
                   datetime={
-                    
+
                     <small>{moment.utc(selectedDiscussion.createdAt).fromNow()}</small>
                   }
                 />

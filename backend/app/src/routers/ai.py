@@ -73,16 +73,19 @@ async def generate(messages: MessageList):
 async def generate(messages: MessageList):
     try:
         # Initialize OpenAI client
-        openai.api_key = OPENAI_API_KEY
+        client = OpenAI(api_key=OPENAI_API_KEY)
 
-        # Prepare the request data using the provided messages
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use the appropriate model (gpt-3.5-turbo)
-            messages=[{"role": msg.role, "content": msg.content} for msg in messages.messages]
+        # Prepare the messages for the chat model
+        chat_messages = [{"role": msg.role, "content": msg.content} for msg in messages.messages]
+
+        # Send the request to the chat/completions endpoint
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # You can change the model as needed (gpt-4 is also available)
+            messages=chat_messages
         )
 
-        # Extract and return the generated response
-        return {"response": response.choices[0].message["content"]}
+        # Extract and return the generated response using dot notation
+        return response
     
     except Exception as e:
         print(e)

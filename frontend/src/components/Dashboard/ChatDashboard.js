@@ -64,14 +64,14 @@ export const ChatDashboard = () => {
         },
         {
             caption: "Grammar",
-            value: data.grammar ? data.grammar.toFixed(2) : "N/A",
+            value: data.subjectivity != null ? data.grammar.toFixed(2) : "N/A",
             change: "-20%",
             changeCls: "text-red-500",
             helpContent: "Grammar measures the percentage of grammatical mistakes in a sentence. A lower value means better grammar, while a higher value suggests more errors; A value of 25% would indicate an Error in every 4th word.",
         },
         {
             caption: "Precision",
-            value: data.precision ? data.precision.toFixed(2) : "N/A",
+            value: data.precision != null ? data.precision.toFixed(2) : "N/A",
             change: "+10%",
             changeCls: "text-green-500",
             helpContent: "Precision measures the readability of messages based on the Flesch Reading Ease scale. Ranges from 0 to 100, where higher values (60-100) indicate easier readability, and lower values (0-30) suggest more complex or difficult-to-read text.",
