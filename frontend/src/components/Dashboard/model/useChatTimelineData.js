@@ -15,19 +15,19 @@ const demoData = [
 
 export const useChatTimelineData = () => {
   const { loading, data } = useDataFetcher({
-    url: "/api/chathistory",
-    filter: true,
+    url: "/api/language/get-chat-log",
     demoData,
   });
 
   if (loading) return [];
 
+  // Format the data to be displayed in the chat timeline
   return data.map((message) => ({
     children: (
       <>
         <b>{message.sender}:</b> {message.message}
       </>
     ),
-    color: message.sender === "You" ? "green" : "blue",
+    color: "blue",
   }));
 };

@@ -1,4 +1,3 @@
-import { useLanguageAnalysisData } from "../model/useLanguageAnalysisData";
 import { useMessagesPerDayData } from "../model/useMessagesPerDayData";
 import { PlotlyChart } from "./base/PlotlyChart";
 

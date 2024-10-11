@@ -11,7 +11,7 @@ export const StatCard = ({
     return (
         <DashboardCard caption={caption} helpContent={helpContent}>
             <div className="flex items-baseline gap-2">
-                <h3 className="font-semibold text-4xl">{value}</h3>
+                <h3 className="font-semibold text-4xl">{caption === "Grammar"? value+"%" : value}</h3>
                 <small className={twMerge("text-lg font-semibold", changeCls)}>
                     {change}
                 </small>

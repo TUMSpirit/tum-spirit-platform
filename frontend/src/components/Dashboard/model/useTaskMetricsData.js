@@ -13,18 +13,23 @@ const demoData = {
 
 export const useTaskMetricsData = () => {
   const { loading, data } = useDataFetcher({
-    url: "/api/taskmetrics",
+    url: "/api/language/get-task-metrics",
     demoData,
-    filter: true,
   });
-  if (loading)
+
+  // If loading, return an empty structure with the loading flag set to true
+  if (loading) {
     return {
+      loading: true,
       data: {
         todo: 0,
         overdue: 0,
         done: 0,
-        averages: { completeTime: 0, overdueTime: 0 },
+        averages: { completeTime: "Loading...", overdueTime: "Loading..." },
       },
     };
-  return { data };
+  }
+
+  // If data is available, return it along with the loading flag
+  return { loading: false, data };
 };

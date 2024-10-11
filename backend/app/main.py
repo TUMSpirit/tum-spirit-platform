@@ -23,6 +23,7 @@ from .src.routers import language
 from .src.routers import timeline
 from .src.routers import notification
 from .src.routers import chat
+from .src.routers import discussions
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -74,6 +75,7 @@ def application_setup() -> FastAPI:
     application.include_router(kanban.router, prefix="/api")
     application.include_router(language.router, prefix="/api")
     application.include_router(timeline.router, prefix="/api")
+    application.include_router(discussions.router, prefix="/api")
     application.include_router(notification.router, prefix="/api")
 
     # Allow CORS

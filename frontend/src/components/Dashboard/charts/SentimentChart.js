@@ -10,6 +10,7 @@ export const SentimentChart = () => {
         xData,
         yDataLabels: ["very negative", "neutral", "very positive"],
         datasets: [{ data: yData, label: "You" }],
+        yDataOverview:"Sentiment"
     };
 
     return <YLabeledLineChart {...params} />;

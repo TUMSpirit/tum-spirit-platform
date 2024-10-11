@@ -44,11 +44,12 @@ export const DashboardCard = forwardRef(
                                 content={helpContent}
                                 title={caption + " Explanation"}
                                 trigger="click"
+                                overlayStyle={{ maxWidth: "250px", whiteSpace: "normal" }}  // Adjust width and allow text wrap
                             >
                                 <QuestionCircleOutlined className="text-blue-400 cursor-pointer" />
                             </Popover>
                         ) : (
-                            <></>
+                        <></>
                         )}
                     </div>
                     {deleteButton && (

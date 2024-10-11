@@ -35,20 +35,20 @@ def analyze_user_big5(user_id):
 
     store_OCEAN(user_id, big5_result)
 
-def analyze_chat_prod(latest):
-    latest_metadata = latest #"2024-01-01"
-
-    messages = retrieve_chat(since=latest_metadata)
-
-    for message in messages:
-        metadata = generate_metadata(message["content"])
-        store_metadata(message["id"], message["sender_id"], message["timestamp"], metadata)
 
 
 
 
 
-def analyze_big5(user_id: str, chat_string: List[str]):
+
+
+def analyze_chat_prod(message):
+    metadata = generate_metadata(message["content"])
+    store_metadata(message["_id"], message["teamId"], message["senderId"], message["timestamp"], metadata)
+
+
+
+def analyze_big5(user_id:str, team_id:str, chat_string: List[str]):
     try:
         # Check if the chat_string array is empty
         if not chat_string:
@@ -59,7 +59,7 @@ def analyze_big5(user_id: str, chat_string: List[str]):
             big5_result = generate_OCEAN(chat_string)
         
         # Store the result
-        store_OCEAN(user_id, big5_result)
+        store_OCEAN(user_id, team_id, big5_result)
     
     except Exception as e:
         # Handle exceptions if necessary

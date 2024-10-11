@@ -42,11 +42,11 @@ const StartTestButton = styled(Button)`
 `;
 const renderLegend = () => (
   <LegendWrapper>
-    <LegendText>0 - Strongly Disagree</LegendText>
-    <LegendText>1 - Disagree</LegendText>
-    <LegendText>2 - Neutral</LegendText>
-    <LegendText>3 - Agree</LegendText>
-    <LegendText>4 - Strongly Agree</LegendText>
+    <LegendText>1 - Strongly Disagree</LegendText>
+    <LegendText>2 - Disagree</LegendText>
+    <LegendText>3 - Neutral</LegendText>
+    <LegendText>4 - Agree</LegendText>
+    <LegendText>5 - Strongly Agree</LegendText>
   </LegendWrapper>
 );
 
@@ -234,14 +234,15 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [answeredCount, setAnsweredCount] = useState([]);
+  const [startTime, setStartTime] = useState(null); // State to track when the test starts
   const authHeader = useAuthHeader();
   const { updateSettings } = useSocket();
 
-  // Save answers when user moves between steps
+  // Corrected SaveStepAnswers to properly merge values
   const saveStepAnswers = () => {
-    const currentValues = form.getFieldsValue(); // Get current form values
-    const updatedValues = { ...formValues, ...currentValues }; // Merge with existing values
-    setFormValues(updatedValues);
+    const currentValues = form.getFieldsValue(); // Get the current form values for the step
+    const updatedValues = { ...formValues, ...currentValues }; // Merge new step values with all previously saved answers
+    setFormValues(updatedValues); // Persist all answers
   };
 
   // Calculate answered questions count dynamically
@@ -256,9 +257,10 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   };
 
   // Update answered count whenever form values change
-  const handleValuesChange = (changedValues, allValues) => {
-    setFormValues(allValues);
-    setAnsweredCount(calculateAnsweredQuestions(allValues));
+  const handleValuesChange = (changedValues) => {
+    const updatedValues = { ...formValues, ...changedValues }; // Merge new values with existing values
+    setFormValues(updatedValues); // Update form values
+    calculateAnsweredQuestions(updatedValues); // Recalculate the answered count
   };
 
   const handleNext = () => {
@@ -280,10 +282,17 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
   const handleFinish = async () => {
     saveStepAnswers(); // Save answers before submitting
     setLoading(true);
+  
     const results = calculateResults(formValues);
-
+  
+    const endTime = Date.now(); // Capture the end time
+    const elapsedTimeInSeconds = Math.floor((endTime - startTime) / 1000); // Calculate elapsed time in seconds
+  
     try {
-      await axios.post("/api/neoffi/save", results, {
+      await axios.post("/api/neoffi/save", { 
+        ...results, 
+        time_taken: elapsedTimeInSeconds // Include time taken in the payload
+      }, {
         headers: {
           Authorization: authHeader(),
           'Content-Type': 'application/json'
@@ -299,7 +308,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
       setLoading(false);
     }
   };
-
+  
   const calculateResults = (values) => {
     const scores = {
       Neuroticism: 0,
@@ -317,7 +326,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
       const question = questionsWithSections.find(q => q.id === questionId);
       if (question) {
         // Adjust for reverse scoring
-        const finalAnswer = question.reverseScored ? (4 - answer) : answer;
+        const finalAnswer = question.reverseScored ? (6 - answer) : answer;
 
         // Add the score to the corresponding trait
         scores[question.trait] += finalAnswer;
@@ -341,7 +350,7 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
             rules={[{ required: true, message: 'Please select an answer.' }]}
           >
             <Radio.Group>
-              {[0, 1, 2, 3, 4].map((value) => (
+              {[1, 2, 3, 4, 5].map((value) => (
                 <Radio key={value} value={value}>
                   {value}
                 </Radio>
@@ -361,7 +370,9 @@ const NEOFFIForm = ({ isPreModalVisible, setPreModalVisible }) => {
 
   const startTest = () => {
     setPreModalVisible(false);
-    setModalVisible(true); // Open the main modal
+    setModalVisible(true);
+    setStartTime(Date.now()); // Set the start time when the user begins the test
+    // Open the main modal
   };
 
   return (

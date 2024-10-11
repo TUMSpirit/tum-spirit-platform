@@ -17,6 +17,8 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['kanban']
 archived_collection = db['archived_kanban']  # New collection for archived tasks
+comments_collection = db['kanban_comments']  # New collection for comments
+
 
 def validate_object_id(v: Any) -> ObjectId:
     if isinstance(v, ObjectId):
@@ -75,6 +77,24 @@ class Task(TaskCreate):
         populate_by_name = True
         arbitrary_types_allowed = True  # Required for the _id 
         json_encoders = {ObjectId: str}
+        
+        
+class CommentModel(BaseModel):
+    id: PyObjectId = Field(alias="_id")
+    task_id: PyObjectId
+    user_id: PyObjectId
+    username: str
+    avatar_color: str
+    content: str
+    timestamp: datetime
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True  # Required for the _id 
+        json_encoders = {ObjectId: str}
+
+class CreateComment(BaseModel):
+    content: str
 
 # Route to archive a task by moving it to the archived_kanban collection
 @router.put("/kanban/archive-task/{task_id}", response_model=TaskModel, tags=["kanban"])
@@ -285,4 +305,76 @@ def get_tasks(current_user: Annotated[User, Depends(get_current_user)],
 
     except Exception as e:
         # If something goes wrong, raise an HTTP exception
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
+# Route to add a new comment to a task
+@router.post("/kanban/{task_id}/comments", response_model=CommentModel, tags=["kanban"])
+def add_comment(task_id: str, comment: CreateComment, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        task = collection.find_one({"_id": ObjectId(task_id), "team_id": ObjectId(current_user["team_id"])})
+        
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        new_comment = {
+            "task_id": ObjectId(task_id),
+            "user_id": ObjectId(current_user["_id"]),
+            "username": current_user["username"],
+            "avatar_color": "#000",#current_user["avatar_color"]
+            "content": comment.content,
+            "timestamp": datetime.now(),
+        }
+        result = comments_collection.insert_one(new_comment)
+
+        return CommentModel(**new_comment, id=str(result.inserted_id))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Route to get all comments for a specific task
+@router.get("/kanban/{task_id}/comments", response_model=List[CommentModel], tags=["kanban"])
+def get_task_comments(task_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        task = collection.find_one({"_id": ObjectId(task_id), "team_id": ObjectId(current_user["team_id"])})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+
+        query = {"task_id": ObjectId(task_id)}
+        comments = list(comments_collection.find(query))
+        return [CommentModel(**comment, id=str(comment["_id"])) for comment in comments]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/kanban/comments/{comment_id}")
+def update_comment(comment_id: str, content: dict, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        comment = comments_collection.find_one({"_id": ObjectId(comment_id), "user_id": current_user["_id"]})
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found or unauthorized.")
+
+        # Update the comment content
+        comments_collection.update_one(
+            {"_id": ObjectId(comment_id)},
+            {"$set": {"content": content['content']}}
+        )
+
+        return {"message": "Comment updated successfully."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# Route to delete a comment by its ID
+@router.delete("/kanban/comments/{comment_id}", response_model=dict, tags=["kanban"])
+def delete_comment(comment_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        comment = comments_collection.find_one({"_id": ObjectId(comment_id), "user_id": ObjectId(current_user["_id"])})
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found or you are not authorized to delete this comment")
+
+        comments_collection.delete_one({"_id": ObjectId(comment_id)})
+        return {"message": "Comment deleted successfully"}
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

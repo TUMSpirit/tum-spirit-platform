@@ -1,48 +1,26 @@
 import { DashboardCard } from "./layout/DashboardCard";
-
 import { getHelpContent } from "./help/helpContent.js";
 import { Big5Chart } from "./charts/Big5Chart.js";
 import { useBig5Data } from "./model/useBig5Data.js";
 import { useBig5TeamData } from "./model/useBig5TeamData.js";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 
 export const TraitDashboard = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const chart = useMemo(
-    () => (
-      <DashboardCard
-        caption={"Big 5"}
-        tabs={[
-          {
-            label: "Team",
-            children: (
-              <Big5Chart
-                dataFetcher={useBig5TeamData}
-                onHoverIndexChanged={setCurrentIndex}
-                label="Team"
-              />
-            ),
-          },
-          {
-            label: "You",
-            children: (
-              <Big5Chart
-                dataFetcher={useBig5Data}
-                label="You"
-                onHoverIndexChanged={setCurrentIndex}
-              />
-            ),
-          },
-        ]}
-      ></DashboardCard>
-    ),
-    []
-  );
+  // Use custom hooks to fetch data for both user and team
+  const userFetcher = useBig5Data;
+  const teamFetcher = useBig5TeamData;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {chart}
+      <DashboardCard caption={"Big 5"}>
+        <Big5Chart
+          userFetcher={userFetcher}
+          teamFetcher={teamFetcher}
+          onHoverIndexChanged={setCurrentIndex}
+        />
+      </DashboardCard>
 
       <DashboardCard caption="Big 5 Explanation" className="lg:col-span-2">
         <p>{getHelpContent("big5")}</p>
@@ -82,14 +60,14 @@ export const TraitDashboard = () => {
           ],
           [
             <>
-              <b>Conscientiousnes</b> reflects an individual's self-discipline,
+              <b>Conscientiousness</b> reflects an individual's self-discipline,
               orderliness, and reliability. Highly conscientious people are
               organized, dependable, and responsible, often setting and
               achieving high goals. They like to plan ahead and have strong
               impulse control. Lower scores in conscientiousness might indicate
               a more laid-back or spontaneous personality, where individuals may
               prioritize flexibility over structure and are more likely to act
-              on impulse.{" "}
+              on impulse.
             </>,
             1,
           ],
@@ -116,7 +94,7 @@ export const TraitDashboard = () => {
               relationships. They are more likely to be considerate, friendly,
               and willing to compromise. Those with lower scores might be more
               competitive or skeptical of others intentions, which can lead to
-              them being more assertive or antagonistic interactions.
+              them being more assertive or antagonistic in interactions.
             </>,
             2,
           ],
@@ -138,19 +116,6 @@ export const TraitDashboard = () => {
             {char}
           </p>
         ))}
-        <p className="hidden">
-          The exploration of personality in psychology has led to various
-          theories and models aiming to encapsulate the broad spectrum of human
-          traits and behaviors. Among these, the Big Five personality traits
-          stand out as a widely accepted framework. The model emerged from
-          multiple researchers who identified five broad dimensions that capture
-          most of the variability in human personality. These traits are
-          considered universal, with studies finding their applicability across
-          different cultures and demographics . The Big Five not only serve as a
-          tool for psychological assessment but also have implications in
-          various domains such as academic performance and career success . The
-          Big Five dimensions are: OCEAN
-        </p>
       </DashboardCard>
     </div>
   );

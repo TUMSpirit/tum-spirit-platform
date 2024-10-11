@@ -37,15 +37,16 @@ PyObjectId = Annotated[
 
 # NEO-FFI Result Schema
 class NEOFFIResult(BaseModel):
-    neuroticism: int
-    extraversion: int
-    openness: int
-    agreeableness: int
-    conscientiousness: int
+    Neuroticism: int
+    Extraversion: int
+    Openness: int
+    Agreeableness: int
+    Conscientiousness: int
+    time_taken: Optional[int] = None  # Time taken to complete the test in seconds
     #raw_scores: dict  # If you want to store item-wise scores, use a dict {item_number: score}
     # Optional meta fields
-    additional_notes: Optional[str] = None
-
+    #additional_notes: Optional[str] = None
+    
 @router.post("/neoffi/save", tags=["neoffi"])
 async def save_neoffi_result(result: NEOFFIResult, current_user: Annotated[User, Depends(get_current_user)]):
     try:
@@ -53,6 +54,10 @@ async def save_neoffi_result(result: NEOFFIResult, current_user: Annotated[User,
         result_data = result.model_dump()  # Using model_dump instead of dict()
         result_data['user_id'] = current_user["_id"]
         result_data['submittedAt'] = datetime.now()
+
+        # Store the time_taken field if provided
+        if result.time_taken:
+            result_data['time_taken'] = result.time_taken
 
         # Save the result to MongoDB
         collection.insert_one(result_data)

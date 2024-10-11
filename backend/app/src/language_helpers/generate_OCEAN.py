@@ -53,7 +53,7 @@ def generate_OCEAN(text_array):
     models['conscientiousness'] = CustomUnpickler(
         open('/app/BigFiveModel/CON_model.pkl', 'rb')).load()
     models['extraversion'] = CustomUnpickler(
-        open('/app/BigFiveModel/CON_model.pkl', 'rb')).load()
+        open('/app/BigFiveModel/EXT_model.pkl', 'rb')).load()
     models['agreeableness'] = CustomUnpickler(
         open('/app/BigFiveModel/AGR_model.pkl', 'rb')).load()
     models['neuroticism'] = CustomUnpickler(

@@ -40,9 +40,8 @@ const demoData = [
 
 export const useTaskLogData = () => {
   const { loading, data } = useDataFetcher({
-    url: "/api/tasklog",
-    demoData,
-    filter: true,
+    url: "/api/language/get-task-logs",
+    demoData
   });
   if (loading) return [];
   return data.map((message) => ({

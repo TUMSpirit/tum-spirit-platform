@@ -35,10 +35,20 @@ export const ChatDisplay = (props) => {
                     },
                 }}
             >
-                <Timeline
-                    className="timelinelist mt-4 -mb-8"
-                    items={timelineList}
-                />
+                {/* Add a container div with a fixed height and scroll */}
+                <div
+                    className="overflow-y-auto"
+                    style={{
+                        maxHeight: "320px", // Adjust the height as needed
+                        paddingRight: "12px", // To avoid content hiding behind scrollbar
+                    }}
+                >
+                    <Timeline
+                        className="timelinelist mt-4 -mb-8"
+                        items={timelineList}
+                        reverse={true}
+                    />
+                </div>
             </ConfigProvider>
         </DashboardCard>
     );

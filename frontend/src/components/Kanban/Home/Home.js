@@ -21,11 +21,11 @@ const { Option } = Select;
 
 // Example tags with colors
 const tags = [
-    { title: 'Planning', color: '#f50' },
-    { title: 'UI', color: '#2db7f5' },
-    { title: 'Organization', color: '#86d068' },
-    { title: 'Hi-Fi', color: '#108ee9' },
-    { title: 'Lo-Fi', color: '#531dab' }
+    { title: 'Organization', color: '#f50' },
+    { title: 'Design', color: '#2db7f5' },
+    { title: 'Prototyping', color: '#86d068' },
+    { title: 'Development', color: '#108ee9' },
+    { title: 'Testing', color: '#531dab' }
 ];
 
 const tagColorMap = tags.reduce((map, tag) => {
@@ -78,7 +78,7 @@ const Home = () => {
     const { currentUser: socketCurrentUser, projectInformation} = useSocket();
     const [users, setUsers] = useState(null);
     const [selectedTags, setSelectedTags] = useState([]);
-    const [milestonesData, setMilestonesData] = useState(projectInformation.milestones.map((milestone, index) => `M${index + 1}`));
+    const [milestonesData, setMilestonesData] = useState(projectInformation.milestones?projectInformation.milestones.map((milestone, index) => `M${index + 1}`):[]);
     const [selectedMilestones, setSelectedMilestones] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredTasks, setFilteredTasks] = useState([]);

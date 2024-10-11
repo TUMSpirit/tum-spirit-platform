@@ -284,10 +284,10 @@ export const SocketProvider = ({ children }) => {
   }
 
   return (
-    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, projectInformation, updateLastLoggedIn, updateSettings }}>
+    <SocketContext.Provider value={{ currentUser, onlineStatus, socket, missedMessages, projectInformation, userSettings, updateLastLoggedIn, updateSettings }}>
       {children}
       <TKIForm visible={isModalOpen} onClose={closeModal} />
-      <NEOFFIForm visible={isFFIModalOpen} onClose={setFFIModalOpen} />
+      <NEOFFIForm isPreModalVisible={isFFIModalOpen} setPreModalVisible={setFFIModalOpen} />
     </SocketContext.Provider>
   );
 };

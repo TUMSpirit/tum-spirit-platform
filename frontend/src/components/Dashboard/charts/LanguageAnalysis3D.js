@@ -1,8 +1,20 @@
 import { useLanguageAnalysisData } from "../model/useLanguageAnalysisData";
 import { PlotlyChart } from "./base/PlotlyChart";
+import { Spin } from "antd"; // Import the Ant Design spinner
+
 
 export const LanguageAnalysis3D = () => {
-    const { words, dataX, dataY, dataZ } = useLanguageAnalysisData();
+    const {loading, words, dataX, dataY, dataZ } = useLanguageAnalysisData();
+
+
+    // Render loading state with a spinner
+    if (loading) {
+        return (
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+            <Spin size="large" />
+          </div>
+        );
+      }
 
     const data = [
         {

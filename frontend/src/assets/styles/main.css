@@ -1323,7 +1323,6 @@ span.ismobile {
 
   main.ant-layout-content.content-ant {
     padding-left: 0px !important;
-    overflow: scroll;
   }
 
  /* .ant-row {
@@ -3477,4 +3476,20 @@ span.ant-badge-status-dot.ant-badge-status-processing {
 .fade-out {
   opacity: 0;
   transition: opacity 1s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulsing-icon {
+  animation: pulse 1.5s infinite;
 }

@@ -253,7 +253,7 @@ async def is_admin(current_user: Annotated[User, Depends(get_current_user)]):
     Ensures the current user is an admin.
     Raises HTTPException if the user is not an admin.
     """
-    if current_user["role"] != "admin":
+    if current_user["role"] != "Admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required",
@@ -274,9 +274,22 @@ async def get_user_last_active(user_id: str) -> datetime:
     return None
 
 def get_users():
-    # Example endpoint to fetch all users
-    users = user_collection.find({}, {'username': 1})
-    return {"users": [str(user['username']) for user in users]}
+    # Example endpoint to fetch all non-admin users
+    users = user_collection.find(
+        {"role": {"$ne": "Admin"}},
+        {"_id": 1, 'username': 1, 'team_id': 1}
+    )
+    return {
+        "users": [
+            {
+                "user_id": str(user['_id']),
+                "username": str(user['username']),
+                "team_id": str(user['team_id'])  # Convert ObjectId to string and handle cases with no team_id
+            }
+            for user in users
+        ]
+    }
+
 
 
 
@@ -316,7 +329,7 @@ async def create_users(user_data: List[CreateUser], current_user: User = Depends
         HTTPException: If the current user is not an admin.
     """
     # Check if the current user is an admin
-    if current_user["role"] != "admin":
+    if current_user["role"] != "Admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to perform this action"
