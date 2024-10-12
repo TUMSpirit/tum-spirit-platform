@@ -179,7 +179,7 @@ function Header({
             currentUser={currentUser} // Pass the users list here
           />
         )}
-        
+
         {me && (
 
           <Dropdown
@@ -211,7 +211,7 @@ function Header({
               className="ant-page-header-heading-title"
               style={{ textTransform: "capitalize" }}
             >
-              {subName.replace("/", "")}
+              {subName === "" ? "Home" : subName.replace("/", "")}
             </span>
           </div>
         </Col>
