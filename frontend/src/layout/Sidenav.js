@@ -14,11 +14,11 @@ import { useAuthHeader } from 'react-auth-kit';
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
-  const page = pathname.replace("/", "");
   const { Title, Text } = Typography;
   const [opened, setOpened] = useState(false);
   const { unreadMessages } = useUnreadMessage();
   const [totalCount, setTotalCount] = useState(0);
+  const [selectedKey, setSelectedKey] = useState(pathname === '/' ? 'home' : pathname.replace("/", "")); // Track selected menu item
   const { projectInformation } = useSocket(); // Access projectInformation from the socket context
   const authHeader = useAuthHeader();
 
@@ -192,6 +192,7 @@ function Sidenav({ color }) {
   // Handle click on menu items and update the click data
   const handleClick = (menuItem) => {
     const newClickData = { ...clickData, [menuItem]: clickData[menuItem] + 1 };
+    setSelectedKey(menuItem); // Update selected key
     setClickData(newClickData);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newClickData)); // Persist in localStorage
 
@@ -205,21 +206,29 @@ function Sidenav({ color }) {
     }
   };
 
+
+
   // Send the click data to the backend
   const sendClickDataToBackend = async (data) => {
     try {
       await axios.post('/api/track-clicks', data,
-      {
-        headers: {
-          Authorization: authHeader(),  // Use the authHeader function to get the token
-        },
-      });
+        {
+          headers: {
+            Authorization: authHeader(),  // Use the authHeader function to get the token
+          },
+        });
       localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear localStorage after successful sync
-      setClickData({ home: 0, calendar: 0, chat: 0, statistics: 0, kanban: 0,team: 0, documents: 0 }); // Reset local state
+      setClickData({ home: 0, calendar: 0, chat: 0, statistics: 0, kanban: 0, team: 0, documents: 0 }); // Reset local state
     } catch (err) {
       console.error('Error sending click data:', err);
     }
   };
+
+
+  useEffect(() => {
+    const currentKey = pathname === '/' ? 'home' : pathname.replace("/", "");
+    setSelectedKey(currentKey);
+  }, [pathname]);
 
   useEffect(() => {
     setTotalCount(unreadMessages.reduce((total, [_, count]) => total + count, 0));
@@ -233,137 +242,104 @@ function Sidenav({ color }) {
     <>
       <div className="brand" style={{ position: 'relative', display: 'flex', alignItems: 'flex-end' }}>
         <img src={logo} alt="" />
-          
-  {/* Version Tag */}
-  <span style={{
-    fontSize: '9px', 
-    backgroundColor: '#f5f5f5',  // Neutral background
-    color: '#666',  // Muted text color
-    padding: '1px 4px',
-    borderRadius: '4px',
-    marginLeft: '4px',  // Space between the logo and the version tag
-    border: '1px solid #e0e0e0',
-    fontWeight: '500'
-  }}>
-    v2.1
-  </span>
+
+        {/* Version Tag */}
+        <span style={{
+          fontSize: '9px',
+          backgroundColor: '#f5f5f5',  // Neutral background
+          color: '#666',  // Muted text color
+          padding: '1px 4px',
+          borderRadius: '4px',
+          marginLeft: '4px',  // Space between the logo and the version tag
+          border: '1px solid #e0e0e0',
+          fontWeight: '500'
+        }}>
+          v2.1
+        </span>
       </div>
-  
-      <hr/>
+
+      <hr />
       {projectInformation && (
-        <div     style={{
-          padding: '0px 5px', 
+        <div style={{
+          padding: '0px 5px',
           position: 'relative',
           marginTop: '25px',
-          marginBottom:'15px'
+          marginBottom: '15px'
         }}>
-          <Text type="secondary" style={{ paddingLeft: 20, fontSize: '14px', fontWeight:'bold' }}>
+          <Text type="secondary" style={{ paddingLeft: 20, fontSize: '14px', fontWeight: 'bold' }}>
             {projectInformation.name || "Project Name"}
           </Text>
           <Title level={4} style={{
             color: '#2576CA',
             paddingLeft: 20,
             paddingTop: 0,
-            marginTop:5
+            marginTop: 5
           }}>
             {projectInformation.team_name || "Team Name"}
           </Title>
         </div>
       )}
-      <hr/>
-      <Menu theme="light" mode="inline" defaultSelectedKeys={[page]}>
-
-        <Menu.Item key="home" onClick={() => handleClick('home')}>
+      <hr />
+      <Menu theme="light" mode="inline" selectedKeys={[selectedKey]}>
+        <Menu.Item key="home">
           <NavLink to="/">
-            <span
-              className="icon"
-              style={{
-                background: page === "home" ? color : "",
-              }}
-            >
-              <HomeFilled></HomeFilled>
+            <span className="icon" style={{ background: selectedKey === "home" ? color : "" }}>
+              <HomeFilled />
             </span>
             <span className="label">Home</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="calendar" onClick={() => handleClick('calendar')}>
+
+        <Menu.Item key="calendar">
           <NavLink to="/calendar">
-            <span
-              className="icon"
-              style={{
-                background: page === "calendar" ? color : "",
-              }}
-            >
-              <CalendarFilled></CalendarFilled>
+            <span className="icon" style={{ background: selectedKey === "calendar" ? color : "" }}>
+              <CalendarFilled />
             </span>
             <span className="label">Calendar</span>
           </NavLink>
         </Menu.Item>
 
-        <Menu.Item key="chat" onClick={() => handleClick('chat')}>
+        <Menu.Item key="chat">
           <NavLink to="/chat">
-            <span
-              className="icon"
-              style={{
-                background: page === "chat" ? color : "",
-              }}
-            >
-              {chat}
+            <span className="icon" style={{ background: selectedKey === "chat" ? color : "" }}>
+              {chat} {/* Assuming `chat` is your icon */}
             </span>
             <span className="label">Chat</span>
-            <Badge className="ml-auto" count={totalCount}>
-            </Badge>
+            <Badge className="ml-auto" count={totalCount} />
           </NavLink>
         </Menu.Item>
 
-        <Menu.Item key="kanban" onClick={() => handleClick('kanban')}>
+        <Menu.Item key="kanban">
           <NavLink to="/kanban">
-            <span
-              className="icon"
-              style={{
-                background: page === "kanban" ? color : "",
-              }}
-            >
-              {kanban}
+            <span className="icon" style={{ background: selectedKey === "kanban" ? color : "" }}>
+              {kanban} {/* Assuming `kanban` is your icon */}
             </span>
             <span className="label">Kanban</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="team" onClick={() => handleClick('team')}>
+
+        <Menu.Item key="team">
           <NavLink to="/team">
-            <span
-              className="icon"
-              style={{
-                background: page === "team" ? color : "",
-              }}
-            >
-              {team}
+            <span className="icon" style={{ background: selectedKey === "team" ? color : "" }}>
+              {team} {/* Assuming `team` is your icon */}
             </span>
             <span className="label">Team</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="documents" onClick={() => handleClick('documents')}>
+
+        <Menu.Item key="documents">
           <NavLink to="/documents">
-            <span
-              className="icon"
-              style={{
-                background: page === "documents" ? color : "",
-              }}
-            >
-              {documents}
+            <span className="icon" style={{ background: selectedKey === "documents" ? color : "" }}>
+              {documents} {/* Assuming `documents` is your icon */}
             </span>
             <span className="label">Documents</span>
           </NavLink>
         </Menu.Item>
-        <Menu.Item key="dashboard" onClick={() => handleClick('statistics')}>
+
+        <Menu.Item key="dashboard">
           <NavLink to="/dashboard">
-            <span
-              className="icon"
-              style={{
-                background: page === "dashboard" ? color : "",
-              }}
-            >
-              <LineChartOutlined></LineChartOutlined>
+            <span className="icon" style={{ background: selectedKey === "dashboard" ? color : "" }}>
+              <LineChartOutlined />
             </span>
             <span className="label">Statistics</span>
           </NavLink>
