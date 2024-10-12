@@ -84,8 +84,8 @@ const HorizontalTimeline = ({ projectId }) => {
     });
 
     if (completedMilestones >= milestones.length) {
-      //setCelebrationVisible(true);
-      //setShowConfetti(true);
+      setCelebrationVisible(true);
+      setShowConfetti(true);
       setCurrent(milestones.length - 1); // Show the last milestone
       setProgress(100); // Set progress to 100% for the last milestone
     } else {
