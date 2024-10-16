@@ -338,7 +338,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                 </Form.Item>
                 <AvatarDisplay selectedUsers={taskData.sharedUsers}></AvatarDisplay>
                 {/* Comments section */}
-                <div className="comments-section">
+                {(isUpdateEventOpen && <div className="comments-section">
                     <h3>Comments</h3>
                     <List
                         style={{
@@ -426,6 +426,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         Add Comment
                     </Button>
                 </div>
+                )}
             </Form>
         </Modal >
     );

@@ -136,9 +136,18 @@ const ChatBody = ({
 
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
-        date.setHours(date.getHours());
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Get date in format: 'Day, Mon DD'
+        const formattedDate = date.toLocaleDateString(undefined, { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        // Get time in format: 'HH:MM'
+        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Combine date and time
+        return `${formattedDate} ${formattedTime}`;
     };
+    
 
 
     const navigatePreviousResult = () => {

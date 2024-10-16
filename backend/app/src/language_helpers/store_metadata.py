@@ -11,7 +11,7 @@ metadata_collection = get_db("chat_metadata")
 
 def store_metadata(message_id, team_id, sender_id, timestamp, metadata):
     record: MessageMetadata = {
-        'message_id': message_id,
+        'message_id': ObjectId(message_id),
         'team_id': team_id,
         'sender_id': sender_id,
         'timestamp': timestamp,
