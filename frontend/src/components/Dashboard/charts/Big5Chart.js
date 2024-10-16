@@ -49,22 +49,22 @@ export const Big5Chart = ({ userFetcher, teamFetcher, onHoverIndexChanged }) => 
   const oldIndex = useRef();
 
   const options = {
-    onHover: (_, elements) => {
+    onClick: (event, elements) => {
       if (!elements || elements.length < 1) return;
       const index = elements[0].index;
       if (oldIndex.current !== index) {
         oldIndex.current = index;
-        if (onHoverIndexChanged) onHoverIndexChanged(index);
+        if (onHoverIndexChanged) onHoverIndexChanged(index); // Notify the parent about the index change
       }
     },
-
+  
     interaction: {
-      intersect: true,
+      intersect: false, // Allow hovering over the nearest element even if it's not directly intersecting
       mode: "nearest",
     },
-
+  
     animation: { duration: 500 },
-
+  
     responsive: true,
     maintainAspectRatio: true,
     scale: {
@@ -83,7 +83,7 @@ export const Big5Chart = ({ userFetcher, teamFetcher, onHoverIndexChanged }) => 
         },
       },
     },
-
+  
     plugins: {
       legend: {
         display: true, // Show legend for toggling datasets
@@ -108,7 +108,7 @@ export const Big5Chart = ({ userFetcher, teamFetcher, onHoverIndexChanged }) => 
       },
     },
     aspectRatio: 1,
-  };
+  };  
 
   // Display loading spinner if data is being fetched
   if (loadingUser || loadingTeam) {

@@ -58,24 +58,32 @@ def generate_OCEAN(text_array):
         open('/app/BigFiveModel/AGR_model.pkl', 'rb')).load()
     models['neuroticism'] = CustomUnpickler(
         open('/app/BigFiveModel/NEU_model.pkl', 'rb')).load()
+
+    predictions_sum = {
+        trait: {'prediction_s': 0, 'prediction_c_probability': 0} for trait in models.keys()
+    }
     
-    # analysis OCEAN
-    predictions = {}
-    trait_list = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism']
+    text_count = len(text_array)
 
-    for trait in trait_list:
-        pkl_model = models[trait]
+    for text in text_array:
+        text_transformed = [text]
+        trait_list = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism']
 
-        trait_scores = pkl_model.predict(text_array, regression=True).reshape(1, -1)
+        for trait in trait_list:
+            pkl_model = models[trait]
 
-        predictions[trait] = {}
+            trait_scores = pkl_model.predict(text_transformed, regression=True).reshape(1, -1)
+            predictions_sum[trait]['prediction_s'] += trait_scores.flatten()[0]
 
-        predictions[trait]['predicton_s'] = trait_scores.flatten()[0]
+            trait_categories_probs = pkl_model.predict_proba(text_transformed)
+            predictions_sum[trait]['prediction_c_probability'] += trait_categories_probs[:, 1][0]
 
-        trait_categories = pkl_model.predict(text_array, regression=False)
-        predictions[trait]['predicton_c'] = str(trait_categories[0])
-
-        trait_categories_probs = pkl_model.predict_proba(text_array)
-        predictions[trait]['predicton_c_probability'] = trait_categories_probs[:, 1][0]
-        
-    return predictions
+    predictions_avg = {
+        trait: {
+            'prediction_s': predictions_sum[trait]['prediction_s'] / text_count,
+            'prediction_c_probability': predictions_sum[trait]['prediction_c_probability'] / text_count,
+            'prediction_c': 'True' if (predictions_sum[trait]['prediction_c_probability'] / text_count) > 0.5 else 'False'
+        } for trait in models.keys()
+    }
+    
+    return predictions_avg

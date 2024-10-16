@@ -20,6 +20,7 @@ task_log_collection = db["scheduler_log"]
 chat_collection= db["chat"]
 kanban_collection= db["kanban"]
 archived_kanban_collection=db["archived_kanban"]
+kanban_comments_collection=db["kanban_comments"]
 
 # Initialize APScheduler
 scheduler = BackgroundScheduler()
@@ -139,16 +140,12 @@ def get_combined_chats_and_kanban(
     user_id: str
 ) -> Dict[str, List]:
     try:
-        # Convert ISO 8601 string to datetime object
-       #since_datetime = datetime.fromisoformat(since.replace("Z", "+00:00"))
-
         # Query for chat messages
         chat_query = {
             'senderId': user_id
         }
         messages_cursor = chat_collection.find(chat_query)
         messages = list(messages_cursor)  # Convert cursor to list
-
 
         # Extract message content into a list (chat)
         message_contents = [message['content'] for message in messages]
@@ -167,6 +164,7 @@ def get_combined_chats_and_kanban(
             for item in kanban_items
         ]
         kanban_count = len(kanban_items)
+
         # Query for archived kanban tasks (only title and description)
         archived_kanban_cursor = archived_kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
         archived_kanban_items = list(archived_kanban_cursor)
@@ -178,9 +176,21 @@ def get_combined_chats_and_kanban(
         ]
         archived_kanban_count = len(archived_kanban_items)
 
-        # Combine chat messages, kanban tasks, and archived kanban tasks
-        combined_contents = message_contents + kanban_contents + archived_kanban_contents
-        total_count = message_count + kanban_count + archived_kanban_count
+        # Query for kanban comments (content by user_id)
+        comments_query = {
+            'username': user_id
+        }
+        comments_cursor = kanban_comments_collection.find(comments_query, {'content': 1})
+        comments_items = list(comments_cursor)
+        print(comments_items)
+
+        # Extract content from kanban comments
+        comments_contents = [comment['content'] for comment in comments_items]
+        comments_count = len(comments_items)
+
+        # Combine chat messages, kanban tasks, archived kanban tasks, and comments
+        combined_contents = message_contents + kanban_contents + archived_kanban_contents + comments_contents
+        total_count = message_count + kanban_count + archived_kanban_count + comments_count
 
         return {
             "combined_contents": combined_contents,
@@ -188,6 +198,7 @@ def get_combined_chats_and_kanban(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 def daily_task():
     print("Running daily task")
@@ -244,9 +255,9 @@ def schedule_task(task_name: str, team_name: str, execution_time: datetime):
 def start_scheduler():
     # Schedule daily task at midnight
     print("scheduler started")
-    scheduler.add_job(daily_task, CronTrigger(hour=5, minute=20), id="daily_task")
-    # Schedule monthly task on the 15th of each month at midnight
-    scheduler.add_job(monthly_task, CronTrigger(day=28, hour=7, minute=20), id="monthly_task")
+    scheduler.add_job(daily_task, CronTrigger(hour=1, minute=15), id="daily_task")
+    # Schedule monthly task on the 15th of each month at midnight 
+    scheduler.add_job(monthly_task, CronTrigger(day=16, hour=3, minute=15), id="monthly_task")
     # Schedule weekly task every Monday at midnight
     #scheduler.add_job(weekly_task, CronTrigger(hour=2, minute=0, day_of_week="mon"))
     # Start the scheduler

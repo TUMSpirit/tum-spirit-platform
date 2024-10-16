@@ -248,19 +248,33 @@ def get_sentiment_data(current_user: User = Depends(get_current_user)):
 
 @router.get("/language/get-chat-metadata", tags=["language"])
 def get_dashboard_stats(current_user: Annotated[User, Depends(get_current_user)]):
-    # Fetch all messages for the user's team from the last 7 days
-    start_date = datetime.now() - timedelta(weeks=1)
-    end_date = datetime.now()
+    # Fetch data for the current week
+    current_start_date = datetime.now() - timedelta(weeks=1)
+    current_end_date = datetime.now()
 
-    filter_by = {
+    # Fetch data for the previous week
+    previous_start_date = datetime.now() - timedelta(weeks=2)
+    previous_end_date = datetime.now() - timedelta(weeks=1)
+
+    filter_by_current = {
         "team_id": ObjectId(current_user["team_id"]), 
         "timestamp": {
-            "$gte": start_date,
-            "$lte": end_date
+            "$gte": current_start_date,
+            "$lte": current_end_date
         }
     }
-    stats_data = metadata_collection.find(
-       filter_by,
+    
+    filter_by_previous = {
+        "team_id": ObjectId(current_user["team_id"]), 
+        "timestamp": {
+            "$gte": previous_start_date,
+            "$lte": previous_end_date
+        }
+    }
+
+    # Fetch current and previous data
+    current_data = metadata_collection.find(
+       filter_by_current,
         {
             "_id": 0,
             "metadata.sentiment": 1,
@@ -270,44 +284,85 @@ def get_dashboard_stats(current_user: Annotated[User, Depends(get_current_user)]
         }
     )
     
-    stats_data_list = list(stats_data)
-    print(stats_data_list)
-    # Initialize statistics
-    total_sentiment = 0
-    total_subjectivity = 0
-    total_reading_ease = 0
-    total_grammar_mistakes = 0
-    total_words = 0
-    message_count = 0
+    previous_data = metadata_collection.find(
+       filter_by_previous,
+        {
+            "_id": 0,
+            "metadata.sentiment": 1,
+            "metadata.flesh_reading_ease": 1,
+            "metadata.grammar.grammar_mistakes_count": 1,
+            "metadata.grammar.average_sentence_length": 1
+        }
+    )
 
-    # Calculate average statistics
-    for entry in stats_data_list:
-        metadata = entry["metadata"]
-        total_sentiment += metadata["sentiment"]["polarity"]
-        total_subjectivity += metadata["sentiment"]["subjectivity"]
-        total_reading_ease += metadata["flesh_reading_ease"]
-        total_grammar_mistakes += metadata["grammar"]["grammar_mistakes_count"]
-        total_words += metadata["grammar"]["average_sentence_length"]  # Sum total words
-        message_count += 1
+    # Process current and previous data
+    def calculate_average(data_list):
+        total_sentiment = 0
+        total_subjectivity = 0
+        total_reading_ease = 0
+        total_grammar_mistakes = 0
+        total_words = 0
+        message_count = 0
 
-    if message_count > 0:
-        avg_sentiment = total_sentiment / message_count
-        avg_subjectivity = total_subjectivity / message_count
-        avg_reading_ease = total_reading_ease / message_count
-        # Calculate grammar mistake percentage
-        grammar_mistake_percentage = (
-            (total_grammar_mistakes / total_words) * 100 if total_words > 0 else 0
-        )
-    else:
-        avg_sentiment = avg_subjectivity = avg_reading_ease = grammar_mistake_percentage = 0
+        for entry in data_list:
+            metadata = entry["metadata"]
+            total_sentiment += metadata["sentiment"]["polarity"]
+            total_subjectivity += metadata["sentiment"]["subjectivity"]
+            total_reading_ease += metadata["flesh_reading_ease"]
+            total_grammar_mistakes += metadata["grammar"]["grammar_mistakes_count"]
+            total_words += metadata["grammar"]["average_sentence_length"]
+            message_count += 1
+
+        if message_count > 0:
+            avg_sentiment = total_sentiment / message_count
+            avg_subjectivity = total_subjectivity / message_count
+            avg_reading_ease = total_reading_ease / message_count
+            grammar_mistake_percentage = (
+                (total_grammar_mistakes / total_words) * 100 if total_words > 0 else 0
+            )
+        else:
+            avg_sentiment = avg_subjectivity = avg_reading_ease = grammar_mistake_percentage = 0
+
+        return {
+            "sentiment": avg_sentiment,
+            "subjectivity": avg_subjectivity,
+            "grammar": grammar_mistake_percentage,
+            "precision": avg_reading_ease,
+        }
+
+    # Calculate averages for current and previous data
+    current_stats = calculate_average(list(current_data))
+    previous_stats = calculate_average(list(previous_data))
+
+    # Calculate percentage changes
+    def calculate_change(current, previous):
+        if previous == 0:
+            return 0 if current == 0 else 100  # Handle edge case of division by 0
+        return ((current - previous) / previous) * 100
+
+    sentiment_change = calculate_change(current_stats["sentiment"], previous_stats["sentiment"])
+    subjectivity_change = calculate_change(current_stats["subjectivity"], previous_stats["subjectivity"])
+    grammar_change = calculate_change(current_stats["grammar"], previous_stats["grammar"])
+    precision_change = calculate_change(current_stats["precision"], previous_stats["precision"])
 
     return {
-        "sentiment": avg_sentiment,
-        "subjectivity": avg_subjectivity,
-        "grammar": grammar_mistake_percentage,
-        "precision": avg_reading_ease,
+        "sentiment": {
+            "value": current_stats["sentiment"],
+            "change": sentiment_change,
+        },
+        "subjectivity": {
+            "value": current_stats["subjectivity"],
+            "change": subjectivity_change,
+        },
+        "grammar": {
+            "value": current_stats["grammar"],
+            "change": grammar_change,
+        },
+        "precision": {
+            "value": current_stats["precision"],
+            "change": precision_change,
+        }
     }
-
 
 
 @router.get("/language/get-emotions", tags=["language"])

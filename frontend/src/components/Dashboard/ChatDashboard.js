@@ -1,5 +1,4 @@
 import { DashboardCard } from "./layout/DashboardCard";
-
 import { StatCard } from "./layout/StatCard.js";
 import { ChatDisplay } from "./ChatDisplay.js";
 import { AddDisplay } from "./AddDisplay.js";
@@ -14,8 +13,6 @@ import { useEffect } from "react";
 import { MessagesPerDayHeatmap } from "./charts/MessagesPerDayHeatmap.js";
 import { useChatMetricsData } from "./model/useChatMetricsData.js";
 import { Spin } from "antd";
-
-
 
 export const ChatDashboard = () => {
     const { data, loading } = useChatMetricsData(); // Use the custom hook
@@ -43,83 +40,58 @@ export const ChatDashboard = () => {
         );
     }
 
-    /*if (error) {
-        return <div className="text-red-500">Failed to load data.</div>;
-    }*/
+    // Helper function to apply color depending on positive or negative change
+    const getChangeClass = (change) => {
+        if (change > 0) return "text-green-500";
+        if (change < 0) return "text-red-500";
+        return "";
+    };
 
     const stats = [
         {
             caption: "Sentiment",
-            value: data.sentiment != null ? data.sentiment.toFixed(2) : "N/A",
-            change: "+3.2%",
-            changeCls: "text-green-500",
+            value: data?.sentiment?.value != null ? data.sentiment.value.toFixed(2) : "N/A",
+            change: data?.sentiment?.change != null ? `${data.sentiment.change.toFixed(2)}%` : "N/A",
+            changeCls: getChangeClass(data?.sentiment?.change),
             helpContent: "Sentiment is a measure of the positivity in messages. Ranges from -1 to 1, where -1 indicates very negative sentiment, 0 is neutral, and 1 is very positive.",
         },
         {
             caption: "Subjectivity",
-            value: data.subjectivity != null ? data.subjectivity.toFixed(2) : "N/A",
-            change: "+9%",
-            changeCls: "text-red-500",
+            value: data?.subjectivity?.value != null ? data.subjectivity.value.toFixed(2) : "N/A",
+            change: data?.subjectivity?.change != null ? `${data.subjectivity.change.toFixed(2)}%` : "N/A",
+            changeCls: getChangeClass(data?.subjectivity?.change),
             helpContent: "Subjectivity indicates how personal or opinionated messages are. Ranges from 0 to 1, where 0 is very objective (factual) and 1 is highly subjective (personal or opinion-based).",
         },
         {
             caption: "Grammar",
-            value: data.subjectivity != null ? data.grammar.toFixed(2) : "N/A",
-            change: "-20%",
-            changeCls: "text-red-500",
-            helpContent: "Grammar measures the percentage of grammatical mistakes in a sentence. A lower value means better grammar, while a higher value suggests more errors; A value of 25% would indicate an Error in every 4th word.",
+            value: data?.grammar?.value != null ? data.grammar.value.toFixed(2) : "N/A",
+            change: data?.grammar?.change != null ? `${data.grammar.change.toFixed(2)}%` : "N/A",
+            changeCls: getChangeClass(data?.grammar?.change),
+            helpContent: "Grammar measures the percentage of grammatical mistakes in a sentence. A lower value means better grammar, while a higher value suggests more errors; A value of 25% would indicate an error in every 4th word.",
         },
         {
             caption: "Precision",
-            value: data.precision != null ? data.precision.toFixed(2) : "N/A",
-            change: "+10%",
-            changeCls: "text-green-500",
+            value: data?.precision?.value != null ? data.precision.value.toFixed(2) : "N/A",
+            change: data?.precision?.change != null ? `${data.precision.change.toFixed(2)}%` : "N/A",
+            changeCls: getChangeClass(data?.precision?.change),
             helpContent: "Precision measures the readability of messages based on the Flesch Reading Ease scale. Ranges from 0 to 100, where higher values (60-100) indicate easier readability, and lower values (0-30) suggest more complex or difficult-to-read text.",
         },
     ];
-    
-    /*
-        const stats = [
-            {
-                caption: "Sentiment",
-                value: "0.4",
-                change: "+3.2%",
-                changeCls: "text-green-500",
-                helpContent: "Plah Plah Plah",
-            },
-            {
-                caption: "Subjectivity",
-                value: "0.6",
-                change: "+9%",
-                changeCls: "text-red-500",
-                helpContent: "Plah Plah Plah",
-            },
-            {
-                caption: "Grammar",
-                value: "0.43",
-                change: "-20%",
-                changeCls: "text-red-500",
-                helpContent: "Plah Plah Plah",
-            },
-            {
-                caption: "Precision",
-                value: "0.7",
-                change: "10%",
-                changeCls: "text-blue-500",
-                helpContent: "Plah Plah Plah",
-            },
-        ];
-    */
 
     return (
-        <DashboardGraphsContext.Provider
-            value={{ extraGraphs, setExtraGraphs }}
-        >
+        <DashboardGraphsContext.Provider value={{ extraGraphs, setExtraGraphs }}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-2 auto-rows-min">
                     <ChatDisplay className="col-span-2" />
                     {stats.map((entry, index) => (
-                        <StatCard key={index} {...entry} />
+                        <StatCard
+                            key={index}
+                            caption={entry.caption}
+                            value={entry.value}
+                            change={entry.change}
+                            changeCls={entry.changeCls}
+                            helpContent={entry.helpContent}
+                        />
                     ))}
                 </div>
                 <DashboardCard
@@ -127,7 +99,7 @@ export const ChatDashboard = () => {
                     caption="Emotions Bar Chart"
                     helpContent="Distribution of emotions based on messages."
                 >
-               <EmotionBarChart />
+                    <EmotionBarChart />
                 </DashboardCard>
                 {extraGraphs.map((key) => {
                     if (key === "sentiment")
