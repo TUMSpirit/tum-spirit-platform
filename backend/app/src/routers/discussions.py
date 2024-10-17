@@ -148,7 +148,7 @@ def toggle_like(
 def get_discussions(project_id: str, current_user: User = Depends(get_current_user)):
     try:
         query={"project_id": ObjectId(project_id)}
-        discussions = discussion_collection.find()
+        discussions = discussion_collection.find(query)
 
         # Serialize discussions and return them with the correct model
         return [DiscussionModel(**discussion, id=str(discussion["_id"])) for discussion in discussions]
