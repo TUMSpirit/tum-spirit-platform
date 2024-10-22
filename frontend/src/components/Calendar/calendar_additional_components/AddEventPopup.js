@@ -16,7 +16,7 @@ import {
     Space,
     Image,
     Switch,
-    Radio, TimePicker, Tooltip
+    Radio, TimePicker, Tooltip, Card, Badge
 } from "antd";
 import './AddEventPopup.css';
 import dayjs from "dayjs";
@@ -32,8 +32,10 @@ import {
     useCreateEntries, useDeleteEntries, useDeleteFile, useUpdateEntries, useUploadFile
 } from "../requests/requestFunc";
 import TextArea from "antd/es/input/TextArea";
+import RoomCard from './RoomCard';
 import axios from 'axios';
 import { useAuthHeader } from 'react-auth-kit';
+import RoomList from './RoomCard';
 
 //import {useDeleteEntries, useUpdateEntries} from "../requests/requestFunc";
 
@@ -77,6 +79,11 @@ const AddEventPopup = ({
     const formRef = useRef(null);
     const [isMensaModalVisible, setIsMensaModalVisible] = useState(false);
     const authHeader = useAuthHeader();
+    const [rooms, setRooms] = useState([]);
+    const [loadingRooms, setLoadingRooms] = useState(false);
+    const [selectedRoom, setSelectedRoom] = useState(isUpdateEventOpen? event.room:null); // To store the selected room details
+    const [isModalVisible, setIsModalVisible] = useState(false); // State for modal visibility
+
 
     const getInitialFormValues = () => {
         return {
@@ -146,14 +153,14 @@ const AddEventPopup = ({
         try {
             // Format the event start date and time using moment.js
             const formattedDate = moment(eventData.start).format('MMM D, h:mm a');
-            
+
             // Construct the message with formatted date and event title
             const notificationPayload = {
                 username: currentUser.name,
                 message: `${eventData.title} on ${formattedDate}`,  // Better notification message
                 participant_ids: eventData.users  // Pass participant IDs
             };
-    
+
             // Send the notification via your FastAPI endpoint
             await axios.post('/api/calendar-notification', notificationPayload, {
                 headers: {
@@ -166,6 +173,7 @@ const AddEventPopup = ({
     }
 
     const onSubmit = async (fieldsValue) => {
+        formData.room = selectedRoom ? selectedRoom : formData.room;
         const newEvent = fillNewEvent(fieldsValue); // Get rid of id
         if (newEvent.start > newEvent.end) {
             message.error('End Date must be greater than Start Date');
@@ -185,18 +193,67 @@ const AddEventPopup = ({
                     uploadFile({ files: fieldsValue['files'], eventID: createdEvent._id });
                 }
             }
-    
+
             // Send calendar notification
             if (createdEvent) {
                 await sendCalendarNotification(createdEvent);
             }
-    
+
             form.resetFields();
             setIsCreateEventOpen(false);
             setIsUpdateEventOpen(false);
         }
     };
-    
+
+
+
+
+
+    const fetchRooms = async () => {
+        setLoadingRooms(true);
+        try {
+            const response = await axios.get('https://iris.asta.tum.de/api/');
+            const data = response.data;
+
+            // Find the "Garching-Hochbrück (EG)" group
+            const garchingGroup = data.gruppen.find(gruppe => gruppe.name === 'StudiTUM Garching');
+
+            if (garchingGroup) {
+                // Get the room numbers for this group
+                const garchingRoomNumbers = garchingGroup.raeume;
+
+                // Filter the rooms for this group based on the room numbers
+                const garchingRooms = data.raeume.filter(garchingRoom => garchingRoomNumbers.includes(garchingRoom.raum_nr));
+
+                setRooms(garchingRooms);
+            } else {
+                message.error('Garching-Hochbrück (EG) group not found.');
+            }
+        } catch (error) {
+            message.error('Failed to fetch room data.');
+        } finally {
+            setLoadingRooms(false);
+        }
+    };
+
+    useEffect(() => {
+       // setSelectedRoom(formData.room);
+        fetchRooms();
+    }, []);
+
+
+    const onRoomSelect = (roomId) => {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            room: roomId.toString(),
+        }));
+        const roomInput = document.getElementById('roomNumberInput');  // Use the input field's ID
+        if (roomInput) {
+            roomInput.value = roomId;  // Set the value directly to the input field
+        }
+        setSelectedRoom(roomId);
+        setIsModalVisible(false); // Close the modal when a room is selected
+    };
 
     const onCancel = () => {
         form.resetFields()
@@ -299,6 +356,11 @@ const AddEventPopup = ({
         },
     };
 
+    const toggleModal = () => {
+        setIsModalVisible(!isModalVisible);
+    };
+
+
 
     const onClickRemoteLink = () => {
         console.log('open meeting');
@@ -327,10 +389,11 @@ const AddEventPopup = ({
             // Handle response data as needed
             console.log(response.data);
             if (response.data.sections[0].entries.length) {
-                setFormData((prevFormData) => ({
-                    ...prevFormData,
-                    room: response.data.sections[0].entries[0].id,
-                }));
+                setSelectedRoom(response.data.sections[0].entries[0].id)
+                /* setFormData((prevFormData) => ({
+                     ...prevFormData,
+                     room: response.data.sections[0].entries[0].id,
+                 }));*/
             } else {
                 setFormData((prevFormData) => ({
                     ...prevFormData,
@@ -458,7 +521,7 @@ const AddEventPopup = ({
 
                                 <Col style={{ marginLeft: '30%' }}>
                                     <Tooltip title={'Can\'t decide remote/online?'}>
-                                        <Button style={{ position: 'absolute', width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex' }} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />} />
+                                        <Button style={{ position: 'absolute', right:'1px', width: '30px', height: '30px', justifyContent: 'center', alignItems: 'center', padding: '0', display: 'flex' }} data-testid='deleteEventButton' shape={'circle'} onClick={() => setIsLocationHelpOpen(true)} icon={<QuestionOutlined />} />
                                     </Tooltip>
 
                                     <Modal title={'Location'} open={isLocationHelpOpen} footer={<Button type='primary' onClick={() => { setIsLocationHelpOpen(false) }}>ok</Button>}>
@@ -471,12 +534,31 @@ const AddEventPopup = ({
                             {formData.isOnSite && <Row className={'row-navigate'} >
                                 <Form.Item label={'Room'} name={'room'}>
                                     <Space.Compact style={{ width: '100%' }}>
-                                        <Input data-testid='roomNumberInput' defaultValue={formData.room} placeholder="Room ID" onChange={onRoomChange}
+                                        <Input id='roomNumberInput' data-testid='roomNumberInput' value={formData.room} placeholder="Room ID" onChange={onRoomChange}
                                         />
+                                        <Button onClick={toggleModal}>
+                                            Find Rooms
+                                        </Button>
                                     </Space.Compact>
                                 </Form.Item>
-                                <Image width={400} src={`https://nav.tum.de/api/locations/${formData.room}/preview`}
-                                    fallback={fallbackImgRoomfinder} />
+                                <div style={{ width: '100%', height: '300px', overflow: 'hidden', position: 'relative' }}>
+                                    <iframe
+                                        src={selectedRoom?`https://nav.tum.de/room/${selectedRoom}/`:''}
+                                        title="Room Map"
+                                        style={{
+                                            width: '100%',
+                                            height: '500px',  // Larger height to scroll into view
+                                            position: 'absolute',
+                                            top: '-150px',  // Moves the iframe content upwards to hide the top part
+                                            left: '0',
+                                            border: 'none'
+                                        }}
+                                    />
+                                </div>
+
+
+
+
                             </Row>}
 
                             {!formData.isOnSite && <Row>
@@ -542,6 +624,15 @@ const AddEventPopup = ({
                     height="100%"
                     title="Mensa Meal Plan"
                 />
+            </Modal>
+            <Modal
+                title="Group Work Rooms"
+                open={isModalVisible}
+                onCancel={toggleModal}
+                footer={null}
+                width={600}
+            >
+                {loadingRooms ? <p>Loading rooms...</p> : <RoomList rooms={rooms} onRoomSelect={onRoomSelect} selectedRoom={selectedRoom} setSelectedRoom={setSelectedRoom}/>}
             </Modal>
         </Modal>);
 
