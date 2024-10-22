@@ -19,19 +19,19 @@ import Calendar from "./pages/Calendar";
 import axios from 'axios';
 import TypewriterDialog from "./pages/Intro.js";
 
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL;
+axios.defaults.baseURL = "http://localhost:8000";
 
 export function useRemoveTrailingSlash() {
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { pathname } = location;
+	const { pathname } = location;
 
-    // Check if the path ends with a slash and is not the root path "/"
-    if (pathname !== '/' && pathname.endsWith('/')) {
-      navigate(pathname.slice(0, -1), { replace: true });
-    }
+	// Check if the path ends with a slash and is not the root path "/"
+	if (pathname !== '/' && pathname.endsWith('/')) {
+  	navigate(pathname.slice(0, -1), { replace: true });
+	}
   }, [location, navigate]);
 }
 
@@ -45,50 +45,50 @@ function AuthRedirect({ children }) {
 function App() {
   //useRemoveTrailingSlash();
   return (
-    <AuthProvider
-      authType={'cookie'}
-      authName={'_auth'}
-      cookieDomain={window.location.hostname}
-      cookieSecure={true}
-    >
-      <UnreadMessageProvider>
-        <SocketProvider>
-            <Routes>
-              <Route path="/intro" element={<TypewriterDialog />} />
-              <Route
-                path="*"
-                element={
-                  <RequireAuth loginPath="/login">
-                    <Main>
-                      <Routes>
-                        <Route path="/calendar" element={<Calendar />} />
-                        <Route path="/chat" element={<Chat />} />
-                        <Route path="/kanban" element={<Kanban />} />
-                        <Route path="/team" element={<Team />} />
-                        <Route path="/documents" element={<Documents />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/" element={<Home />} />
-                        <Route
-                          path="*"
-                          element={<Navigate to="/" replace />}
-                        />
-                      </Routes>
-                    </Main>
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path="/login"
-                element={
-                  <AuthRedirect>
-                    <Login />
-                  </AuthRedirect>
-                }
-              />
-            </Routes>
-        </SocketProvider>
-      </UnreadMessageProvider>
-    </AuthProvider >
+	<AuthProvider
+  	authType={'cookie'}
+  	authName={'_auth'}
+  	cookieDomain={window.location.hostname}
+  	cookieSecure={true}
+	>
+  	<UnreadMessageProvider>
+    	<SocketProvider>
+        	<Routes>
+          	<Route path="/intro" element={<TypewriterDialog />} />
+          	<Route
+            	path="*"
+            	element={
+              	<RequireAuth loginPath="/login">
+                	<Main>
+                  	<Routes>
+                    	<Route path="/calendar" element={<Calendar />} />
+                    	<Route path="/chat" element={<Chat />} />
+                    	<Route path="/kanban" element={<Kanban />} />
+                    	<Route path="/team" element={<Team />} />
+                    	<Route path="/documents" element={<Documents />} />
+                    	<Route path="/dashboard" element={<Dashboard />} />
+                    	<Route path="/" element={<Home />} />
+                    	<Route
+                      	path="*"
+                      	element={<Navigate to="/" replace />}
+                    	/>
+                  	</Routes>
+                	</Main>
+              	</RequireAuth>
+            	}
+          	/>
+          	<Route
+            	path="/login"
+            	element={
+              	<AuthRedirect>
+                	<Login />
+              	</AuthRedirect>
+            	}
+          	/>
+        	</Routes>
+    	</SocketProvider>
+  	</UnreadMessageProvider>
+	</AuthProvider >
   );
 }
 
