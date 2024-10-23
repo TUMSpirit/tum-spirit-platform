@@ -434,7 +434,7 @@ const AddEventPopup = ({
                             </Form.Item>
 
                             <Form.Item label={' '} name="color" style={{ marginLeft: '2px' }}>
-                                <ColorPicker size={'large'} disabledAlpha onChange={(color) => {
+                                <ColorPicker size={'medium'} disabledAlpha onChange={(color) => {
                                     setFormData((prevFormData) => ({
                                         ...prevFormData, color: color.toHexString()
                                     }))
@@ -447,28 +447,28 @@ const AddEventPopup = ({
                             </Form.Item>
                         </Row>
 
-                        <Row gutter={[16, 16]}>
+                        <Row gutter={[4, 4]}>
                             <Col>
                                 <Form.Item label={"Start"} name="datepickerStart">
                                     <DatePicker format="DD.MM.YYYY" placeholder={"start date"}></DatePicker>
                                 </Form.Item>
                             </Col>
 
-                            <Col>
+                            <Col xs={8}>
                                 <Form.Item label={' '} name="timepickerStart">
                                     <TimePicker format="HH:mm" placeholder={"start time"} needConfirm={false}></TimePicker>
                                 </Form.Item>
                             </Col>
                         </Row>
 
-                        <Row gutter={[16, 16]}>
+                        <Row gutter={[4, 4]}>
                             <Col>
                                 <Form.Item label={"End"} name="datepickerEnd">
                                     <DatePicker format="DD.MM.YYYY" placeholder={"end date"}></DatePicker>
                                 </Form.Item>
                             </Col>
 
-                            <Col>
+                            <Col xs={8}>
                                 <Form.Item label={' '} name="timepickerEnd">
                                     <TimePicker format="HH:mm" placeholder={"end time"} needConfirm={false}></TimePicker>
                                 </Form.Item>
