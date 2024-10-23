@@ -61,7 +61,7 @@ const CustomToolbar = ({
 
                 <div>
                     {!isMobile && <Radio.Group buttonStyle={"solid"} options={views} optionType={"button"} onChange={onChangeView} value={view}></Radio.Group>}
-                    {isMobile && <Button type={'primary'}  onClick={() => setOpenExpandModal(true)}><CalendarOutlined /></Button>}
+                    {isMobile && <Button type={'primary'} style={{padding: "4px 10px"}} onClick={() => setOpenExpandModal(true)}><CalendarOutlined /></Button>}
                 </div>
                 <div>
                     <Button data-testid='navigate-left' icon={<LeftOutlined />} onClick={() => onNavigate(navigate.PREVIOUS)} type={"text"}></Button>
@@ -71,7 +71,7 @@ const CustomToolbar = ({
                 <div>
                     {/*!isMobile && <Button type={"primary"} style={{marginRight: "10px"}} onClick={() => {setIsTimelineOpen(!isTimelineOpen)}} icon={<UnorderedListOutlined />}></Button>*/}
                     {!isMobile && <Button data-testid='openImportButton' type={"primary"} onClick={onOpenUploadImportPopup} style={{marginRight: "10px"}} icon={<UploadOutlined />}></Button>}
-                    <Button data-testid='addEventButton'  type={"primary"} onClick={onOpenAddEvent}>{isMobile?<PlusOutlined/>:'+ add Event'}</Button>
+                    <Button data-testid='addEventButton' type={"primary"} style={isMobile ? { padding: "4px 10px" } : { padding: "4px 15px" }} onClick={onOpenAddEvent}>{isMobile?<PlusOutlined/>:'+ add Event'}</Button>
                 </div>
             </div>
             <Modal title={'View'} open={openExpandModal} footer={null} onCancel={() => setOpenExpandModal(false)} closable={true}>
