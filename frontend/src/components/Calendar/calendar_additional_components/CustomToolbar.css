@@ -11,7 +11,7 @@ body{
     display: flex;
     justify-content: space-between;
     margin-bottom: 20px;
-    padding: 20px;
+    padding: 10px;
 }
 
 .toolbarWrapper svg{
