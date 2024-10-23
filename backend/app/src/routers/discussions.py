@@ -73,6 +73,18 @@ class DiscussionBase(BaseModel):
         
 # Model for the Reply
 class Reply(BaseModel):
+    reply_id: PyObjectId
+    author: str
+    content: str
+    createdAt: datetime
+    avatar_color: str
+
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
+
+class ReplyCreate(BaseModel):
     author: str
     content: str
     createdAt: datetime
@@ -179,6 +191,16 @@ def create_discussion(
 
         # Insert the discussion into MongoDB
         result = discussion_collection.insert_one(record)
+        
+        # Add notification
+        notification = {
+            'team_id': current_user["team_id"],
+            'title': "Discussion",
+            'description': f"{current_user['username']} created a discussion.",
+            'type': "kanban_added",
+            'timestamp': datetime.now()
+        }
+        add_notification(notification)
 
         # Add the inserted ID to the record
         record["_id"] = result.inserted_id
@@ -187,6 +209,29 @@ def create_discussion(
         response_data = convert_objectid_to_str(record)
 
         return response_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Route to delete a specific reply
+@router.delete("/discussions/{discussion_id}/reply/{reply_id}/delete", response_model=dict, tags=["discussions"])
+def delete_reply(discussion_id: str, reply_id: str, current_user: Annotated[User, Depends(get_current_user)]):
+    try:
+        # Check if the discussion exists
+        discussion = discussion_collection.find_one({"_id": ObjectId(discussion_id)})
+        if not discussion:
+            raise HTTPException(status_code=404, detail="Discussion not found")
+        
+        # Find the reply and remove it
+        result = discussion_collection.update_one(
+            {"_id": ObjectId(discussion_id)},
+            {"$pull": {"replies": {"reply_id": ObjectId(reply_id)}}}  # Remove the reply by ID
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Reply not found")
+
+        return {"message": "Reply deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -219,17 +264,20 @@ def delete_discussion(discussion_id: str, current_user: Annotated[User, Depends(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Add a reply to a specific discussion
 @router.post("/discussions/{discussion_id}/reply")
-async def add_reply(discussion_id: str, reply: Reply):
+async def add_reply(discussion_id: str, reply: ReplyCreate):
+    # Create a new reply and assign it an ObjectId
     new_reply = reply.model_dump()
-    
+    new_reply["reply_id"] = ObjectId()  # Add an ObjectId for the reply
+
+    # Update the discussion by pushing the new reply to the replies array
     result = discussion_collection.update_one(
         {"_id": ObjectId(discussion_id)},
         {"$push": {"replies": new_reply}}
     )
-    
+
+    # Check if the discussion was found and updated
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Discussion not found")
-    return {"message": "Reply added successfully"}
+    
+    return {"message": "Reply added successfully", "reply_id": str(new_reply["reply_id"])}

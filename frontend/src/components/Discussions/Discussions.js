@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Menu, Row, Col, message, Button, Input, Modal, Select, Avatar, Badge } from 'antd';
 import { Comment } from '@ant-design/compatible';
-import { LikeOutlined, LikeFilled } from '@ant-design/icons';
+import { LikeOutlined, LikeFilled, DeleteOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -58,13 +58,11 @@ const DiscussionForum = ({ projectId }) => {
 
       const { likes: updatedLikes } = response.data;
 
-      // Update selectedDiscussion with the new likes count
       setSelectedDiscussion((prev) => ({
         ...prev,
         likes: updatedLikes,
       }));
 
-      // Also update the discussion in the list
       setDiscussions((prevDiscussions) =>
         prevDiscussions.map((d) =>
           d._id === discussion._id ? { ...d, likes: updatedLikes } : d
@@ -82,29 +80,38 @@ const DiscussionForum = ({ projectId }) => {
 
   const handleReplySubmit = async () => {
     if (!replyContent) return;
-
+  
     const newReply = {
       author: currentUser.username,
       content: replyContent,
       createdAt: moment().toISOString(),
       avatar_color: currentUser.avatar_color || '#25160',
     };
-
+  
     try {
-      await axios.post(`/api/discussions/${selectedDiscussion._id}/reply`, newReply, {
+      // Send the reply to the server and get the generated reply_id
+      const response = await axios.post(`/api/discussions/${selectedDiscussion._id}/reply`, newReply, {
         headers: { Authorization: authHeader() },
       });
-
-      // Update replies list and reset reply content
+  
+      const { reply_id } = response.data;  // Get the new reply_id from the server
+  
+      // Update the reply with the correct reply_id from the server
+      const replyWithId = { ...newReply, reply_id };  // Assign the reply_id
+  
+      // Update the state with the new reply that has the correct reply_id
       setSelectedDiscussion((prev) => ({
         ...prev,
-        replies: [newReply, ...prev.replies], // Prepend new reply to the list
+        replies: [replyWithId, ...prev.replies],
       }));
-      setReplyContent('');
+  
+      setReplyContent('');  // Clear the input
+      message.success('Reply posted successfully');
     } catch (error) {
       message.error('Failed to post the reply.');
     }
   };
+  
 
   const onSelectDiscussion = (discussion) => {
     setSelectedDiscussion(discussion);
@@ -143,19 +150,74 @@ const DiscussionForum = ({ projectId }) => {
     setIsModalVisible(false);
   };
 
-  // Function to recursively render nested comments
+  const handleDeleteDiscussion = (discussionId) => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this discussion?',
+      content: 'Once deleted, this action cannot be undone.',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await axios.delete(`/api/discussions/${discussionId}/delete`, {
+            headers: { Authorization: authHeader() },
+          });
+
+          message.success('Discussion deleted successfully');
+          fetchDiscussions();  // Refresh discussions
+          setSelectedDiscussion(null);  // Reset selected discussion
+        } catch (error) {
+          message.error('Failed to delete the discussion');
+        }
+      },
+      onCancel() {
+        message.info('Deletion cancelled');
+      },
+    });
+  };
+
+  const handleDeleteReply = async (replyId, discussionId) => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this reply?',
+      content: 'This action cannot be undone.',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await axios.delete(`/api/discussions/${discussionId}/reply/${replyId}/delete`, {
+            headers: { Authorization: authHeader() },
+          });
+  
+          // Update state to remove the deleted reply
+          setSelectedDiscussion((prev) => ({
+            ...prev,
+            replies: prev.replies.filter((reply) => reply.reply_id !== replyId),
+          }));
+  
+          message.success('Reply deleted successfully');
+        } catch (error) {
+          message.error('Failed to delete the reply');
+        }
+      },
+    });
+  };  
+
   const renderNestedComments = (replies) =>
     replies.map((reply) => (
       <Comment
         key={reply.createdAt}
         author={<span>{reply.author}</span>}
-        avatar={
-          <Avatar style={{ backgroundColor: reply.avatar_color || '#25160' }}>
-            {reply.author[0]}
-          </Avatar>
-        }
+        avatar={<Avatar style={{ backgroundColor: reply.avatar_color || '#25160' }}>{reply.author[0]}</Avatar>}
         content={<p>{reply.content}</p>}
         datetime={<span>{moment.utc(reply.createdAt).fromNow()}</span>}
+        actions={[
+          reply.author === currentUser.username && (
+            <Button danger size="small" onClick={() => handleDeleteReply(reply.reply_id, selectedDiscussion._id)}>
+              Delete
+            </Button>
+          ),
+        ]}
         children={reply.replies && reply.replies.length > 0 ? renderNestedComments(reply.replies) : null}
       />
     ));
@@ -168,7 +230,7 @@ const DiscussionForum = ({ projectId }) => {
 
       <Modal
         title="Create New Discussion"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         okText="Post"
@@ -205,7 +267,6 @@ const DiscussionForum = ({ projectId }) => {
         <Col xs={24} md={8}>
           <Menu mode="inline" style={{ height: '100%' }}>
             {categories.map((category, index) => {
-              // Calculate the number of discussions in the current category
               const categoryDiscussionCount = discussions.filter(
                 (discussion) => discussion.category === category).length;
               return (
@@ -230,7 +291,7 @@ const DiscussionForum = ({ projectId }) => {
                               {discussion.author} - {moment.utc(discussion.createdAt).fromNow()}
                             </div>
                           </div>
-                          <div style={{ fontSize: '12px', color: 'blue', margin: '5px' }}>
+                          <div style={{ fontSize: '12px', color: 'blue', margin: '10px' }}>
                             <Badge color={"blue"} count={discussion.likes} showZero>
                               <LikeOutlined />
                             </Badge>
@@ -246,31 +307,33 @@ const DiscussionForum = ({ projectId }) => {
         <Col xs={24} md={16}>
           {selectedDiscussion ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card>
+              <Card style={{ position: 'relative' }}>  {/* Card positioning */}
                 <h1 style={{ textAlign: 'center', marginBottom: '16px' }}>
                   {selectedDiscussion.title}
                 </h1>
+
+                {selectedDiscussion.author === currentUser.username && (
+                  <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+                    <Button
+            
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleDeleteDiscussion(selectedDiscussion._id)} // Pass comment id
+                      danger
+                    />
+                  </div>
+                )}
+
                 <Comment
-                  author={
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{selectedDiscussion.author}</span>
-                    </div>
-                  }
-                  avatar={
-                    <Avatar style={{ backgroundColor: selectedDiscussion.avatar_color || '#25160' }}>
-                      {selectedDiscussion.author[0]}
-                    </Avatar>
-                  }
+                  author={<span>{selectedDiscussion.author}</span>}
+                  avatar={<Avatar style={{ backgroundColor: selectedDiscussion.avatar_color || '#25160' }}>{selectedDiscussion.author[0]}</Avatar>}
                   content={<p>{selectedDiscussion.content}</p>}
                   actions={[
                     <span onClick={() => handleLikeToggle(selectedDiscussion)}>
                       {likes[selectedDiscussion._id] ? <LikeFilled /> : <LikeOutlined />} {selectedDiscussion.likes}
                     </span>,
                   ]}
-                  datetime={
-
-                    <small>{moment.utc(selectedDiscussion.createdAt).fromNow()}</small>
-                  }
+                  datetime={<small>{moment.utc(selectedDiscussion.createdAt).fromNow()}</small>}
                 />
                 <h2>Replies ({selectedDiscussion.replies.length})</h2>
                 <div style={{ height: '250px', overflowY: 'scroll', marginTop: '20px' }}>
