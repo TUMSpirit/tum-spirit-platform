@@ -22,12 +22,40 @@ const Chatbot = ({ opened, setOpened }) => {
   //loading state for the bot
   const [loading, setLoading] = useState(false);
 
+  const [thread, setThread] = useState("");
+
+// Define the function to get a thread
+const getThread = async () => {
+    console.log("Getting thread...");
+    try {
+        const response = await axios.post(
+            "http://localhost:8000/api/ai/generate_gpt_thread",  // Assuming this endpoint creates a thread
+            {}, // Empty data object as no parameters are required
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        console.log("Thread Data:", response.data);
+        setThread(response.data);; // Assign the response directly to thread
+    } catch (error) {
+        console.error("Failed to get thread", error);
+    }
+};
+  
   // Function to send the message
   const sendMessage = async () => {
     // Set loading to true
     setLoading(true);
+
+    if (!thread) {
+        await getThread();
+    }
   
     if (inputValue.trim()) {
+      let oldInput = inputValue;
+
       // Add user message to the chat
       setMessages([...messages, { role: "user", content: inputValue }]);
       // Clear the input
@@ -35,16 +63,15 @@ const Chatbot = ({ opened, setOpened }) => {
   
       try {
         // Post request to the backend to get the bot response using axios
-        const response = await axios.post(
-          "/api/ai/generate_gpt",{
-            messages: [...messages, { role: "user", content: inputValue }],
-          },
-          {
+        // Build the URL with query parameters for inputValue and threadId
+        const url = `/api/ai/generate_gpt?inputValue=${encodeURIComponent(oldInput)}&threadId=${encodeURIComponent(thread)}`;
+
+        // Send the request without a JSON body
+        const response = await axios.post(url, null, {
             headers: {
-              "Content-Type": "application/json",
+                "Content-Type": "application/json",
             },
-          }
-        );
+        });
   
         // Set loading to false
         setLoading(false);
@@ -52,7 +79,7 @@ const Chatbot = ({ opened, setOpened }) => {
         // Add bot response to the chat
         setMessages((prevMessages) => [
           ...prevMessages,
-          { content: response.data.choices[0].message.content, role: "assistant" },
+          { content: response.data, role: "assistant" },
         ]);
       } catch (error) {
         // Handle error
@@ -73,6 +100,7 @@ const Chatbot = ({ opened, setOpened }) => {
   };
 
   useEffect(() => {
+    getThread()
     // Generate and set a unique session ID when the component mounts
     const newSessionId = uuidv4();
     setSessionId(newSessionId);

@@ -10,6 +10,9 @@ from dotenv import load_dotenv
 import os
 from app.config import MONGO_DB,MONGO_URI, OPENAI_API_KEY
 from pymongo import MongoClient
+from app.src.avatar.translate_functions import extract_avatar_function_strings, extract_avatar_functions
+import json
+from openai.types.beta import Thread
 
 # Define a BaseModel for representing a single message
 
@@ -43,6 +46,9 @@ client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chatbot_analytics']
 
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 # Endpoint to generate AI responses using OpenAI
 
 
@@ -68,24 +74,104 @@ async def generate(messages: MessageList):
     return response
 
 
+@router.post("/ai/generate_gpt_thread", tags=["ai"])
+async def generate():
+    print("thread generated")
+    return client.beta.threads.create().id
+    
+
 # Endpoint to generate AI responses using OpenAI
 @router.post("/ai/generate_gpt", tags=["ai"])
-async def generate(messages: MessageList):
+async def generate(inputValue: str, threadId: str):
+    print("start")
+    print(f"input Value: {inputValue}")
     try:
-        # Initialize OpenAI client
-        client = OpenAI(api_key=OPENAI_API_KEY)
 
-        # Prepare the messages for the chat model
-        chat_messages = [{"role": msg.role, "content": msg.content} for msg in messages.messages]
+        function_strings = extract_avatar_function_strings()
 
-        # Send the request to the chat/completions endpoint
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",  # You can change the model as needed (gpt-4 is also available)
-            messages=chat_messages
+        # Retrieve function mappings
+        functions = extract_avatar_functions()
+
+        # Cap the number of function calls to 10
+        max_function_calls = 1
+
+        instructions=("You are Delphi, an assistant in the project management software Spirit. Spirit should always be witty, "
+              "intelligent, and funny")
+        
+        assistant = client.beta.assistants.create(
+            instructions=instructions,
+            model="gpt-4o-mini",
+            tools=function_strings
         )
 
-        # Extract and return the generated response using dot notation
-        return response
+        message = client.beta.threads.messages.create(
+            thread_id=threadId,
+            role="user",
+            content=inputValue,
+        )
+
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=threadId,
+            assistant_id=assistant.id,
+        )
+
+        num_req = 10
+
+        while run.status != 'completed' and num_req > 0:
+            num_req -= 1
+            if run.status == 'cancelled' or run.status == 'failed' or run.status == 'expired':
+                return f"request: {run.status}"
+            elif run.status == 'requires_action':
+                # Define the list to store tool outputs
+                tool_outputs = []
+
+                # Loop through each tool in the required action section
+                for tool in run.required_action.submit_tool_outputs.tool_calls:
+                    function_name = tool.function.name
+                    print(f"{function_name} called")
+                    try:
+                        function_args = json.loads(tool.function.arguments)
+                        function_args['db'] = db
+
+                        # Retrieve and call the function
+                        if function_name in functions:
+                            function_to_call = functions[function_name]
+                            function_result = function_to_call(**function_args)
+                        else:
+                            function_result = "error: " + f"Function '{function_name}' not found"
+                            print(f"Function '{function_name}' not found")
+                    
+                    except Exception as e:
+                        function_result = "error: " + str(e)
+                        print(f"error: {str(e)}")
+
+                    tool_outputs.append({
+                        "tool_call_id": tool.id,
+                        "output": function_result
+                    })
+                    print(function_result)
+
+                # Submit all tool outputs at once after collecting them in a list
+                if tool_outputs:
+                    try:
+                        run = client.beta.threads.runs.submit_tool_outputs_and_poll(
+                            thread_id=threadId,
+                            run_id=run.id,
+                            tool_outputs=tool_outputs
+                        )
+                        print("Tool outputs submitted successfully.")
+                    except Exception as e:
+                        return "Failed to submit tool outputs:" + str(e)
+
+                else:
+                    print("No tool outputs to submit.")
+        messages = client.beta.threads.messages.list(
+            thread_id=threadId
+        )
+
+        print(f"returned: {messages._get_page_items()[0].content[0].text.value}")
+            
+        return messages._get_page_items()[0].content[0].text.value
     
     except Exception as e:
         print(e)

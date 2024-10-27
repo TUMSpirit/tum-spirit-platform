@@ -60,7 +60,6 @@ class ProjectCreate(BaseModel):
 # Create a new project
 @router.post("/create-project", response_model=ProjectCreate, tags=["projects"])
 def create_project(project: ProjectCreate, current_user: Annotated[User, Depends(is_admin)]):
-    print("test")
     project_data = project.model_dump()
     project_data['created_at'] = datetime.now()
     result =  project_collection.insert_one(project_data)
