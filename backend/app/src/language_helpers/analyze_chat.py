@@ -48,7 +48,7 @@ def analyze_chat_prod(message):
 
 
 
-def analyze_big5(user_id:str, team_id:str, chat_string: List[str]):
+def analyze_big5(user_id:str, team_id:str, chat_string: List[str], message_count: int):
     try:
         # Check if the chat_string array is empty
         if not chat_string:
@@ -59,7 +59,7 @@ def analyze_big5(user_id:str, team_id:str, chat_string: List[str]):
             big5_result = generate_OCEAN(chat_string)
         
         # Store the result
-        store_OCEAN(user_id, team_id, big5_result)
+        store_OCEAN(user_id, team_id, big5_result, message_count)
     
     except Exception as e:
         # Handle exceptions if necessary
@@ -69,4 +69,3 @@ def analyze_big5(user_id:str, team_id:str, chat_string: List[str]):
 def analyze_chat_demo(input):
     metadata = generate_metadata(input)
     return metadata
-

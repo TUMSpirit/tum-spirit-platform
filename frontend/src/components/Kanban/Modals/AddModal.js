@@ -6,6 +6,15 @@ import { DeleteOutlined, FolderAddOutlined, EditOutlined, SaveOutlined, CloseOut
 import axios from "axios";
 import { useAuthHeader } from "react-auth-kit";
 import moment from "moment";
+import EditorJS from '@editorjs/editorjs';
+import ListEditor from '@editorjs/list';
+import Checklist from '@editorjs/checklist';
+import InlineCode from '@editorjs/inline-code';
+import Marker from '@editorjs/marker';
+import Table from '@editorjs/table';
+import Embed from '@editorjs/embed';
+
+import Code from '@editorjs/code';
 
 
 const { Option } = Select;
@@ -26,7 +35,7 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
         title: isUpdateEventOpen ? initValues.title : "",
         column: isUpdateEventOpen ? initValues.column : "",
         description: isUpdateEventOpen ? initValues.description : "",
-        priority: isUpdateEventOpen ? initValues.priority : "",
+        priority: isUpdateEventOpen ? initValues.priority : "low",  // Set default to "low"
         deadline: isUpdateEventOpen ? initValues.deadline : 180,
         tags: isUpdateEventOpen ? initValues.tags : [],
         milestone: isUpdateEventOpen ? initValues.milestone : "",
@@ -42,22 +51,55 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
     const authHeader = useAuthHeader(); // For auth header
 
     const formRef = useRef(null);
+    const editorRef = useRef(null);
+
+
 
     useEffect(() => {
-        if (initValues && isUpdateEventOpen) {
+            editorRef.current = new EditorJS({
+                holder: 'editorjs',
+                placeholder: 'Enter a description...',
+                tools: {
+                    list: ListEditor,
+                    checklist: Checklist,
+                    inlineCode: InlineCode,
+                    marker: Marker,
+                    table: Table,
+                    embed: {
+                        class: Embed,
+                        config: { services: { youtube: true, vimeo: true } },
+                    },
+                    code: Code,
+                },
+                data: isUpdateEventOpen && initValues.description ? JSON.parse(initValues.description) : {},
+            });
+
+        if (isUpdateEventOpen && initValues) {
             form.setFieldsValue(initValues);
             fetchComments(initValues._id);
         }
-    }, [initValues, form, isUpdateEventOpen]);
+
+        return () => {
+            if (editorRef.current) {
+                editorRef.current.destroy();
+                editorRef.current = null;
+            }
+        };
+    }, [isUpdateEventOpen, initValues, form]);
+
+
+
+    const getEditorData = async () => {
+        if (editorRef.current) {
+            const outputData = await editorRef.current.save();
+            return JSON.stringify(outputData);
+        }
+        return "";
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setTaskData({ ...taskData, [name]: value });
-    };
-
-    const closeModal = () => {
-        form.resetFields();
-        onClose();
     };
 
     const fetchComments = async (taskId) => {
@@ -139,26 +181,65 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
         setEditCommentText(""); // Clear the edit textarea when canceling
     };
 
-    const handleSubmit = () => {
+
+    const closeModal = () => {
+        form.resetFields();
+        if (editorRef.current) {
+            editorRef.current.destroy();  // Clear EditorJS content
+            editorRef.current = null;  // Reset editor instance
+        }
+        onClose();
+    };
+
+    const notifyNewContributors = async (newContributors, taskTitle) => {
+        if (newContributors.length === 0) return; // No new contributors to notify
+
+        try {
+            const notificationData = {
+                task_title: "New Task!",
+                message: `You've been assigned to the task: ${taskTitle}`,
+                contributor_ids: newContributors
+            };
+
+            await axios.post("/api/kanban-notification", notificationData, {
+                headers: { Authorization: authHeader() }
+            });
+            message.success("Notification sent to new contributors.");
+        } catch (error) {
+            console.error("Error sending notifications:", error);
+            message.error("Failed to notify contributors.");
+        }
+    };
+
+    const handleSubmit = async () => {
+        const descriptionContent = await getEditorData();
         const taskDataFormatted = {
             id: taskData.id,
             title: taskData.title,
             column: taskData.column,
-            description: taskData.description,
+            description: descriptionContent,
             priority: taskData.priority,
             deadline: taskData.deadline,
             tags: taskData.tags,
             milestone: taskData.milestone,
             sharedUsers: taskData.sharedUsers.map(user => user.id)
         };
+         // Identify newly added contributors
+         const previousContributors = isUpdateEventOpen ? initValues.sharedUsers: [];
+         const newContributors = taskDataFormatted.sharedUsers.filter(id => !previousContributors.includes(id));
+        
         if (isUpdateEventOpen) {
             handleEditTask(taskDataFormatted);
         } else {
             handleAddTask(taskDataFormatted);
         }
+        if (newContributors.length > 0) {
+            await notifyNewContributors(newContributors, taskData.title);
+        }
         form.resetFields();
         closeModal();
     };
+
 
     const onChangeParticipants = (selectedUserIds) => {
         setTaskData((prevFormData) => ({
@@ -252,21 +333,16 @@ const AddModal = ({ onClose, isCreateEventOpen, isUpdateEventOpen, handleAddTask
                         placeholder="Title"
                     />
                 </Form.Item>
-                <Form.Item label={"Description"} name="description">
-                    <TextArea
-                        name="description"
-                        onChange={handleChange}
-                        placeholder="Description"
-                        rows={4}
-                    />
+                <Form.Item label="Description" name="description">
+                    <div id="editorjs" style={{ border: '1px solid #d9d9d9', padding: '10px' }} />
                 </Form.Item>
                 <Form.Item label={"Priority"} name="priority">
                     <Select
                         name="priority"
                         onChange={value => setTaskData({ ...taskData, priority: value })}
                         placeholder="Priority"
+                        value={taskData.priority}
                     >
-                        <Option value="">Priority</Option>
                         <Option value="low">Low</Option>
                         <Option value="medium">Medium</Option>
                         <Option value="high">High</Option>

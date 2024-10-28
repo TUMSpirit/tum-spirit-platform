@@ -80,6 +80,7 @@ const Home = () => {
     const [selectedTags, setSelectedTags] = useState([]);
     const [milestonesData, setMilestonesData] = useState(projectInformation.milestones?projectInformation.milestones.map((milestone, index) => `M${index + 1}`):[]);
     const [selectedMilestones, setSelectedMilestones] = useState([]);
+    const [selectedContributors, setSelectedContributors] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredTasks, setFilteredTasks] = useState([]);
     const [activeTab, setActiveTab] = useState('board');
@@ -96,7 +97,6 @@ const Home = () => {
     };
 
 
-
     // Fetch team members
     const fetchTeamMembers = async () => {
         try {
@@ -105,9 +105,8 @@ const Home = () => {
                     "Authorization": authHeader()
                 }
             });
-            // Map the backend response to the expected user structure
             const teamMembers = response.data.map(member => ({
-                name: member._id === currentUser.id ? "You" : member.username, // Check if the member is the current user
+                name: member._id === currentUser.id ? "You" : member.username,
                 id: member._id,
                 color: member.avatar_color,
                 initialen: member.username.charAt(0),
@@ -141,6 +140,12 @@ const Home = () => {
             return [];
         }
     };
+
+    useEffect(() => {
+        if (projectInformation?.milestones?.length && activeTab === 'board') {
+            setMilestonesData(projectInformation.milestones.map((milestone, index) => `M${index + 1}`));
+        }
+    }, [projectInformation]);
 
     const postTask = async (taskData) => {
         try {
@@ -213,12 +218,14 @@ const Home = () => {
 
     const handleTagChange = (values) => {
         setSelectedTags(values);
-        updateFilteredTasks(tasks, searchTerm, values, selectedMilestones);
     };
 
     const handleMilestonesChange = (values) => {
         setSelectedMilestones(values);
-        updateFilteredTasks(tasks, searchTerm, selectedTags, values);
+    };
+
+    const handleContributorChange = (values) => {
+        setSelectedContributors(values);
     };
 
     const openModal = (columnId) => {
@@ -302,7 +309,6 @@ const Home = () => {
 
     const handleSearch = (input) => {
         setSearchTerm(input);
-        updateFilteredTasks(tasks, input, selectedTags, selectedMilestones);
     };
 
     const createBoard = (tasks) => {
@@ -313,10 +319,8 @@ const Home = () => {
         return board;
     };
 
-    const updateFilteredTasks = (tasks, searchTerm = '', tags = [], milestones = []) => {
+    const updateFilteredTasks = (tasks, searchTerm = '', tags = [], milestones = [], contributors = []) => {
         let filteredTasks = tasks;
-
-        // Apply search term filtering
         if (searchTerm.trim()) {
             const lowercasedSearchTerm = searchTerm.toLowerCase();
             filteredTasks = filteredTasks.filter(task =>
@@ -325,7 +329,6 @@ const Home = () => {
             );
         }
 
-        // Apply tags filtering
         if (tags.length > 0) {
             const tagTitles = new Set(tags.map(tag => tag));
             filteredTasks = filteredTasks.filter(task =>
@@ -333,9 +336,14 @@ const Home = () => {
             );
         }
 
-        // Apply milestones filtering
         if (milestones.length > 0) {
             filteredTasks = filteredTasks.filter(task => milestones.includes(task.milestone));
+        }
+
+        if (contributors.length > 0) {
+            filteredTasks = filteredTasks.filter(task =>
+                task.sharedUsers.some(user => contributors.includes(user))
+            );
         }
 
         setFilteredTasks(filteredTasks);
@@ -345,22 +353,23 @@ const Home = () => {
 
     const getActiveFilterCount = () => {
         let activeFilterCount = 0;
-
-        if (searchTerm.trim()) {
+    
+        /*if (searchTerm.trim()) {
             activeFilterCount++;
-        }
-
+        }*/
         if (selectedTags.length > 0) {
             activeFilterCount++;
         }
-
         if (selectedMilestones.length > 0) {
             activeFilterCount++;
         }
-
+        if (selectedContributors.length > 0) {  // Count contributors as active filters
+            activeFilterCount++;
+        }
+    
         return activeFilterCount;
     };
-
+    
 
     const onDragEnd = async (result, board, setBoard) => {
         const { destination, source, draggableId } = result;
@@ -413,9 +422,17 @@ const Home = () => {
     };
 
     useEffect(() => {
+        if (activeTab === 'board') {
+            updateFilteredTasks(tasks, searchTerm, selectedTags, selectedMilestones, selectedContributors);
+        }
+    }, [tasks, searchTerm, selectedTags, selectedMilestones, selectedContributors]);
+
+    
+    useEffect(() => {
         fetchTeamMembers();
         getTasks();
     }, []);
+    
 
     useEffect(() => {
         setSubHeaderComponent({
@@ -426,6 +443,7 @@ const Home = () => {
                             setActiveTab(key);
                             if (key === 'board') {
                                 getTasks();
+                                setSearchTerm('');
                             }
                         }}>
                             <TabPane tab="Board" key="board" />
@@ -444,11 +462,11 @@ const Home = () => {
                                             expandIcon={({ isActive }) => (
                                                 <FilterOutlined rotate={isActive ? 90 : 0} style={{ fontSize: '20px', color: '#2576CA' }} />
                                             )}
-                                            style={{ background: '#f0f2f5', borderRadius: '8px', marginBottom: '8px' }}  // Reduce margin on mobile
+                                            style={{ background: '#f0f2f5', borderRadius: '8px', marginBottom: '8px' }}
                                         >
                                             <Panel header={`Filters (${getActiveFilterCount()})`} key="1">
-                                                <Row gutter={[8, 8]} style={{ padding: '8px 0' }}>  {/* Reduced gutter and padding for mobile */}
-                                                    <Col xs={24} sm={12} md={8}>
+                                                <Row gutter={[8, 8]} style={{ padding: '8px 0' }}>
+                                                    <Col xs={24} sm={12} md={6}>
                                                         <Select
                                                             mode="multiple"
                                                             style={{ width: '100%' }}
@@ -464,7 +482,7 @@ const Home = () => {
                                                         </Select>
                                                     </Col>
 
-                                                    <Col xs={24} sm={12} md={8}>
+                                                    <Col xs={24} sm={12} md={6}>
                                                         <Select
                                                             mode="multiple"
                                                             style={{ width: '100%' }}
@@ -480,7 +498,11 @@ const Home = () => {
                                                         </Select>
                                                     </Col>
 
-                                                    <Col xs={24} sm={12} md={8}>
+                                                    <Col xs={24} sm={12} md={6}>
+                                                        {contributorFilter}
+                                                    </Col>
+                                                    
+                                                    <Col xs={24} sm={12} md={6}>
                                                         <Search
                                                             placeholder="Search tasks"
                                                             allowClear
@@ -495,7 +517,7 @@ const Home = () => {
                                     </Col>
 
                                     {/* Show filters directly on larger screens */}
-                                    <Col xs={0} sm={12} md={8}>
+                                    <Col xs={0} sm={12} md={6}>
                                         <Select
                                             mode="multiple"
                                             style={{ width: '100%' }}
@@ -511,7 +533,7 @@ const Home = () => {
                                         </Select>
                                     </Col>
 
-                                    <Col xs={0} sm={12} md={8}>
+                                    <Col xs={0} sm={12} md={6}>
                                         <Select
                                             mode="multiple"
                                             style={{ width: '100%' }}
@@ -526,8 +548,10 @@ const Home = () => {
                                             ))}
                                         </Select>
                                     </Col>
-
-                                    <Col xs={0} sm={12} md={8}>
+                                    <Col xs={0} sm={12} md={6}>
+                                        {contributorFilter}
+                                    </Col>
+                                    <Col xs={0} sm={12} md={6}>
                                         <Search
                                             placeholder="Search tasks"
                                             allowClear
@@ -544,9 +568,14 @@ const Home = () => {
             )
         });
 
-        return () => setSubHeaderComponent(null); // Clear subheader when unmounting
-    }, [activeTab, selectedMilestones, selectedTags]);
+        return () => setSubHeaderComponent(null);
+    }, [activeTab, selectedMilestones, selectedTags, selectedContributors, users]);
 
+    const contributorFilter = (
+        <Select fieldNames={{ label: 'name', value: 'id' }}
+        placeholder="Select contributors" mode="tags" allowClear={true} options={users}
+        onChange={handleContributorChange} value={selectedContributors}  style={{ width: '100%' }} />
+    );
 
     return (
         <>

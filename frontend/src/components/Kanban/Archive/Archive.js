@@ -46,34 +46,47 @@ const Archive = () => {
         getArchivedTasks(); // Fetch tasks when the component is mounted
     }, []);
 
+    const truncateDescription = (description) => {
+        try {
+            const descriptionData = JSON.parse(description);
+            
+            return descriptionData?.blocks
+                ?.find(block => block.type === 'paragraph')?.data?.text?.slice(0, 50) + '...' || ''; // Truncate at 50 characters
+        } catch (error) {
+            console.error('Error parsing description JSON:', error);
+            return ''; // Return an empty string if parsing fails
+        }
+    };
+    
+    
     return (
         <div style={{ padding: '20px' }}>
-        <Card>
-            <List
-                grid={{ gutter: 16, column: 1 }}
-                dataSource={archivedTasks}
-                renderItem={(task) => (
-                    <List.Item>
-                        <Card
-                            title={task.title}
-                            extra={
-                                <Button type="primary" onClick={() => restoreTask(task._id)}>
-                                    Restore
-                                </Button>
-                            }
-                        >
-                            <Text>{task.description}</Text>
-                            <div style={{ marginTop: 10 }}>
-                                {task.tags.map((tag) => (
-                                    <Tag key={tag.title} color={tag.color}>
-                                        {tag.title}
-                                    </Tag>
-                                ))}
-                            </div>
-                        </Card>
-                    </List.Item> 
-                )}
-            />
+            <Card>
+                <List
+                    grid={{ gutter: 16, column: 1 }}
+                    dataSource={archivedTasks}
+                    renderItem={(task) => (
+                        <List.Item>
+                            <Card
+                                title={task.title}
+                                extra={
+                                    <Button type="primary" onClick={() => restoreTask(task._id)}>
+                                        Restore
+                                    </Button>
+                                }
+                            >
+                                <Text>{truncateDescription(task.description)}</Text>
+                                <div style={{ marginTop: 10 }}>
+                                    {task.tags.map((tag) => (
+                                        <Tag key={tag.title} color={tag.color}>
+                                            {tag.title}
+                                        </Tag>
+                                    ))}
+                                </div>
+                            </Card>
+                        </List.Item>
+                    )}
+                />
             </Card>
         </div>
     );

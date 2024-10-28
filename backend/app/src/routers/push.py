@@ -37,6 +37,11 @@ class NotificationRequest(BaseModel):
 
 class CalendarNotificationRequest(NotificationRequest):
     participant_ids: List[str]  # List of participant user IDs
+    
+class KanbanNotificationRequest(BaseModel):
+    task_title: str
+    message: str
+    contributor_ids: List[str]  # List of contributor user IDs
 
 @router.post("/subscribe")
 async def subscribe(subscription: PushSubscription, current_user: Annotated[User, Depends(get_current_user)]):
@@ -204,4 +209,70 @@ async def send_calendar_notification(notification_request: CalendarNotificationR
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error sending calendar notification: {str(e)}")
 
+@router.post("/kanban-notification")
+async def send_kanban_notification(notification_request: KanbanNotificationRequest, current_user: Annotated[User, Depends(get_current_user)]):
+    """Send a notification to newly assigned contributors of a Kanban task."""
+    payload = {
+        "title": f"New Kanban Task: {notification_request.task_title}",
+        "body": f"{notification_request.message}",
+        "vibrate": [150, 75, 150],
+        "tag": "kanban-task"
+    }
+    
+    contributor_ids = [ObjectId(cid) for cid in notification_request.contributor_ids]
 
+    try:
+        # Find subscriptions for contributors within the same team
+        apple_subscriptions = apple_subscriptions_collection.find({
+            "team_id": current_user["team_id"],
+            "user_id": {"$in": contributor_ids}
+        })
+        android_subscriptions = android_subscriptions_collection.find({
+            "team_id": current_user["team_id"],
+            "user_id": {"$in": contributor_ids}
+        })
+
+        # Send notifications to Apple subscriptions
+        for subscription in apple_subscriptions:
+            try:
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
+                    "keys": {
+                        "p256dh": subscription['keys']['p256dh'],
+                        "auth": subscription['keys']['auth']
+                    }
+                }
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+                print(f"Kanban notification sent to Apple subscription: {subscription['endpoint']}")
+            except WebPushException as ex:
+                print(f"Failed to send Kanban notification to Apple subscription: {subscription['endpoint']}: {ex}")
+
+        # Send notifications to Android subscriptions
+        for subscription in android_subscriptions:
+            try:
+                subscription_info = {
+                    "endpoint": subscription['endpoint'],
+                    "keys": {
+                        "p256dh": subscription['keys']['p256dh'],
+                        "auth": subscription['keys']['auth']
+                    }
+                }
+                webpush(
+                    subscription_info=subscription_info,
+                    data=json.dumps(payload),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims=VAPID_CLAIMS
+                )
+                print(f"Kanban notification sent to Android subscription: {subscription['endpoint']}")
+            except WebPushException as ex:
+                print(f"Failed to send Kanban notification to Android subscription: {subscription['endpoint']}: {ex}")
+
+        return {"message": f"Kanban notifications sent to newly assigned contributors for task {notification_request.task_title}."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error sending Kanban notification: {str(e)}")

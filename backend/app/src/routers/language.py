@@ -112,36 +112,8 @@ def predictdemo(input:str):
     return analyze_chat_demo(input)
 
 
-@router.get("/language/get-big5-data", tags=["language"])
-def get_latest_big5_data(current_user: Annotated[User, Depends(get_current_user)]):
-    try:
-        # Find the latest OCEAN result for the user
-        latest_result = ocean_collection.find_one(
-            {"user_id": ObjectId(current_user["_id"])},  # Filter by user ID
-            sort=[("timestamp", DESCENDING)]  # Sort by timestamp to get the latest
-        )
-
-        # Check if a result was found
-        if not latest_result:
-            return {"message": "No OCEAN data available for this user."}
-
-        # Extract OCEAN predictions
-        ocean_result = latest_result["result"]
-        predictions = [
-            ocean_result["extraversion"]["predicton_s"],
-            ocean_result["conscientiousness"]["predicton_s"],
-            ocean_result["agreeableness"]["predicton_s"],
-            ocean_result["neuroticism"]["predicton_s"],
-            ocean_result["openness"]["predicton_s"],
-        ]
-
-        return predictions
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.get("/language/get-big5-team-data", tags=["language"])
-def get_team_average_big5_data(current_user: Annotated[User, Depends(get_current_user)]):
+def get_team_average_big5_data(current_user: Annotated[User, Depends(get_current_user)]) -> List[float]:
     try:
         # Get the team ID of the current user
         team_id = current_user["team_id"]
@@ -167,17 +139,22 @@ def get_team_average_big5_data(current_user: Annotated[User, Depends(get_current
 
         # Iterate over each user's latest result to sum the scores
         for result in team_results:
-            ocean_result = result["latest_result"]["result"]
-            sum_extraversion += ocean_result["extraversion"]["predicton_s"]
-            sum_conscientiousness += ocean_result["conscientiousness"]["predicton_s"]
-            sum_agreeableness += ocean_result["agreeableness"]["predicton_s"]
-            sum_neuroticism += ocean_result["neuroticism"]["predicton_s"]
-            sum_openness += ocean_result["openness"]["predicton_s"]
+            # Check if the user has a valid OCEAN result
+            ocean_result = result["latest_result"].get("result")
+            if not ocean_result:
+                continue  # Skip this user if no result is found
+
+            # Sum the valid scores for each trait
+            sum_extraversion += ocean_result["extraversion"].get("prediction_s", 0)
+            sum_conscientiousness += ocean_result["conscientiousness"].get("prediction_s", 0)
+            sum_agreeableness += ocean_result["agreeableness"].get("prediction_s", 0)
+            sum_neuroticism += ocean_result["neuroticism"].get("prediction_s", 0)
+            sum_openness += ocean_result["openness"].get("prediction_s", 0)
             count += 1
 
-        # Check if any results were found
+        # Check if any results were found after filtering
         if count == 0:
-            return {"message": "No OCEAN data available for this team."}
+            return {"message": "No valid OCEAN data available for this team."}
 
         # Calculate averages
         avg_extraversion = sum_extraversion / count
@@ -194,6 +171,35 @@ def get_team_average_big5_data(current_user: Annotated[User, Depends(get_current
             avg_neuroticism,
             avg_openness,
         ]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/language/get-big5-data", tags=["language"])
+def get_latest_big5_data(current_user: Annotated[User, Depends(get_current_user)]) -> List[float]:
+    try:
+        # Find the latest OCEAN result for the user
+        latest_result = ocean_collection.find_one(
+            {"user_id": ObjectId(current_user["_id"])},  # Filter by user ID
+            sort=[("timestamp", DESCENDING)]  # Sort by timestamp to get the latest
+        )
+
+        # Check if a result was found
+        if not latest_result:
+            return {"message": "No OCEAN data available for this user."}
+
+        # Extract OCEAN predictions with the correct key name
+        ocean_result = latest_result["result"]
+        predictions = [
+            ocean_result["extraversion"]["prediction_s"],
+            ocean_result["conscientiousness"]["prediction_s"],
+            ocean_result["agreeableness"]["prediction_s"],
+            ocean_result["neuroticism"]["prediction_s"],
+            ocean_result["openness"]["prediction_s"],
+        ]
+
+        return predictions
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -412,9 +418,6 @@ def get_emotions(current_user: Annotated[User, Depends(get_current_user)]):
         avg_emotions = [0] * len(total_emotions)
 
     return avg_emotions
-
-
-
 
 @router.get("/language/get-chat-log", tags=["language"])
 def get_chat_log(current_user: Annotated[User, Depends(get_current_user)]):
@@ -698,7 +701,3 @@ def get_task_metrics(current_user: Annotated[User, Depends(get_current_user)]):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
-

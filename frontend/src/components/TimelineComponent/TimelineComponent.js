@@ -126,6 +126,10 @@ const HorizontalTimeline = ({ projectId }) => {
     status: index === current ? 'process' : (milestone.percent === 100 ? 'finish' : 'wait')
   }));
 
+  const renderDetails = (htmlString) => {
+    return <div dangerouslySetInnerHTML={{ __html: htmlString }} />;
+  };
+
   return (
     <div style={{ padding: '20px' }}>
       {showConfetti && <Confetti />}
@@ -198,7 +202,7 @@ const HorizontalTimeline = ({ projectId }) => {
                     </Row>
                     <Divider />
                     <Paragraph>
-                      <Text strong>Details:</Text> {milestones[current]?.details}
+                      {renderDetails(milestones[current]?.details)}
                     </Paragraph>
                     <Divider />
                     <Progress

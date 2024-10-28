@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
 from bson import ObjectId
+import json
 from fastapi import HTTPException
 from pymongo import ASCENDING, MongoClient
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -135,10 +136,32 @@ def get_chat_messages_since_last_run(task_name: str) -> List[Dict[str, str]]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+def extract_all_text(description: str) -> str:
+    try:
+        description_data = json.loads(description)  # Parse the JSON string
+        texts = []
+        
+        for block in description_data.get("blocks", []):
+            if block["type"] == "paragraph":
+                texts.append(block["data"].get("text", ""))
+            elif block["type"] == "checklist":
+                for item in block["data"].get("items", []):
+                    texts.append(item.get("text", ""))
+            elif block["type"] == "list":
+                texts.extend(block["data"].get("items", []))
+            elif block["type"] == "table":
+                for row in block["data"].get("content", []):
+                    texts.extend(row)
+            elif block["type"] == "code":
+                texts.append(block["data"].get("code", ""))
+        
+        # Join all extracted text elements into a single string
+        return " ".join([text for text in texts if text]).replace("&nbsp;", " ").strip()
+    except (json.JSONDecodeError, KeyError, TypeError) as e:
+        print(f"Error parsing description JSON: {e}")
+        return ""  # Return empty string if parsing fails
 
-def get_combined_chats_and_kanban(
-    user_id: str
-) -> Dict[str, List]:
+def get_combined_chats_and_kanban(user_id: str) -> Dict[str, List]:
     try:
         # Query for chat messages
         chat_query = {
@@ -158,9 +181,9 @@ def get_combined_chats_and_kanban(
         kanban_cursor = kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
         kanban_items = list(kanban_cursor)
 
-        # Extract title and description from kanban tasks
+        # Extract title and all text from descriptions of kanban tasks
         kanban_contents = [
-            f"{item.get('title', '')} {item.get('description', '')}".strip()
+            f"{item.get('title', '')} {extract_all_text(item.get('description', ''))}".strip()
             for item in kanban_items
         ]
         kanban_count = len(kanban_items)
@@ -169,9 +192,9 @@ def get_combined_chats_and_kanban(
         archived_kanban_cursor = archived_kanban_collection.find(kanban_query, {'title': 1, 'description': 1})
         archived_kanban_items = list(archived_kanban_cursor)
 
-        # Extract title and description from archived kanban tasks
+        # Extract title and all text from descriptions of archived kanban tasks
         archived_kanban_contents = [
-            f"{item.get('title', '')} {item.get('description', '')}".strip()
+            f"{item.get('title', '')} {extract_all_text(item.get('description', ''))}".strip()
             for item in archived_kanban_items
         ]
         archived_kanban_count = len(archived_kanban_items)
@@ -182,7 +205,6 @@ def get_combined_chats_and_kanban(
         }
         comments_cursor = kanban_comments_collection.find(comments_query, {'content': 1})
         comments_items = list(comments_cursor)
-        print(comments_items)
 
         # Extract content from kanban comments
         comments_contents = [comment['content'] for comment in comments_items]
@@ -191,7 +213,8 @@ def get_combined_chats_and_kanban(
         # Combine chat messages, kanban tasks, archived kanban tasks, and comments
         combined_contents = message_contents + kanban_contents + archived_kanban_contents + comments_contents
         total_count = message_count + kanban_count + archived_kanban_count + comments_count
-
+        print(combined_contents)
+        
         return {
             "combined_contents": combined_contents,
             "total_count": total_count
@@ -239,7 +262,7 @@ def monthly_task():
         
         # Fetch and analyze the data for the user
         userString = get_combined_chats_and_kanban(username)
-        analyze_big5(ObjectId(user_id), ObjectId(team_id), userString["combined_contents"])
+        analyze_big5(ObjectId(user_id), ObjectId(team_id), userString["combined_contents"], userString["total_count"])
         
     update_last_run_time("monthly_task")
 

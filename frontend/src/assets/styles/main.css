@@ -3493,3 +3493,11 @@ span.ant-badge-status-dot.ant-badge-status-processing {
 .pulsing-icon {
   animation: pulse 1.5s infinite;
 }
+
+.codex-editor__redactor{
+  padding-bottom: 40px !important;
+}
+
+.spirit-progress-text{
+  color: #fff !important; /* Change to any color you need */
+}
