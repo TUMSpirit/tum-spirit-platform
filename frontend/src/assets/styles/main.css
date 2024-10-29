@@ -3501,3 +3501,8 @@ span.ant-badge-status-dot.ant-badge-status-processing {
 .spirit-progress-text{
   color: #fff !important; /* Change to any color you need */
 }
+.fixed-header {
+    position: fixed;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
