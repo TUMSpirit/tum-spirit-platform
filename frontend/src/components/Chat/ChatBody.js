@@ -397,7 +397,7 @@ const ChatBody = ({
         <div
             id={id}
             ref={chatContainerRef}
-            className="flex-grow overflow-y-auto w-full px-4 chat-container-component pb-5 bg-chat-background border-t-2 border-chat-grid relative"
+            className="flex-grow overflow-y-auto w-full px-4 chat-container-component pb-5 bg-chat-background border-chat-grid relative"
             style={{ borderColor: "rgb(229, 231, 235)", height: "100px" }}>
             {loading? (
                 <div className="flex justify-center items-center h-full">
