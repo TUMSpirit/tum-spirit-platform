@@ -1,52 +1,19 @@
 from mailbox import Message
-from fastapi import APIRouter, UploadFile
 from typing import Annotated, Dict, List, Optional, Union
 from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJsonSchema
-from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime, timezone
 from app.src.routers.auth import get_distinct_team_ids
 from app.src.routers.avatar import validate_object_id
-from app.config import MONGO_DB,MONGO_URI
+from app.src.routers.notification import add_notification
+from app.src.avatar.helper import get_team_members
 
-
-# Load environment variables from a .env file
-#load_dotenv()
-
-
-
-PyObjectId = Annotated[
-    Union[str, ObjectId],
-    AfterValidator(validate_object_id),
-    PlainSerializer(lambda x: str(x), return_type=str),
-    WithJsonSchema({"type": "string"}, mode="serialization"),
-]
-
-class Message(BaseModel):
-    teamId: PyObjectId
-    content: str
-    senderId: str
-    timestamp: datetime
-    replyingTo: Optional[str] = None
-    reactions: Optional[Dict[str, str]] = Field(default_factory=dict)
-    isGif: Optional[bool] = False
-    privateChatId: Optional[str] = None
-
-    class Config:
-        populate_by_name = True
-        arbitrary_types_allowed = True  # required for the _id
-        json_encoders = {ObjectId: str}
 
 class TeamsNotFoundException(Exception):
     def __init__(self, message="No teams found for the specified project"):
         self.message = message
         super().__init__(self.message)
 
-
-class SpiritException(Exception):
-    def __init__(self, message="Something went wrong during the execution of the spirit function"):
-        self.message = message
-        super().__init__(self.message)
 
 
 def broadcast_message(
@@ -55,13 +22,10 @@ def broadcast_message(
     project_id: Optional[str] = None,  # Allow project_id as an optional field
 ):
     """
-    Broadcasts a message to teams. The message can be sent to all teams or filtered by a specific project ID. 
-    If a `project_id` is provided, the function filters the teams associated with that project. Otherwise, 
-    it broadcasts to all teams.
+    Broadcasts a message to the team.
 
     Parameters:
     - content (str): The content of the message to be broadcast.
-    - project_id (Optional[str]): The ID of the project to filter teams (optional).
 
     Returns:
     - dict: A dictionary containing:
@@ -69,7 +33,7 @@ def broadcast_message(
         - 'message_ids': A list of the IDs of the messages that were created and broadcast.
 
     Raises:
-    - TeamsNotFoundException: If no teams are found for the provided `project_id`.
+    - TeamsNotFoundException: If team is not found.
     """
 
     # If a project_id is provided, filter teams by that project ID from the teams collection
@@ -110,36 +74,6 @@ def broadcast_message(
     return {"message": "Broadcast successful", "message_ids": [str(m) for m in messages]}
 
 
-#@router.post("/avatar/create-calendar-entry", tags=["avatar"])
-#def create_calendar_entry(title: str, date: datetime = Body(...), current_user: User = Depends(is_admin)):
- #   try:
-  #      teams = get_distinct_team_ids()  # Assuming you have a teams collection
-   ##     events = []
-        
-     #   for teamId in teams:
-      #      event = {
-              #  'title': title,
-               # 'startDate': startDate,
-                #'endDate': endDate,
-                #'color': "B29DD9",
-                #'allDay': false,
-                #'isOnSite': calendar_entry.isOnSite,
-                #'room': calendar_entry.room,
-                #'remoteLink': calendar_entry.remoteLink,
-                #'textArea': calendar_entry.textArea,
-                #'isMilestone': calendar_entry.isMilestone,
-                #'files': calendar_entry.files,
-                #'users': calendar_entry.users,  # Convert ObjectId to str
-       #         'timestamp': datetime.now()
-        #    }
-         #   result = db['chat'].insert_one(event)
-          #  events.append(result.inserted_id)
-        
-        #return {"message": "Calendar entry created", "message_ids": [str(m) for m in events]}
-    #except Exception as e:
-     #   raise HTTPException(status_code=500, detail=str(e))
-
-
 from bson import ObjectId  # Ensure ObjectId is imported
 
 def create_kanban_card(
@@ -152,8 +86,7 @@ def create_kanban_card(
     project_id: Optional[str] = None,  # Allow project_id as an optional field
 ):
     """
-    Creates a Kanban card for one or more teams. The card can be associated with a specific project 
-    or added to all teams if no project ID is provided. The Kanban card is initially added to the 'backlog' column.
+    Creates a Kanban card for the team. The Kanban card is initially added to the 'backlog' column.
 
     Parameters:
     - title (str): The title of the Kanban card.
@@ -161,7 +94,6 @@ def create_kanban_card(
     - priority (str): The priority of the task (optional, defaults to an empty string).
     - deadline (int): A Unix timestamp representing the deadline for the card (optional, defaults to 0).
     - milestone (str): The milestone associated with the card (optional, defaults to an empty string).
-    - project_id (Optional[str]): The ID of the project to filter teams (optional).
 
     Returns:
     - dict: A dictionary containing:
@@ -169,7 +101,7 @@ def create_kanban_card(
         - 'card_ids': A list of the IDs of the Kanban cards that were created.
 
     Raises:
-    - TeamsNotFoundException: If no teams are found for the provided `project_id`.
+    - TeamsNotFoundException: If team is not found.
     """
     # If a project_id is provided, filter teams by that project ID from the teams collection
     if project_id:
@@ -209,41 +141,43 @@ def create_kanban_card(
         result = db['kanban'].insert_one(card)
         cards.append(result.inserted_id)
 
-    return "Kanban card created" + "card_ids: " + str([str(m) for m in cards])
+    return "Kanban card created\n" + "card_ids: " + str([str(m) for m in cards])
 
 
 
 async def upload_document_for_teams(
     db,
-    files: List[UploadFile], 
+    file_title: str,
+    file_content: bytes,
+    file_content_type: str,
     project_id: Optional[str] = None,  # Single project_id as an optional field
 ):
     """
-    Uploads a document to teams. The document can either be uploaded to all teams or filtered by a specific 
-    project ID. If no project ID is provided, the document is uploaded to all teams. 
+    Uploads a document to the team.
 
     Parameters:
-    - files (List[UploadFile]): A list of files to be uploaded. At least one file must be provided.
-    - project_id (Optional[str]): The ID of the project to filter teams (optional).
+    - db: Database connection for document storage.
+    - file_title (str): Title of the uploaded file.
+    - file_content (bytes): Binary content of the file.
+    - file_content_type (str): MIME type (e.g., 'application/pdf').
 
     Returns:
-    - dict: A dictionary containing:
-        - 'message': A success message indicating that the files were uploaded.
-        - 'file_ids': A list of the IDs of the files that were uploaded.
+    - dict: Contains:
+        - 'message': Success message.
+        - 'file_ids': List of file IDs uploaded to each team.
 
     Raises:
-    - SpiritException: If no file is provided.
-    - TeamsNotFoundException: If no teams are found for the provided `project_id`.
+    - TeamsNotFoundException: If team is not found.
 
-    This method reads the file, calculates its size, and uploads the document along with its metadata (e.g., 
-    team ID, file name, content type, file size, and upload timestamp) to the relevant teams' collection. 
-    If no project ID is specified, the file will be uploaded to all teams.
+    The file's metadata, including team ID, filename, content type, and timestamp, is saved. If no project ID is specified, uploads to all teams.
     """
-    if not files:
-        raise SpiritException("File is required")
-    file = files[0]
-    file_data = await file.read()
-    file_size = len(file_data)  # Calculate file size in bytes
+    if type(file_content) != bytes:
+        if type(file_content) == str:
+            file_content = file_content.encode('utf-8')
+        else:
+            raise Exception("file content must be encoded in bytes")
+    
+    file_size = len(file_content)  # Calculate file size in bytes
 
     # Fetch all team IDs from the user collection
     all_team_ids = get_distinct_team_ids()
@@ -258,7 +192,7 @@ async def upload_document_for_teams(
         print(f"Filtered team IDs for project {project_id}: {team_ids}")  # Debug log
 
         if not team_ids:
-            raise TeamsNotFoundException("404: No teams found for the specified project")
+            raise Exception("404: No teams found for the specified project")
     else:
         team_ids = all_team_ids  # If no project_id, use all teams
         print(f"No project_id provided, using all team IDs: {team_ids}")  # Debug log
@@ -268,9 +202,9 @@ async def upload_document_for_teams(
     for team_id in team_ids:
         file_record = {
             "team_id": team_id,
-            "filename": file.filename,
-            "contentType": file.content_type,
-            "fileData": file_data,
+            "filename": file_title,
+            "contentType": file_content_type,
+            "fileData": file_content,
             "size": file_size,  # Store file size
             "uploaded_by": 'Spirit',  # Avatar name as uploader
             "timestamp": datetime.now(timezone.utc)
@@ -279,4 +213,84 @@ async def upload_document_for_teams(
         result = db['files'].insert_one(file_record)
         uploaded_files.append(str(result.inserted_id))
 
-    return {"message": "Files uploaded", "file_ids": uploaded_files}
+    return str({"message": "Files uploaded", "file_ids": uploaded_files})
+
+def add_calendar_entry(current_user, db, title: str, startDateTime:str, endDateTime:str,
+                       users:List[str],room:str = "", remoteLink:str = "", color:str = "#1677FF",
+                       allDay:bool = False, isOnSite:bool = True, description:str = "", isMilestone:bool = False):
+    """
+    Adds a calendar entry for specified users; the current user must be included in `users`.
+
+    Parameters:
+    - title (str): Calendar entry title.
+    - startDateTime (str): Start date/time in "YYYY-MM-DDTHH:MM:SS+01:00" format.
+    - endDateTime (str): End date/time in "YYYY-MM-DDTHH:MM:SS+01:00" format.
+    - users (List[str]): List of usernames, including the current user.
+    - room (str, optional): Event location.
+    - remoteLink (str, optional): URL for remote participation.
+    - color (str, optional): Hex color for display.
+    - allDay (bool, optional): Indicates if the event lasts all day.
+    - isOnSite (bool, optional): Marks if the event is on-site.
+    - description (str, optional): Event details.
+    - isMilestone (bool, optional): Marks the event as a milestone.
+
+    Returns:
+    - str: Success message.
+
+    Raises:
+    - Exception: If the current user is not in `users`.
+
+    Creates the event and sends a notification to the team.
+    """
+    print(current_user)
+    print(users)
+    includes_self = False
+    included_users = []
+    team = get_team_members(current_user, db)
+    print(f"team: {team}")
+
+    found_usernames = set()
+
+    for user in team:
+        print(f"user: {user}")
+        if user["username"] in users:
+            included_users.append(user['_id'])
+            found_usernames.add(user["username"])
+            includes_self = includes_self or (user['username'] == current_user['username'])
+
+    if not includes_self:
+        raise Exception("the current user must be part of the users")
+    
+    missing_users = set(users) - found_usernames
+    if missing_users:
+        raise Exception(f" The following users were not found in the team: {', '.join(missing_users)}")
+
+    record = {
+        'title': title,
+        'startDate': startDateTime,
+        'endDate': endDateTime,
+        'color': color,
+        'allDay': allDay,
+        'isOnSite': isOnSite,
+        'room': room,
+        'remoteLink': remoteLink,
+        'textArea': description,
+        'isMilestone': isMilestone,
+        'files': [],
+        'users': included_users,  # Convert ObjectId to str
+        'timestamp': datetime.now()
+    }
+
+    result = db['calendar'].insert_one(record)
+
+
+    notification = {
+        'team_id': current_user["team_id"],
+        'title': "Calendar",
+        'description': current_user["username"] + " added a Calendar Entry",
+        'type': "calendar_added",
+        'timestamp': datetime.now()
+    }
+    add_notification(notification)
+    
+    return "Calendar entry successfully created."

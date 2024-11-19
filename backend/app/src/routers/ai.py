@@ -1,22 +1,27 @@
 # Import necessary libraries
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import openai
 from openai import OpenAI
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 import pytz
 from dotenv import load_dotenv
 import os
 from app.config import MONGO_DB,MONGO_URI, OPENAI_API_KEY
 from pymongo import MongoClient
-from app.src.avatar.translate_functions import extract_avatar_function_strings, extract_avatar_functions
+from app.src.avatar.translate_functions import extract_avatar_functions
 import json
 from openai.types.beta import Thread
+import inspect
+from app.src.routers.auth import get_current_user, User
+from app.src.avatar.helper import get_project_by_team
+
+class GenerateGPTRequest(BaseModel):
+    inputValue: str
+    threadId: str
 
 # Define a BaseModel for representing a single message
-
-
 class Message(BaseModel):
     role: str  # Defines the role of the sender (e.g., user, bot)
     content: str  # The actual message content
@@ -25,7 +30,6 @@ class Message(BaseModel):
 # Define a BaseModel for representing a list of messages
 class MessageList(BaseModel):
     messages: List[Message]  # A list of Message objects
-
 
 # Define a BaseModel for analytics records
 class AnalyticsRecord(BaseModel):
@@ -82,21 +86,18 @@ async def generate():
 
 # Endpoint to generate AI responses using OpenAI
 @router.post("/ai/generate_gpt", tags=["ai"])
-async def generate(inputValue: str, threadId: str):
+async def generate(request: GenerateGPTRequest, current_user: User = Depends(get_current_user)):
+    inputValue = request.inputValue
+    threadId = request.threadId
     print("start")
     print(f"input Value: {inputValue}")
     try:
-
-        function_strings = extract_avatar_function_strings()
-
         # Retrieve function mappings
-        functions = extract_avatar_functions()
+        function_strings, functions = extract_avatar_functions()
 
-        # Cap the number of function calls to 10
-        max_function_calls = 1
-
-        instructions=("You are Delphi, an assistant in the project management software Spirit. Spirit should always be witty, "
-              "intelligent, and funny")
+        instructions=("You are Spirit, an assistant in the project management software TUM-Spirit. Spirit should always be witty, "
+              f"intelligent, and funny. The current user is called {current_user['username']}. Current time: {datetime.now(timezone.utc)}."
+              "Before deleting anything ask the user if their sure unless promted to do otherwise")
         
         assistant = client.beta.assistants.create(
             instructions=instructions,
@@ -131,12 +132,22 @@ async def generate(inputValue: str, threadId: str):
                     print(f"{function_name} called")
                     try:
                         function_args = json.loads(tool.function.arguments)
-                        function_args['db'] = db
 
                         # Retrieve and call the function
                         if function_name in functions:
                             function_to_call = functions[function_name]
-                            function_result = function_to_call(**function_args)
+                            sig = inspect.signature(function_to_call)
+                            true_func_args = [param.name for param in sig.parameters.values()]
+                            if true_func_args.__contains__('db'):
+                                function_args['db'] = db
+                            if true_func_args.__contains__('current_user'):
+                                function_args['current_user'] = current_user
+                            if true_func_args.__contains__('project_id'):
+                                function_args['project_id'] = get_project_by_team(current_user, db)['id']
+                            if inspect.iscoroutinefunction(function_to_call):
+                                function_result = await function_to_call(**function_args)
+                            else:
+                                function_result = function_to_call(**function_args)
                         else:
                             function_result = "error: " + f"Function '{function_name}' not found"
                             print(f"Function '{function_name}' not found")

@@ -4,6 +4,7 @@ import { Button, FloatButton, Input, Tooltip } from "antd";
 import logo from "../../assets/images/ghost.png";
 import { v4 as uuidv4 } from "uuid";
 import axios from 'axios';
+import { useAuthHeader } from 'react-auth-kit';
 
 const Chatbot = ({ opened, setOpened }) => {
   // State to hold messages
@@ -23,6 +24,8 @@ const Chatbot = ({ opened, setOpened }) => {
   const [loading, setLoading] = useState(false);
 
   const [thread, setThread] = useState("");
+
+  const authHeader = useAuthHeader();
 
 // Define the function to get a thread
 const getThread = async () => {
@@ -62,14 +65,19 @@ const getThread = async () => {
       setInputValue("");
   
       try {
-        // Post request to the backend to get the bot response using axios
-        // Build the URL with query parameters for inputValue and threadId
-        const url = `/api/ai/generate_gpt?inputValue=${encodeURIComponent(oldInput)}&threadId=${encodeURIComponent(thread)}`;
+        // Define the URL without query parameters
+        const url = `/api/ai/generate_gpt`;
 
-        // Send the request without a JSON body
-        const response = await axios.post(url, null, {
+        // Create the request body as a JSON object
+        const requestBody = {
+            inputValue: oldInput,
+            threadId: thread
+        };
+
+        // Send the POST request with the JSON body
+        const response = await axios.post(url, requestBody, {
             headers: {
-                "Content-Type": "application/json",
+                "Authorization": authHeader()
             },
         });
   

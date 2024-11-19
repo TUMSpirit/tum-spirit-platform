@@ -1,20 +1,11 @@
 import ast
-from mailbox import Message
-from fastapi import APIRouter, Body, Depends, File, Form, UploadFile
-from typing import Annotated, Any, Dict, List, Optional, Union
-from pydantic import AfterValidator, BaseModel, Field, PlainSerializer, WithJsonSchema
-from pymongo import MongoClient
-from bson import ObjectId
-from datetime import datetime, timedelta, timezone
-from app.src.routers.auth import is_admin, User
-from app.src.routers.auth import get_distinct_team_ids
-from app.src.routers.avatar import validate_object_id
-import io
-from dotenv import load_dotenv
-from app.config import MONGO_DB,MONGO_URI
+import os
 
-AVATAR_FUNCTIONS_PATH = "app/src/avatar/avatar_functions.py"
+#auto imports
+#end auto imports
 
+AVATAR_FUNCTIONS_PATH = "app/src/avatar/avatar_functions"
+PARAMS_IGNORE = ['self', 'current_user', 'db', 'project_id']
 
 def extract_functions_from_file(file_path):
     # Create a dictionary to store function names and their objects
@@ -54,8 +45,8 @@ def map_python_type_to_gpt_type(annotation):
             return "number"
         elif annotation.id == 'bool':
             return "boolean"
-        elif annotation.id == 'UploadFile':
-            return "string"  # Represent UploadFile as a string
+        elif annotation.id == 'UploadFile' or annotation.id == 'bytes':
+            return "bytes"  # Represent bytes as a string
         else:
             return "string"  # Default to string for unknown types
 
@@ -66,16 +57,22 @@ def map_python_type_to_gpt_type(annotation):
             # Handle Optional type (usually represented as Union in Python AST)
             if base_type == 'Optional':
                 inner_type = map_python_type_to_gpt_type(annotation.slice)
+                if inner_type == 'bytes':
+                    inner_type = "string"
                 # Indicate that the type can be null by using an array of types
                 return ["null", inner_type] if isinstance(inner_type, str) else inner_type
 
             # Handle List type
             elif base_type == 'List':
                 element_type = map_python_type_to_gpt_type(annotation.slice)
-                return {
+                ret = {
                     "type": "array",
                     "items": {"type": element_type}
                 }
+                if element_type == 'bytes':
+                    ret["items"]["type"] = "string"
+                    ret["items"]["format"] = "binary"
+                return ret
 
     return "string"  # Default to string if type is unknown
 
@@ -103,7 +100,7 @@ def extract_function_strings_from_python_file(file_path):
             # Process each argument
             for arg, default in zip(node.args.args, default_values):
                 param_name = arg.arg
-                if param_name == 'self' or param_name == 'db':  # Skip 'self' in class methods
+                if param_name in PARAMS_IGNORE:  # Skip 'self', 'current_user' and 'db' in class methods
                     continue
 
                 # Detect parameter type via type annotations
@@ -117,6 +114,9 @@ def extract_function_strings_from_python_file(file_path):
                         "type": param_type,
                         "description": f"Parameter {param_name}"
                     }
+                    if param_type == 'bytes':
+                        param_info["format"] = "binary"
+                        param_info["type"] = "string"
 
                 # Add to required params if no default value is provided
                 if default is None:
@@ -142,10 +142,30 @@ def extract_function_strings_from_python_file(file_path):
 
     return tools
 
-def extract_avatar_function_strings():
-    return extract_function_strings_from_python_file(AVATAR_FUNCTIONS_PATH)
-
 def extract_avatar_functions():
-    return extract_functions_from_file(AVATAR_FUNCTIONS_PATH)
+    # Initialize an empty list to hold all function strings
+    all_function_strings = []
+    
+    # Initialize an empty dictionary to hold all the merged dictionary entries
+    merged_dict = {}
+    
+    # Iterate over all files in the AVATAR_FUNCTIONS_PATH directory
+    for filename in os.listdir(AVATAR_FUNCTIONS_PATH):
+        # Check if the file has a .py extension
+        if filename.endswith(".py"):
+            file_path = os.path.join(AVATAR_FUNCTIONS_PATH, filename)
+            
+            # Extract function strings from the Python file
+            function_strings = extract_function_strings_from_python_file(file_path)
+            # Add extracted function strings to the main list
+            all_function_strings.extend(function_strings)
+            
+            # Extract the dictionary from the file
+            file_dict = extract_functions_from_file(file_path)
+            # Merge the dictionary entries into the main dictionary
+            merged_dict.update(file_dict)
+    
+    # Return the concatenated list and the merged dictionary as a tuple
+    return all_function_strings, merged_dict
 
 

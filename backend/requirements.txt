@@ -79,3 +79,7 @@ urllib3==2.2.0
 uvicorn==0.27.0.post1
 vine==5.1.0
 wcwidth==0.2.13
+langchain_community==0.2.17
+pytesseract==0.3.13
+pdfplumber==0.11.1
+git+https://github.com/ProfSchurrie/SearchGPT-Searx.git
