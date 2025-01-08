@@ -419,27 +419,26 @@ def get_emotions(current_user: Annotated[User, Depends(get_current_user)]):
 
     return avg_emotions
 
+
 @router.get("/language/get-chat-log", tags=["language"])
 def get_chat_log(current_user: Annotated[User, Depends(get_current_user)]):
-    # Fetch the last 10 messages sorted by timestamp
+    # Fetch the last 10 messages where privateChatId is null, sorted by timestamp
     chat_messages = chats_collection.find(
-        {"teamId": ObjectId(current_user["team_id"])}, 
-        {"_id": 0, "content": 1, "timestamp": 1, "senderId": 1}
+        {
+            "teamId": ObjectId(current_user["team_id"]),
+            "privateChatId": None  # Filter for team messages only
+        },
+        {
+            "_id": 0, "content": 1, "timestamp": 1, "senderId": 1
+        }
     ).sort("timestamp", DESCENDING).limit(4)
-    # Debug print to see chat messages
+    
     # Convert cursor to list for proper handling
     chat_messages_list = list(chat_messages)
-
-    # Debug print to see the fetched messages
-    print("Fetched chat messages:", chat_messages_list)
 
     # Format messages to match the required format
     messages_list = []
     for message in chat_messages_list:
-        # Debug each message structure
-        print("Processing message:", message)
-
-        # Check and handle potential issues with data types or missing fields
         sender = message.get("senderId", "Unknown sender")
         content = message.get("content", "")
         timestamp = message.get("timestamp")
@@ -456,11 +455,9 @@ def get_chat_log(current_user: Annotated[User, Depends(get_current_user)]):
             "date": formatted_date
         })
 
-    # Debug final formatted list
-    print("Formatted messages list:", messages_list)
-
     # Reverse the list to show messages in chronological order
     messages_list.reverse()
+
     # Return the formatted list
     return messages_list
 
