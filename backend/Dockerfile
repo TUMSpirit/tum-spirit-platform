@@ -14,6 +14,10 @@ RUN apt-get update && \
 ENV JAVA_HOME /usr/lib/jvm/default-java
 ENV PATH $JAVA_HOME/bin:$PATH
 
+
+# Install necessary packages, including Git
+RUN apt-get update && apt-get install -y git && apt-get clean
+
 # Set the working directory to /app
 WORKDIR /app
 
@@ -23,12 +27,19 @@ COPY requirements.txt .
 # Copy the .env file into the container at /app
 # COPY /app/.env .
 
+# Install Tesseract OCR with automatic "yes" to prompts
+RUN apt-get update && apt-get install -y tesseract-ocr && apt-get clean
+
 # Install any necessary dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the FastAPI app files to the container
 COPY app /app/app
-COPY BigFiveModels /app/BigFiveModel
+
+# Adjust the auto imports for the function translation
+RUN python3 /app/app/src/avatar/insert_imports.py
+
+#COPY BigFiveModels /app/BigFiveModel
 #COPY MTBIModels /app/MTBIModel
 
 # Expose the port that Uvicorn will run on

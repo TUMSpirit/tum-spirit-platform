@@ -57,7 +57,6 @@ class ProjectCreate(BaseModel):
    # description: Optional[str] = None
     #created_at: datetime = Field(default_factory=datetime.now)
     #milestones: List[Milestone] = []  # List of milestones
-
 # Create a new project
 @router.post("/create-project", response_model=ProjectCreate, tags=["projects"])
 def create_project(project: ProjectCreate, current_user: Annotated[User, Depends(is_admin)]):
