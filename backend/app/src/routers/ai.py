@@ -253,9 +253,9 @@ def test_feedback_recieved(id: str, reward: int):
     
 
 @router.post("/ai/test_launch_thread", tags=["ai"])
-def test_launch_thread():
+def test_launch_thread(sleep_duration):
     try:
-        return start_initiative_avatar_thread()
+        return start_initiative_avatar_thread(sleep_duration)
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))

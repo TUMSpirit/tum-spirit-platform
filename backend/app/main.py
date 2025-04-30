@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi import Request
 from pydantic import ValidationError
 from app.config import SECRET_KEY
-from app.src.avatar.initiative.initiative import shutdown_initiative_avatar_thread
+from app.src.avatar.initiative.initiative import shutdown_initiative_avatar_thread, start_initiative_avatar_thread
 
 from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
 # import routers
@@ -92,6 +92,8 @@ def application_setup() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    start_initiative_avatar_thread()
 
     return application
 
