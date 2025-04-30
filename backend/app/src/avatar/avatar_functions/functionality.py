@@ -22,12 +22,11 @@ def extract_text_from_image(db, current_user, file_id:str):
         
         # If text is detected, return it
         if text.strip():
-            return str({"type": "text", "content": text})
+            return {"message": text}
         else:
-            # Otherwise, return a generic content description
-            return str({"type": "description", "content": "No text found. This may be a photo or abstract image."})
+            return {"message": "No text found. This may be a photo or abstract image."}
     except Exception as e:
-        return str({"type": "error", "content": f"Could not process image: {e}"})
+        return {"message": f"Could not process image: {e}"}
     
 
 def extract_text_with_from_pdf(file_id:str, db, current_user):
@@ -52,4 +51,4 @@ def extract_text_with_from_pdf(file_id:str, db, current_user):
             if page_text:  # Ensure there is text on the page
                 text += page_text + "\n\n"  # Append text from each page
     
-    return text
+    return {'message': text}

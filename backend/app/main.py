@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi import Request
 from pydantic import ValidationError
 from app.config import SECRET_KEY
+from app.src.avatar.initiative.initiative import shutdown_initiative_avatar_thread
 
 from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
 # import routers
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI):
     start_scheduler()
     yield
     # Shutdown
+    shutdown_initiative_avatar_thread()
     stop_scheduler()
 
 

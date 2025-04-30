@@ -5,7 +5,7 @@ import os
 #end auto imports
 
 AVATAR_FUNCTIONS_PATH = "app/src/avatar/avatar_functions"
-PARAMS_IGNORE = ['self', 'current_user', 'db', 'project_id']
+PARAMS_IGNORE = ['self', 'current_user', 'db', 'project_id', 'action_step_id', 'isInitiativeAI']
 
 def extract_functions_from_file(file_path):
     # Create a dictionary to store function names and their objects
@@ -141,6 +141,22 @@ def extract_function_strings_from_python_file(file_path):
             tools.append(function_tool)
 
     return tools
+
+
+def extract_function_strings_and_functions_from_multiple_python_files(file_paths: list[str]):
+    all_function_strings = []
+    merged_dict = {}
+    for file_path in file_paths:
+        function_strings = extract_function_strings_from_python_file(file_path)
+        # Add extracted function strings to the main list
+        all_function_strings.extend(function_strings)
+        
+        # Extract the dictionary from the file
+        file_dict = extract_functions_from_file(file_path)
+        # Merge the dictionary entries into the main dictionary
+        merged_dict.update(file_dict)
+    return all_function_strings, merged_dict
+
 
 def extract_avatar_functions():
     # Initialize an empty list to hold all function strings

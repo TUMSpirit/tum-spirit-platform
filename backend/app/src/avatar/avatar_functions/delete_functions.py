@@ -23,7 +23,7 @@ def delete_calendar_entry(entry_id: str, current_user, db):
     if result.deleted_count == 0:
         raise Exception(detail="Entry not found")
 
-    return str({"message": "Entry deleted successfully"})
+    return {"message": "Entry deleted successfully"}
 
 def delete_kanban_task(task_id: str, current_user, db):
     # Überprüfen, ob der Eintrag existiert und der aktuelle Benutzer berechtigt ist
@@ -46,10 +46,10 @@ def delete_kanban_task(task_id: str, current_user, db):
     if result.deleted_count == 0:
         raise Exception(detail="Entry not found")
 
-    return str({"message": "Entry deleted successfully"})
+    return {"message": "Entry deleted successfully"}
 
 def delete_file(file_id: str, current_user, db):
     result = db['files'].delete_one({"_id": ObjectId(file_id), "team_id": current_user["team_id"]})
     if result.deleted_count == 0:
         raise Exception(detail="File not found")
-    return str({"detail": "File successfully deleted"})
+    return {"detail": "File successfully deleted"}

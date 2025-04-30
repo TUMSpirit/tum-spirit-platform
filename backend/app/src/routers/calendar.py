@@ -158,8 +158,6 @@ def add_calendar_entry(calendar_entry: CreateCalendarEntry, current_user: User =
 @router.get("/calendar/get-entries", response_model=List[CalendarEntry], tags=["calendar"])
 def get_calendar_entries(current_user: User = Depends(get_current_user)):
     try:
-            print('Hello')
-
             print('currID: ', current_user['_id'])
             # Convert current user id to string
             #current_user_id_str = str(current_user.id)

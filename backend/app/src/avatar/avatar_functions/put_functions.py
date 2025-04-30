@@ -23,7 +23,7 @@ def archive_kanban_task(task_id: str, current_user, db):
     }
     add_notification(notification)
 
-    return "Task archived successfully. " + str(TaskModel(**task))
+    return {'message': "Task archived successfully. " + str(TaskModel(**task))}
 
 def restore_archived_kanban_task(task_id: str, current_user, db):
     archived_task = db['archived_kanban'].find_one({"_id": ObjectId(task_id), "team_id": current_user["team_id"]})
@@ -44,7 +44,7 @@ def restore_archived_kanban_task(task_id: str, current_user, db):
     }
     add_notification(notification)
 
-    return "Task restored successfully. " + str(TaskModel(**archived_task))
+    return {'message': "Task restored successfully. " + str(TaskModel(**archived_task))}
 
 def update_task_column(task_id: str, column: str, current_user, db):
     available_columns = ["backlog", "doing", "testing", "done"]
@@ -65,4 +65,4 @@ def update_task_column(task_id: str, column: str, current_user, db):
 
     # Retrieve and return the updated task
     updated_entry = db['kanban'].find_one({"_id": ObjectId(task_id), "team_id": current_user["team_id"]})
-    return "column updated successfully" + str(TaskModel(**updated_entry))
+    return {'message': "column updated successfully" + str(TaskModel(**updated_entry))}

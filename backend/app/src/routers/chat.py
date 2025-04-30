@@ -6,6 +6,7 @@ from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 from app.src.routers.auth import get_current_user, User
 from app.config import MONGO_DB,MONGO_URI
+from app.src.avatar.helper import check_for_ID_in_reward_buffer, get_feedback
 
 
 
@@ -42,7 +43,6 @@ def get_messages(latest: datetime):
         items = []
 
         for item in collection.find(query):
-            print(f"Found message: {item}")
             item['id'] = str(item['_id'])
             item['teamId'] = str(item['teamId'])
             item['senderId'] = str(item['senderId'])
@@ -254,6 +254,8 @@ def get_messages(
             item['isGif'] = item.get('isGif', False)
             item['privateChatId'] = item.get('privateChatId', None)
             items.append(Message(**item))
+            if check_for_ID_in_reward_buffer(item['_id'], db):
+                get_feedback(item['_id'], db)
 
         print(f"Total messages found: {len(items)}")
         return items

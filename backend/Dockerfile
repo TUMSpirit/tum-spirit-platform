@@ -33,6 +33,8 @@ RUN apt-get update && apt-get install -y tesseract-ocr && apt-get clean
 # Install any necessary dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN python -m spacy download en_core_web_lg
+
 # Copy the FastAPI app files to the container
 COPY app /app/app
 
