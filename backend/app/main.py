@@ -1,10 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from fastapi import Request
-from pydantic import ValidationError
 from app.config import SECRET_KEY
 
 from .src.routers.scheduler import scheduler, start_scheduler, stop_scheduler
@@ -93,6 +89,7 @@ def application_setup() -> FastAPI:
 
     return application
 
+
 app = application_setup()
 
 
@@ -125,13 +122,6 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print("Validation error details:", exc.errors())
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors()},
-    )
 
 # Abhängigkeitsimport für OpenAPI
 from fastapi.openapi.utils import get_openapi

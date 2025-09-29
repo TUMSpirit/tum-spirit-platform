@@ -4,7 +4,6 @@ import { Button, FloatButton, Input, Tooltip } from "antd";
 import logo from "../../assets/images/ghost.png";
 import { v4 as uuidv4 } from "uuid";
 import axios from 'axios';
-import { useAuthHeader } from 'react-auth-kit';
 
 const Chatbot = ({ opened, setOpened }) => {
   // State to hold messages
@@ -23,63 +22,29 @@ const Chatbot = ({ opened, setOpened }) => {
   //loading state for the bot
   const [loading, setLoading] = useState(false);
 
-  const [thread, setThread] = useState("");
-
-  const authHeader = useAuthHeader();
-
-// Define the function to get a thread
-const getThread = async () => {
-    console.log("Getting thread...");
-    try {
-        const response = await axios.post(
-            "http://localhost:8000/api/ai/generate_gpt_thread",  // Assuming this endpoint creates a thread
-            {}, // Empty data object as no parameters are required
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
-        console.log("Thread Data:", response.data);
-        setThread(response.data);; // Assign the response directly to thread
-    } catch (error) {
-        console.error("Failed to get thread", error);
-    }
-};
-  
   // Function to send the message
   const sendMessage = async () => {
     // Set loading to true
     setLoading(true);
-
-    if (!thread) {
-        await getThread();
-    }
   
     if (inputValue.trim()) {
-      let oldInput = inputValue;
-
       // Add user message to the chat
       setMessages([...messages, { role: "user", content: inputValue }]);
       // Clear the input
       setInputValue("");
   
       try {
-        // Define the URL without query parameters
-        const url = `/api/ai/generate_gpt`;
-
-        // Create the request body as a JSON object
-        const requestBody = {
-            inputValue: oldInput,
-            threadId: thread
-        };
-
-        // Send the POST request with the JSON body
-        const response = await axios.post(url, requestBody, {
+        // Post request to the backend to get the bot response using axios
+        const response = await axios.post(
+          "/api/ai/generate_gpt",{
+            messages: [...messages, { role: "user", content: inputValue }],
+          },
+          {
             headers: {
-                "Authorization": authHeader()
+              "Content-Type": "application/json",
             },
-        });
+          }
+        );
   
         // Set loading to false
         setLoading(false);
@@ -87,7 +52,7 @@ const getThread = async () => {
         // Add bot response to the chat
         setMessages((prevMessages) => [
           ...prevMessages,
-          { content: response.data, role: "assistant" },
+          { content: response.data.choices[0].message.content, role: "assistant" },
         ]);
       } catch (error) {
         // Handle error
@@ -108,7 +73,6 @@ const getThread = async () => {
   };
 
   useEffect(() => {
-    getThread()
     // Generate and set a unique session ID when the component mounts
     const newSessionId = uuidv4();
     setSessionId(newSessionId);
