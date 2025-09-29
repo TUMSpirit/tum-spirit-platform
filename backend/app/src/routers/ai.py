@@ -1,27 +1,19 @@
 # Import necessary libraries
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import openai
 from openai import OpenAI
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List
 import pytz
 from dotenv import load_dotenv
 import os
 from app.config import MONGO_DB,MONGO_URI, OPENAI_API_KEY
 from pymongo import MongoClient
-from app.src.avatar.translate_functions import extract_avatar_functions
-import json
-from openai.types.beta import Thread
-import inspect
-from app.src.routers.auth import get_current_user, User
-from app.src.avatar.helper import get_project_by_team
-
-class GenerateGPTRequest(BaseModel):
-    inputValue: str
-    threadId: str
 
 # Define a BaseModel for representing a single message
+
+
 class Message(BaseModel):
     role: str  # Defines the role of the sender (e.g., user, bot)
     content: str  # The actual message content
@@ -30,6 +22,7 @@ class Message(BaseModel):
 # Define a BaseModel for representing a list of messages
 class MessageList(BaseModel):
     messages: List[Message]  # A list of Message objects
+
 
 # Define a BaseModel for analytics records
 class AnalyticsRecord(BaseModel):
@@ -49,9 +42,6 @@ router = APIRouter()
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 collection = db['chatbot_analytics']
-
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Endpoint to generate AI responses using OpenAI
 
@@ -78,111 +68,24 @@ async def generate(messages: MessageList):
     return response
 
 
-@router.post("/ai/generate_gpt_thread", tags=["ai"])
-async def generate():
-    print("thread generated")
-    return client.beta.threads.create().id
-    
-
 # Endpoint to generate AI responses using OpenAI
 @router.post("/ai/generate_gpt", tags=["ai"])
-async def generate(request: GenerateGPTRequest, current_user: User = Depends(get_current_user)):
-    inputValue = request.inputValue
-    threadId = request.threadId
-    print("start")
-    print(f"input Value: {inputValue}")
+async def generate(messages: MessageList):
     try:
-        # Retrieve function mappings
-        function_strings, functions = extract_avatar_functions()
+        # Initialize OpenAI client
+        client = OpenAI(api_key=OPENAI_API_KEY)
 
-        instructions=("You are Spirit, an assistant in the project management software TUM-Spirit. Spirit should always be witty, "
-              f"intelligent, and funny. The current user is called {current_user['username']}. Current time: {datetime.now(timezone.utc)}."
-              "Before deleting anything ask the user if their sure unless promted to do otherwise")
-        
-        assistant = client.beta.assistants.create(
-            instructions=instructions,
-            model="gpt-4o-mini",
-            tools=function_strings
+        # Prepare the messages for the chat model
+        chat_messages = [{"role": msg.role, "content": msg.content} for msg in messages.messages]
+
+        # Send the request to the chat/completions endpoint
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # You can change the model as needed (gpt-4 is also available)
+            messages=chat_messages
         )
 
-        message = client.beta.threads.messages.create(
-            thread_id=threadId,
-            role="user",
-            content=inputValue,
-        )
-
-        run = client.beta.threads.runs.create_and_poll(
-            thread_id=threadId,
-            assistant_id=assistant.id,
-        )
-
-        num_req = 10
-
-        while run.status != 'completed' and num_req > 0:
-            num_req -= 1
-            if run.status == 'cancelled' or run.status == 'failed' or run.status == 'expired':
-                return f"request: {run.status}"
-            elif run.status == 'requires_action':
-                # Define the list to store tool outputs
-                tool_outputs = []
-
-                # Loop through each tool in the required action section
-                for tool in run.required_action.submit_tool_outputs.tool_calls:
-                    function_name = tool.function.name
-                    print(f"{function_name} called")
-                    try:
-                        function_args = json.loads(tool.function.arguments)
-
-                        # Retrieve and call the function
-                        if function_name in functions:
-                            function_to_call = functions[function_name]
-                            sig = inspect.signature(function_to_call)
-                            true_func_args = [param.name for param in sig.parameters.values()]
-                            if true_func_args.__contains__('db'):
-                                function_args['db'] = db
-                            if true_func_args.__contains__('current_user'):
-                                function_args['current_user'] = current_user
-                            if true_func_args.__contains__('project_id'):
-                                function_args['project_id'] = get_project_by_team(current_user, db)['id']
-                            if inspect.iscoroutinefunction(function_to_call):
-                                function_result = await function_to_call(**function_args)
-                            else:
-                                function_result = function_to_call(**function_args)
-                        else:
-                            function_result = "error: " + f"Function '{function_name}' not found"
-                            print(f"Function '{function_name}' not found")
-                    
-                    except Exception as e:
-                        function_result = "error: " + str(e)
-                        print(f"error: {str(e)}")
-
-                    tool_outputs.append({
-                        "tool_call_id": tool.id,
-                        "output": function_result
-                    })
-                    print(function_result)
-
-                # Submit all tool outputs at once after collecting them in a list
-                if tool_outputs:
-                    try:
-                        run = client.beta.threads.runs.submit_tool_outputs_and_poll(
-                            thread_id=threadId,
-                            run_id=run.id,
-                            tool_outputs=tool_outputs
-                        )
-                        print("Tool outputs submitted successfully.")
-                    except Exception as e:
-                        return "Failed to submit tool outputs:" + str(e)
-
-                else:
-                    print("No tool outputs to submit.")
-        messages = client.beta.threads.messages.list(
-            thread_id=threadId
-        )
-
-        print(f"returned: {messages._get_page_items()[0].content[0].text.value}")
-            
-        return messages._get_page_items()[0].content[0].text.value
+        # Extract and return the generated response using dot notation
+        return response
     
     except Exception as e:
         print(e)
