@@ -1,22 +1,55 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Layout, Button, Typography, Form, Input, Checkbox, message } from "antd";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Layout, Button, Typography, Form, Input, Checkbox, Spin } from "antd";
 import Logo from "../assets/images/Spirit.png";
 import { useSignIn } from "react-auth-kit";
 import axios, { AxiosError } from "axios";
-import { useUnreadMessage } from '../context/UnreadMessageContext';
+import { useUnreadMessage } from "../context/UnreadMessageContext";
+import jwtDecode from "jwt-decode";
 
 const { Title } = Typography;
 
-function Login(props) {
+function Login() {
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const signIn = useSignIn();
   const { setUnreadMessages } = useUnreadMessage();
   const navigate = useNavigate();
-  
-
+  const location = useLocation();
   const [form] = Form.useForm();
 
+  // 🔹 1. Handle auto-login via token (from Moodle LTI redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+
+    if (token) {
+      setLoading(true);
+      try {
+        const decoded = jwtDecode(token);
+        signIn({
+          token: token,
+          expiresIn: 60 * 60 * 24 * 90, // 90 days
+          tokenType: "Bearer",
+          authState: {
+            username: decoded.username,
+            role: decoded.role,
+          },
+        });
+
+        // Clean up the URL (remove ?token=)
+        window.history.replaceState({}, document.title, "/redirect");
+        navigate("/redirect");
+      } catch (err) {
+        console.error("Invalid token:", err);
+        setError("Invalid login token. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [location.search, navigate, signIn]);
+
+  // 🔹 2. Manual login form submission
   const onSubmit = async (values) => {
     setError("");
     const form_data = new FormData();
@@ -27,11 +60,13 @@ function Login(props) {
       const response = await axios.post("/api/login", form_data);
       signIn({
         token: response.data.access_token,
-        expiresIn: 129600, // 90 days logged in
-        tokenType: "bearer",
-        authState: { username: values.username },
+        expiresIn: 60 * 60 * 24 * 90, // 90 days
+        tokenType: "Bearer",
+        authState: {
+          username: values.username,
+          role: response.data.role,
+        },
       });
-      console.log("TEST");
       window.location.reload(true);
     } catch (err) {
       if (err && err instanceof AxiosError) {
@@ -39,10 +74,27 @@ function Login(props) {
       } else if (err && err instanceof Error) {
         setError(err.message || "The username or password you entered is incorrect.");
       }
-      console.log("Error: ", err);
+      console.error("Error during login:", err);
     }
   };
 
+  // 🔹 3. Optional loading spinner for Moodle redirect
+  if (loading) {
+    return (
+      <div style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}>
+        <Spin size="large" />
+        <p style={{ marginTop: 16, color: "#555" }}>Signing you in via Moodle...</p>
+      </div>
+    );
+  }
+
+  // 🔹 4. Default manual login form
   return (
     <div className="login-page">
       <div className="picture-background">
@@ -67,14 +119,14 @@ function Login(props) {
 
               <Form.Item
                 name="username"
-                rules={[{ required: true, message: 'Please input your username!' }]}
+                rules={[{ required: true, message: "Please input your username!" }]}
               >
                 <Input placeholder="Username" />
               </Form.Item>
 
               <Form.Item
                 name="password"
-                rules={[{ required: true, message: 'Please input your password!' }]}
+                rules={[{ required: true, message: "Please input your password!" }]}
               >
                 <Input.Password id="password-input" placeholder="Password" />
               </Form.Item>
